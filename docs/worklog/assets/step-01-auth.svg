@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+  <defs>
+    <linearGradient id="auth" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="#0f172a" rx="24" />
+  <rect x="32" y="32" width="576" height="296" rx="20" fill="#111827" stroke="#1d4ed8" stroke-width="2" />
+  <g fill="#e0f2fe" font-family="'Inter', sans-serif">
+    <text x="64" y="92" font-size="32" font-weight="700">STEP 01 · AUTH</text>
+    <text x="64" y="140" font-size="20">Supabase email auth with guarded routes</text>
+    <text x="64" y="170" font-size="20">and profile bootstrapping.</text>
+  </g>
+  <g transform="translate(64,208)">
+    <rect width="512" height="96" rx="20" fill="url(#auth)" opacity="0.18" />
+    <text x="28" y="56" font-size="28" font-weight="600" fill="#38bdf8">🔐 Users can sign in &amp; sign up</text>
+  </g>
+</svg>

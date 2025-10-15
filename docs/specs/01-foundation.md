@@ -19,6 +19,12 @@ Bootstrap the SavePixie project with a Vite + React + TypeScript PWA, Supabase c
 - `.github/workflows/deploy.yml` configured for Pages deployment.
 - Updated documentation (`README.md`, this spec, worklog entry once implemented).
 
+## Implementation Snapshot
+- `src/main.tsx` bootstraps React Router with placeholder routes for `/`, `/auth`, and `/dashboard`.
+- `src/service-worker.ts` caches the shell (`index.html`, manifest, and runtime requests) for offline access.
+- Global styling lives in `src/styles/global.css` to provide a polished default look for placeholder screens.
+- The GitHub Pages workflow builds on pushes to `main` and publishes the static bundle from `dist/`.
+
 ## Acceptance Criteria
 - Local development server runs without errors.
 - Production build succeeds via `npm run build`.
