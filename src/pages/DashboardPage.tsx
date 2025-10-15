@@ -180,6 +180,9 @@ function DashboardPage() {
     setBannerError(null);
     setBannerSuccess(null);
 
+  const greeting = useMemo(() => formatDisplayName(profile, user?.email ?? null), [profile, user?.email]);
+  const createdAtLabel = useMemo(() => {
+    if (!profile?.created_at) return "–";
     try {
       const goal = await createGoal({
         userId: user.id,
@@ -201,7 +204,7 @@ function DashboardPage() {
     } finally {
       setCreatingGoal(false);
     }
-  };
+  }, [profile?.created_at]);
 
   const handleDeposit = async (values: { amountCents: number; note?: string }) => {
     if (!user?.id) {
