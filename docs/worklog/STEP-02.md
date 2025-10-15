@@ -3,9 +3,9 @@
 Let authenticated savers manage Supabase-backed goals, record deposits, and visualize their progress on the dashboard.
 
 ## Changes
-- Replaced the placeholder dashboard with a goals workspace featuring progress rings, totals, and empty state guidance.
-- Added goal creation and deposit modals with optimistic updates powered by new Supabase helpers in `src/features/goals/`.
-- Expanded global styling to support the dashboard UI and modal system for managing goals and deposits.
+- Turned the dashboard into a Supabase-backed goals workspace with summary stats, progress rings, and empty-state guidance.
+- Added goal creation and deposit modals wired to Supabase helpers with optimistic updates and friendly validation.
+- Documented the Step 2 product spec detailing dashboard structure, modal flows, and API expectations.
 
 ## SQL
 - `sql/migrations/002_goals.sql`
@@ -14,7 +14,7 @@ Let authenticated savers manage Supabase-backed goals, record deposits, and visu
 - `npm run build`
 
 ## Screens
-- _Screenshot pending._
+- _Screenshot pending (auth-required dashboard cannot be captured in this environment)._ 
 
 ## NEXT
 - Step 3 – Streak Engine.

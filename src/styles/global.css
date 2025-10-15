@@ -200,6 +200,60 @@ a:focus {
   color: rgba(226, 232, 240, 0.75);
 }
 
+.dashboard-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.profile-card header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.profile-card header p {
+  margin: 0;
+}
+
+.profile-meta {
+  display: grid;
+  gap: 1rem;
+  margin: 1.25rem 0 0;
+}
+
+.profile-meta div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.profile-meta dt {
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.75);
+}
+
+.profile-meta dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.highlight-card {
+  display: grid;
+  gap: 0.75rem;
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  padding: 1.75rem;
+}
+
+.highlight-card h2 {
+  margin: 0;
+}
+
+.highlight-card p {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.82);
+}
+
 .dashboard-summary {
   display: grid;
   gap: 1rem;
