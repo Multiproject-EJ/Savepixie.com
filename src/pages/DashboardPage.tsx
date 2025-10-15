@@ -1,124 +1,27 @@
-import { type CSSProperties, type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../app/AuthProvider";
-import { createGoal, fetchGoals, recordDeposit } from "../features/goals/api";
-import type { Goal } from "../features/goals/types";
+import { fetchProfile, type ProfileRow, updateProfile } from "../features/profile/api";
 
-const emojiOptions = ["🏦", "🎯", "🪄", "✈️", "🏡", "🚗", "🎉"];
-const colorOptions = ["#7C3AED", "#38BDF8", "#F97316", "#F43F5E", "#22C55E", "#EAB308"];
+function formatDisplayName(profile: ProfileRow | null, fallback: string | null): string {
+  if (profile?.display_name) {
+    return profile.display_name;
+  }
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 2,
-});
+  if (fallback) {
+    return fallback.split("@")[0];
+  }
 
-function formatCurrency(cents: number) {
-  return currencyFormatter.format(cents / 100);
-}
-
-function calculateProgress(goal: Goal) {
-  if (!goal.target_cents) return 0;
-  return Math.min(100, Math.round((goal.saved_cents / goal.target_cents) * 100));
-}
-
-type CreateGoalFormState = {
-  name: string;
-  target: string;
-  emoji: string;
-  color: string;
-  deadline: string;
-};
-
-type DepositFormState = {
-  amount: string;
-  note: string;
-};
-
-function GoalCard({ goal, onDeposit }: { goal: Goal; onDeposit: (goal: Goal) => void }) {
-  const progress = calculateProgress(goal);
-  const ringStyle = {
-    "--progress": progress,
-    "--ring-color": goal.color ?? "#7C3AED",
-  } as CSSProperties;
-
-  const deadline = goal.deadline_date ? new Date(goal.deadline_date).toLocaleDateString() : null;
-
-  return (
-    <article className="goal-card">
-      <div className="goal-progress">
-        <div className="goal-progress-ring" style={ringStyle}>
-          <span>{progress}%</span>
-        </div>
-        <div className="goal-emoji" aria-hidden>
-          {goal.emoji ?? "🏦"}
-        </div>
-      </div>
-      <div className="goal-details">
-        <header>
-          <h3>{goal.name}</h3>
-          <p className="goal-balance">{formatCurrency(goal.saved_cents)}</p>
-        </header>
-        <dl>
-          <div>
-            <dt>Target</dt>
-            <dd>{formatCurrency(goal.target_cents)}</dd>
-          </div>
-          <div>
-            <dt>Remaining</dt>
-            <dd>{formatCurrency(Math.max(goal.target_cents - goal.saved_cents, 0))}</dd>
-          </div>
-          {deadline ? (
-            <div>
-              <dt>Deadline</dt>
-              <dd>{deadline}</dd>
-            </div>
-          ) : null}
-        </dl>
-      </div>
-      <footer>
-        <button className="button secondary" type="button" onClick={() => onDeposit(goal)}>
-          Deposit
-        </button>
-      </footer>
-    </article>
-  );
-}
-
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal">
-        <header className="modal-header">
-          <h2>{title}</h2>
-          <button type="button" className="link-button" onClick={onClose}>
-            Close
-          </button>
-        </header>
-        <div className="modal-body">{children}</div>
-      </div>
-    </div>
-  );
+  return "there";
 }
 
 function DashboardPage() {
   const { user } = useAuth();
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateGoalFormState>({
-    name: "",
-    target: "",
-    emoji: emojiOptions[0],
-    color: colorOptions[0],
-    deadline: "",
-  });
-  const [depositGoal, setDepositGoal] = useState<Goal | null>(null);
-  const [depositError, setDepositError] = useState<string | null>(null);
-  const [isDepositSubmitting, setIsDepositSubmitting] = useState(false);
-  const [depositForm, setDepositForm] = useState<DepositFormState>({ amount: "", note: "" });
+  const [success, setSuccess] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ displayName: "", username: "" });
 
   useEffect(() => {
     if (!user) return;
@@ -127,14 +30,18 @@ function DashboardPage() {
     setLoading(true);
     setError(null);
 
-    fetchGoals(user.id)
-      .then((items) => {
+    fetchProfile(user.id)
+      .then((result) => {
         if (!active) return;
-        setGoals(items);
+        setProfile(result);
+        setForm({
+          displayName: result?.display_name ?? "",
+          username: result?.username ?? "",
+        });
       })
-      .catch((err) => {
+      .catch((cause) => {
         if (!active) return;
-        setError(err.message ?? "Unable to load goals");
+        setError(cause instanceof Error ? cause.message : "Unable to load your profile.");
       })
       .finally(() => {
         if (!active) return;
@@ -144,288 +51,134 @@ function DashboardPage() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user?.id]);
 
-  const totals = useMemo(() => {
-    const summary = goals.reduce(
-      (acc, goal) => {
-        acc.saved += goal.saved_cents;
-        acc.target += goal.target_cents;
-        return acc;
-      },
-      { saved: 0, target: 0 }
-    );
+  const greeting = useMemo(() => formatDisplayName(profile, user?.email ?? null), [profile, user?.email]);
+  const createdAtLabel = useMemo(() => {
+    if (!profile?.created_at) return "–";
+    try {
+      return new Date(profile.created_at).toLocaleString();
+    } catch (cause) {
+      console.warn("Unable to format created_at", cause);
+      return profile.created_at;
+    }
+  }, [profile?.created_at]);
 
-    const completion = summary.target > 0 ? Math.round((summary.saved / summary.target) * 100) : 0;
-
-    return {
-      savedLabel: formatCurrency(summary.saved),
-      targetLabel: formatCurrency(summary.target),
-      completion,
-    };
-  }, [goals]);
-
-  const handleOpenCreate = () => {
-    setCreateForm({ name: "", target: "", emoji: emojiOptions[0], color: colorOptions[0], deadline: "" });
-    setCreateError(null);
-    setIsCreateOpen(true);
-  };
-
-  const handleCloseCreate = () => {
-    setIsCreateOpen(false);
-    setCreateError(null);
-    setCreateForm({ name: "", target: "", emoji: emojiOptions[0], color: colorOptions[0], deadline: "" });
-  };
-
-  const handleCreateGoal = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!user) return;
 
-    setCreateError(null);
-    setIsCreateSubmitting(true);
-
-    const name = createForm.name.trim();
-    if (!name) {
-      setCreateError("Please enter a goal name.");
-      setIsCreateSubmitting(false);
-      return;
-    }
-
-    const targetValue = Number(createForm.target);
-    if (!Number.isFinite(targetValue) || targetValue <= 0) {
-      setCreateError("Target amount must be a positive number.");
-      setIsCreateSubmitting(false);
-      return;
-    }
-
-    const targetCents = Math.round(targetValue * 100);
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
 
     try {
-      const newGoal = await createGoal({
-        userId: user.id,
-        name,
-        targetCents,
-        emoji: createForm.emoji,
-        color: createForm.color,
-        deadlineDate: createForm.deadline ? createForm.deadline : null,
+      const updated = await updateProfile(user.id, {
+        displayName: form.displayName.trim() ? form.displayName.trim() : null,
+        username: form.username.trim() ? form.username.trim() : null,
       });
-
-      setGoals((prev) => [...prev, newGoal]);
-      setIsCreateOpen(false);
-    } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Failed to create goal.");
+      setProfile(updated);
+      setSuccess("Profile updated successfully.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to update your profile.");
     } finally {
-      setIsCreateSubmitting(false);
+      setSaving(false);
     }
   };
-
-  const handleDeposit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!user || !depositGoal) return;
-
-    setDepositError(null);
-    setIsDepositSubmitting(true);
-
-    const amountValue = Number(depositForm.amount);
-    if (!Number.isFinite(amountValue) || amountValue <= 0) {
-      setDepositError("Deposit must be greater than zero.");
-      setIsDepositSubmitting(false);
-      return;
-    }
-
-    const amountCents = Math.round(amountValue * 100);
-
-    const previousGoals = goals.map((goal) => ({ ...goal }));
-    const optimistic = goals.map((goal) =>
-      goal.id === depositGoal.id ? { ...goal, saved_cents: goal.saved_cents + amountCents } : goal
-    );
-    setGoals(optimistic);
-
-    try {
-      const updatedGoal = await recordDeposit({
-        userId: user.id,
-        goal: depositGoal,
-        amountCents,
-        note: depositForm.note.trim() ? depositForm.note.trim() : undefined,
-      });
-
-      setGoals((current) => current.map((goal) => (goal.id === updatedGoal.id ? updatedGoal : goal)));
-      setDepositGoal(null);
-    } catch (err) {
-      setGoals(previousGoals);
-      setDepositError(err instanceof Error ? err.message : "Failed to record deposit.");
-    } finally {
-      setIsDepositSubmitting(false);
-    }
-  };
-
-  const hasGoals = goals.length > 0;
 
   return (
     <section className="dashboard">
       <header className="dashboard-header">
         <div>
-          <h1>Your savings goals</h1>
+          <h1>Welcome, {greeting}!</h1>
           <p className="dashboard-subtitle">
-            Track progress across every goal and celebrate each deposit you make.
+            This is your personal savings headquarters. Update your profile and get ready for goals,
+            streaks, and more.
           </p>
         </div>
-        <button type="button" className="button" onClick={handleOpenCreate}>
-          New goal
-        </button>
       </header>
 
       {error ? <div className="alert error">{error}</div> : null}
+      {success ? <div className="alert success">{success}</div> : null}
 
-      <section className="dashboard-summary">
-        <div>
-          <span className="summary-label">Total saved</span>
-          <strong className="summary-value">{totals.savedLabel}</strong>
-        </div>
-        <div>
-          <span className="summary-label">Combined target</span>
-          <strong className="summary-value">{totals.targetLabel}</strong>
-        </div>
-        <div>
-          <span className="summary-label">Overall progress</span>
-          <strong className="summary-value">{totals.completion}%</strong>
-        </div>
-      </section>
+      <div className="dashboard-grid">
+        <article className="card profile-card">
+          <header>
+            <h2>Your account details</h2>
+          </header>
 
-      {loading ? (
-        <p className="muted">Loading goals…</p>
-      ) : hasGoals ? (
-        <div className="goal-grid">
-          {goals.map((goal) => (
-            <GoalCard key={goal.id} goal={goal} onDeposit={(selected) => {
-              setDepositGoal(selected);
-              setDepositForm({ amount: "", note: "" });
-              setDepositError(null);
-            }} />
-          ))}
-        </div>
-      ) : (
-        <div className="empty-state">
-          <p>No goals yet. Create your first savings goal to get started!</p>
-          <button type="button" className="button secondary" onClick={handleOpenCreate}>
-            Create a goal
-          </button>
-        </div>
-      )}
-
-      <p className="fine-print">Deposits update instantly and sync to Supabase so you never lose momentum.</p>
-
-      {isCreateOpen ? (
-        <Modal title="Create a savings goal" onClose={handleCloseCreate}>
-          {createError ? <div className="alert error">{createError}</div> : null}
-          <form className="form" onSubmit={handleCreateGoal}>
-            <div className="form-control">
-              <span>Goal name</span>
-              <input
-                name="name"
-                required
-                placeholder="Emergency fund"
-                value={createForm.name}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, name: event.target.value }))}
-              />
-            </div>
-            <div className="form-control">
-              <span>Target amount (USD)</span>
-              <input
-                name="target"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                placeholder="1000"
-                value={createForm.target}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, target: event.target.value }))}
-              />
-            </div>
-            <div className="form-row">
-              <div className="form-control">
-                <span>Emoji</span>
-                <select
-                  name="emoji"
-                  value={createForm.emoji}
-                  onChange={(event) => setCreateForm((prev) => ({ ...prev, emoji: event.target.value }))}
-                >
-                  {emojiOptions.map((emoji) => (
-                    <option key={emoji} value={emoji}>
-                      {emoji}
-                    </option>
-                  ))}
-                </select>
+          {loading ? (
+            <p className="muted">Loading profile…</p>
+          ) : (
+            <dl className="profile-meta">
+              <div>
+                <dt>Email</dt>
+                <dd>{user?.email ?? "–"}</dd>
               </div>
-              <div className="form-control">
-                <span>Accent color</span>
-                <input
-                  type="color"
-                  name="color"
-                  value={createForm.color}
-                  onChange={(event) => setCreateForm((prev) => ({ ...prev, color: event.target.value }))}
-                />
+              <div>
+                <dt>Display name</dt>
+                <dd>{profile?.display_name ?? "Add a friendly name"}</dd>
               </div>
-            </div>
-            <div className="form-control">
-              <span>Deadline (optional)</span>
-              <input
-                type="date"
-                name="deadline"
-                value={createForm.deadline}
-                onChange={(event) => setCreateForm((prev) => ({ ...prev, deadline: event.target.value }))}
-              />
-            </div>
-            <div className="modal-actions">
-              <button type="submit" className="button primary" disabled={isCreateSubmitting}>
-                {isCreateSubmitting ? "Creating…" : "Create goal"}
-              </button>
-            </div>
-          </form>
-        </Modal>
-      ) : null}
+              <div>
+                <dt>Username</dt>
+                <dd>{profile?.username ? `@${profile.username}` : "Choose a username"}</dd>
+              </div>
+              <div>
+                <dt>Profile created</dt>
+                <dd>{createdAtLabel}</dd>
+              </div>
+            </dl>
+          )}
+        </article>
 
-      {depositGoal ? (
-        <Modal
-          title={`Deposit to ${depositGoal.name}`}
-          onClose={() => {
-            setDepositGoal(null);
-            setDepositError(null);
-            setDepositForm({ amount: "", note: "" });
-          }}
-        >
-          {depositError ? <div className="alert error">{depositError}</div> : null}
-          <form className="form" onSubmit={handleDeposit}>
-            <div className="form-control">
-              <span>Deposit amount (USD)</span>
+        <article className="card profile-card">
+          <header>
+            <h2>Update your profile</h2>
+            <p className="muted">Choose a display name and username to personalize SavePixie.</p>
+          </header>
+
+          <form className="form" onSubmit={handleSubmit}>
+            <label className="form-control">
+              <span>Display name</span>
               <input
-                name="amount"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                placeholder="50"
-                value={depositForm.amount}
-                onChange={(event) => setDepositForm((prev) => ({ ...prev, amount: event.target.value }))}
+                value={form.displayName}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, displayName: event.target.value }))
+                }
+                placeholder="Pixie Pal"
+                disabled={saving || loading}
+                maxLength={80}
               />
-            </div>
-            <div className="form-control">
-              <span>Note (optional)</span>
+            </label>
+
+            <label className="form-control">
+              <span>Username</span>
               <input
-                name="note"
-                placeholder="Paycheck boost"
-                value={depositForm.note}
-                onChange={(event) => setDepositForm((prev) => ({ ...prev, note: event.target.value }))}
+                value={form.username}
+                onChange={(event) => setForm((prev) => ({ ...prev, username: event.target.value }))}
+                placeholder="pixiepal"
+                disabled={saving || loading}
+                maxLength={32}
               />
-            </div>
-            <div className="modal-actions">
-              <button type="submit" className="button primary" disabled={isDepositSubmitting}>
-                {isDepositSubmitting ? "Saving…" : "Record deposit"}
-              </button>
-            </div>
+            </label>
+
+            <button className="button primary" type="submit" disabled={saving || loading}>
+              {saving ? "Saving…" : "Save changes"}
+            </button>
+            <p className="form-footnote">
+              Your profile updates instantly and apply across every device where you use SavePixie.
+            </p>
           </form>
-        </Modal>
-      ) : null}
+        </article>
+      </div>
+
+      <article className="card highlight-card">
+        <h2>Coming soon: savings goals</h2>
+        <p>
+          Next we will introduce colorful goal cards and deposit tracking so you can visualize your
+          progress toward each milestone.
+        </p>
+      </article>
     </section>
   );
 }

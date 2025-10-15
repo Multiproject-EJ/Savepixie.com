@@ -3,10 +3,10 @@
 Deliver password-based authentication with Supabase and bootstrap a `profiles` record for each user.
 
 ## Changes
-- Implemented `AuthProvider` with Supabase session management, password flows, and profile upserts.
+- Implemented `AuthProvider` with Supabase session management, password flows, and resilient profile upserts.
 - Added protected routing for `/dashboard` plus refreshed navigation that reflects authentication state.
 - Built `/auth` with sign-in, sign-up, and password reset tabs alongside polished form styling.
-- Updated dashboard placeholder to greet the authenticated user and highlight upcoming milestones.
+- Created a dashboard profile hub with Supabase-backed editing plus teasers for the upcoming goals release.
 - Documented the new flows in the README and created the Step 1 SQL migration for the `profiles` table.
 
 ## SQL
