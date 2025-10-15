@@ -2,7 +2,57 @@
 
 SavePixie is a mobile-first personal savings coach delivered as a static Progressive Web App (PWA). The client is built with Vite, React, and TypeScript, and all backend capabilities (authentication, database, and row-level security) are provided by Supabase.
 
-This repository currently documents the full development plan so we can implement the product step by step.
+This repository tracks both the full development plan and the implementation of the SavePixie
+application. The project is bootstrapped with Vite, React, and TypeScript and includes a PWA shell so
+future roadmap steps can build on a working foundation.
+
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+The development server is available on http://localhost:5173 and automatically reloads as you edit
+files in `src/`.
+
+To produce a production build run:
+
+```bash
+npm run build
+npm run preview
+```
+
+This command checks TypeScript types and outputs the static bundle in `dist/`.
+
+## PWA Shell
+
+- `public/manifest.webmanifest` describes the installable app metadata and references generated icons
+  in `public/icons/`.
+- `src/service-worker.ts` caches the application shell so the router and core assets load offline.
+- The service worker is registered from `src/main.tsx` once the page is loaded.
+
+## Authentication & Profiles (Step 1)
+
+- Password-based sign-in, sign-up, and password reset flows live at `/auth` and are powered by Supabase
+  Auth.
+- `src/app/AuthProvider.tsx` exposes the current session and helpers for signing in, signing up, signing
+  out, and requesting password resets while ensuring the `profiles` table is upserted after first login.
+- `src/app/ProtectedRoute.tsx` guards private routes like `/dashboard`, redirecting anonymous visitors to
+  the auth page and preserving their original destination.
+- Profile bootstrapping happens through `src/features/profile/api.ts`, which writes the default
+  `display_name`, `username`, and `avatar_url` for the authenticated user.
+
+## Savings Goals & Deposits (Step 2)
+
+- `/dashboard` now surfaces a goals workspace where you can create personalized savings goals with emoji
+  accents, colors, target amounts, and optional deadlines.
+- The `src/features/goals/api.ts` helpers load, create, and update Supabase goals alongside their deposit
+  events while keeping optimistic UI updates in sync.
+- Rich dashboard styling (`src/styles/global.css`) introduces progress rings, summary stats, and modals
+  for the "New goal" and "Record deposit" flows.
+- SQL migration `sql/migrations/002_goals.sql` provisions the `goals` and `goal_events` tables secured by
+  row level security policies tied to the authenticated Supabase user.
 
 ## Guiding Codex Through the Plan
 To have Codex implement the product incrementally, reference the roadmap step you want to tackle and ask Codex to begin that
@@ -73,4 +123,4 @@ Create GitHub issues #1–#13 to mirror Steps 0–12. For each step:
 - Use `auth.uid()` checks (or equivalent joins) to restrict CRUD operations to the owning user.
 - Never expose the Supabase service role key in the client or repository.
 
-Stay tuned for implementation starting with **Step 0 — Initialize Repo & Tooling**.
+Stay tuned as we build on **Step 1 — Supabase Auth + Profiles** and beyond.
