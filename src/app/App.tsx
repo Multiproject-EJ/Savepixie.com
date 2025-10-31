@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
+import { UnderConstructionGate } from "../components/UnderConstructionGate";
 import { useAuth } from "./AuthProvider";
 
 export function App() {
@@ -15,39 +16,42 @@ export function App() {
   };
 
   return (
-    <div className="layout">
-      <header className="site-header">
-        <Link to="/" className="brand">
-          SavePixie
-        </Link>
-        <nav className="nav-links">
-          <Link to="/">Home</Link>
-          {user ? <Link to="/dashboard">Dashboard</Link> : <Link to="/auth">Auth</Link>}
-        </nav>
-        <div className="auth-summary">
-          {loading ? (
-            <span className="badge">Checking session…</span>
-          ) : user ? (
-            <>
-              <span className="badge">{user.email}</span>
-              <button className="link-button" onClick={handleSignOut}>
-                Sign out
-              </button>
-            </>
-          ) : (
-            <Link className="button" to="/auth">
-              Sign in
-            </Link>
-          )}
-        </div>
-      </header>
-      <main className="content">
-        <Outlet />
-      </main>
-      <footer className="site-footer">
-        SavePixie is your friendly savings companion powered by Supabase.
-      </footer>
-    </div>
+    <>
+      <div className="layout">
+        <header className="site-header">
+          <Link to="/" className="brand">
+            SavePixie
+          </Link>
+          <nav className="nav-links">
+            <Link to="/">Home</Link>
+            {user ? <Link to="/dashboard">Dashboard</Link> : <Link to="/auth">Auth</Link>}
+          </nav>
+          <div className="auth-summary">
+            {loading ? (
+              <span className="badge">Checking session…</span>
+            ) : user ? (
+              <>
+                <span className="badge">{user.email}</span>
+                <button className="link-button" onClick={handleSignOut}>
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <Link className="button" to="/auth">
+                Sign in
+              </Link>
+            )}
+          </div>
+        </header>
+        <main className="content">
+          <Outlet />
+        </main>
+        <footer className="site-footer">
+          SavePixie is your friendly savings companion powered by Supabase.
+        </footer>
+      </div>
+      <UnderConstructionGate />
+    </>
   );
 }
 
