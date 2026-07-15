@@ -28,6 +28,9 @@ type SavingsContextValue = {
   displayName: string;
   refresh: () => Promise<void>;
   addGoal: (input: NewGoalInput) => Promise<Goal>;
+  startFirstGoal: (
+    input: NewGoalInput & { initialDepositCents: number }
+  ) => Promise<{ goal: Goal; initialSaveRecorded: boolean }>;
   deposit: (goalId: string, amountCents: number, note?: string) => Promise<Goal>;
 };
 
@@ -92,6 +95,42 @@ export function SavingsProvider({ children }: PropsWithChildren) {
     [user?.id]
   );
 
+  const startFirstGoal = useCallback(
+    async (input: NewGoalInput & { initialDepositCents: number }) => {
+      if (!user?.id) throw new Error("Sign in before starting your first goal.");
+
+      const createdGoal = await createGoal({
+        userId: user.id,
+        name: input.name,
+        targetCents: input.targetCents,
+        emoji: input.emoji,
+        color: input.color,
+        deadlineDate: input.deadlineDate,
+      });
+
+      let goal = createdGoal;
+      let initialSaveRecorded = input.initialDepositCents <= 0;
+
+      if (input.initialDepositCents > 0) {
+        try {
+          goal = await recordDeposit({
+            userId: user.id,
+            goal: createdGoal,
+            amountCents: input.initialDepositCents,
+            note: "My first tiny win",
+          });
+          initialSaveRecorded = true;
+        } catch {
+          initialSaveRecorded = false;
+        }
+      }
+
+      setGoals((current) => [...current, goal]);
+      return { goal, initialSaveRecorded };
+    },
+    [user?.id]
+  );
+
   const deposit = useCallback(
     async (goalId: string, amountCents: number, note?: string) => {
       if (!user?.id) throw new Error("Sign in before recording a save.");
@@ -122,8 +161,18 @@ export function SavingsProvider({ children }: PropsWithChildren) {
   const displayName = profile?.display_name?.trim() || user?.email?.split("@")[0] || "Saver";
 
   const value = useMemo<SavingsContextValue>(
-    () => ({ profile, goals, loading, error, displayName, refresh, addGoal, deposit }),
-    [addGoal, deposit, displayName, error, goals, loading, profile, refresh]
+    () => ({
+      profile,
+      goals,
+      loading,
+      error,
+      displayName,
+      refresh,
+      addGoal,
+      startFirstGoal,
+      deposit,
+    }),
+    [addGoal, deposit, displayName, error, goals, loading, profile, refresh, startFirstGoal]
   );
 
   return <SavingsContext.Provider value={value}>{children}</SavingsContext.Provider>;

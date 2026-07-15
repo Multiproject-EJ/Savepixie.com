@@ -38,14 +38,14 @@ function AuthPage() {
 
   const redirectTo = useMemo(() => {
     const state = location.state as LocationState | null;
-    return state?.from || "/app/today";
+    return state?.from || "/app";
   }, [location.state]);
 
   useEffect(() => {
     if (user) {
-      navigate("/app/today", { replace: true });
+      navigate(redirectTo, { replace: true });
     }
-  }, [navigate, user]);
+  }, [navigate, redirectTo, user]);
 
   useEffect(() => {
     setError(null);
@@ -85,11 +85,15 @@ function AuthPage() {
     setError(null);
     setMessage(null);
     try {
-      await signUpWithPassword(email, password, {
+      const result = await signUpWithPassword(email, password, {
         displayName: displayName || null,
         username: username || null,
       });
-      setMessage("Almost there! Check your inbox for a confirmation email.");
+      setMessage(
+        result.requiresEmailConfirmation
+          ? "Almost there! Check your inbox, confirm your email, then come back to meet your Pixie."
+          : "Your account is ready. Opening your SavePixie space…"
+      );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to sign up. Please try again.");
     } finally {

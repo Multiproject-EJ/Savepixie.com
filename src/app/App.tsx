@@ -31,7 +31,7 @@ export function App() {
             <span className="badge">One moment…</span>
           ) : user ? (
             <>
-              <Link className="button secondary compact-button" to="/app/today">
+              <Link className="button secondary compact-button" to="/app">
                 Open app
               </Link>
               <button className="link-button" onClick={handleSignOut}>

@@ -20,7 +20,7 @@ type AuthContextValue = {
     email: string,
     password: string,
     profile?: { displayName?: string | null; username?: string | null }
-  ) => Promise<void>;
+  ) => Promise<{ requiresEmailConfirmation: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 };
@@ -85,12 +85,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
         },
       });
       if (error) throw error;
-      if (data.user) {
+      if (data.user && data.session) {
         await ensureProfile(data.user, {
           display_name: profile?.displayName ?? null,
           username: profile?.username ?? null,
         });
       }
+      return { requiresEmailConfirmation: !data.session };
     },
     []
   );
