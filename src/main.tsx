@@ -4,7 +4,7 @@ import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-rou
 import App from "./app/App";
 import { AuthProvider } from "./app/AuthProvider";
 import ProtectedRoute from "./app/ProtectedRoute";
-import { SavingsProvider } from "./app/SavingsProvider";
+import { SavingsPreviewProvider, SavingsProvider } from "./app/SavingsProvider";
 import AppShell from "./components/AppShell";
 import AuthPage from "./pages/AuthPage";
 import GoalsPage from "./pages/GoalsPage";
@@ -67,6 +67,21 @@ const router = createBrowserRouter([
               <OnboardingPage />
             </SavingsProvider>
           ),
+        },
+        {
+          path: "/preview/app",
+          element: (
+            <SavingsPreviewProvider>
+              <AppShell basePath="/preview/app" />
+            </SavingsPreviewProvider>
+          ),
+          children: [
+            { index: true, element: <Navigate to="today" replace /> },
+            { path: "today", element: <TodayPage /> },
+            { path: "goals", element: <GoalsPage /> },
+            { path: "plan", element: <PlanPage /> },
+            { path: "journey", element: <JourneyPage /> },
+          ],
         },
       ]
     : []),

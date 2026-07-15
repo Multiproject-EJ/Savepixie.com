@@ -1,14 +1,21 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useSavings } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
+import { goalIdeas, type GoalIdea } from "../data/savingsMoves";
 import { formatMoney, formatShortDate, goalProgress } from "../lib/format";
 
 export function GoalsPage() {
   const { goals, loading, error, addGoal } = useSavings();
   const { openQuickSave } = useOutletContext<AppShellOutletContext>();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedIdea, setSelectedIdea] = useState<GoalIdea | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  const openGoalDialog = (idea: GoalIdea | null = null) => {
+    setSelectedIdea(idea);
+    setDialogOpen(true);
+  };
 
   return (
     <div className="app-page goals-page">
@@ -18,7 +25,7 @@ export function GoalsPage() {
           <h1>Your goals</h1>
           <p>Give every small save somewhere meaningful to go.</p>
         </div>
-        <button className="button secondary" type="button" onClick={() => setDialogOpen(true)}>
+        <button className="button secondary" type="button" onClick={() => openGoalDialog()}>
           <span aria-hidden="true">＋</span> New goal
         </button>
       </header>
@@ -39,7 +46,7 @@ export function GoalsPage() {
           <span className="eyebrow">Plant your first goal</span>
           <h2>What would make future-you smile?</h2>
           <p>A trip, an emergency cushion, a new laptop—start with one thing you genuinely want.</p>
-          <button className="button primary" type="button" onClick={() => setDialogOpen(true)}>
+          <button className="button primary" type="button" onClick={() => openGoalDialog()}>
             Create my first goal
           </button>
         </section>
@@ -81,7 +88,7 @@ export function GoalsPage() {
               </article>
             );
           })}
-          <button className="add-goal-card" type="button" onClick={() => setDialogOpen(true)}>
+          <button className="add-goal-card" type="button" onClick={() => openGoalDialog()}>
             <span aria-hidden="true">＋</span>
             <strong>Add another goal</strong>
             <small>Keep secondary goals quiet and focused.</small>
@@ -89,9 +96,48 @@ export function GoalsPage() {
         </section>
       )}
 
+      <section className="dream-library surface-card">
+        <header className="section-heading">
+          <div>
+            <span className="eyebrow">Dream Library</span>
+            <h2>Find something worth growing</h2>
+          </div>
+          <span className="library-count">{goalIdeas.length} starters</span>
+        </header>
+        <p className="support-copy">
+          Pick an idea to pre-fill a realistic starting target. Make it yours before saving.
+        </p>
+        <div className="dream-library__grid">
+          {goalIdeas.map((idea) => (
+            <button
+              className="dream-card"
+              type="button"
+              key={idea.id}
+              onClick={() => openGoalDialog(idea)}
+            >
+              <span className="dream-card__emoji" aria-hidden="true">
+                {idea.emoji}
+              </span>
+              <span>
+                <small>{idea.category}</small>
+                <strong>{idea.name}</strong>
+                <em>{formatMoney(idea.targetCents)} starter goal</em>
+              </span>
+              <span className="dream-card__arrow" aria-hidden="true">
+                →
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <NewGoalDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        idea={selectedIdea}
+        onClose={() => {
+          setDialogOpen(false);
+          setSelectedIdea(null);
+        }}
         onCreate={async (values) => {
           const goal = await addGoal(values);
           setNotice(`${goal.name} is ready for its first save.`);
@@ -104,6 +150,7 @@ export function GoalsPage() {
 
 type NewGoalDialogProps = {
   open: boolean;
+  idea?: GoalIdea | null;
   onClose: () => void;
   onCreate: (values: {
     name: string;
@@ -114,13 +161,21 @@ type NewGoalDialogProps = {
   }) => Promise<void>;
 };
 
-function NewGoalDialog({ open, onClose, onCreate }: NewGoalDialogProps) {
+function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
   const [name, setName] = useState("");
   const [target, setTarget] = useState("");
   const [emoji, setEmoji] = useState("✈️");
   const [deadline, setDeadline] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open || !idea) return;
+    setName(idea.name);
+    setTarget(String(idea.targetCents / 100));
+    setEmoji(idea.emoji);
+    setError(null);
+  }, [idea, open]);
 
   if (!open) return null;
 
@@ -167,8 +222,9 @@ function NewGoalDialog({ open, onClose, onCreate }: NewGoalDialogProps) {
       >
         <header className="pixie-modal__header">
           <div>
-            <span className="eyebrow">Plant a goal seed</span>
+            <span className="eyebrow">{idea ? idea.category : "Plant a goal seed"}</span>
             <h2 id="new-goal-title">What are you saving for?</h2>
+            {idea ? <p className="dialog-motivation">{idea.motivation}</p> : null}
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
             ×

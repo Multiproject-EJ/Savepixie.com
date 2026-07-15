@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useSavings } from "../app/SavingsProvider";
 import PixieMark from "../components/PixieMark";
+import { savingsMoves } from "../data/savingsMoves";
 import { formatMoney } from "../lib/format";
 
 export function JourneyPage() {
@@ -79,6 +80,33 @@ export function JourneyPage() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section className="technique-library surface-card">
+        <header className="section-heading">
+          <div>
+            <span className="eyebrow">Savings toolkit</span>
+            <h2>Small techniques, ready when you need them</h2>
+          </div>
+          <span className="library-count">{savingsMoves.length} moves</span>
+        </header>
+        <div className="technique-grid">
+          {savingsMoves.map((move, index) => (
+            <article
+              className={index === 0 ? "technique-card featured" : "technique-card"}
+              key={move.id}
+            >
+              <span className="technique-card__emoji" aria-hidden="true">
+                {move.emoji}
+              </span>
+              <div>
+                <span>{index === 0 ? "Try today" : "In your toolkit"}</span>
+                <h3>{move.name}</h3>
+                <p>{move.principle}</p>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
     </div>
   );
