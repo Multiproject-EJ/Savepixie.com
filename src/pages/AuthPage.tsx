@@ -22,14 +22,28 @@ function AuthPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const heading =
+    view === "sign-up"
+      ? "Create your SavePixie account"
+      : view === "reset"
+        ? "Reset your password"
+        : "Welcome back";
+
+  const introduction =
+    view === "sign-up"
+      ? "Start with one meaningful goal and one tiny saving action."
+      : view === "reset"
+        ? "Enter your email and we’ll send you a secure reset link."
+        : "Your goals and your Pixie are right where you left them.";
+
   const redirectTo = useMemo(() => {
     const state = location.state as LocationState | null;
-    return state?.from || "/dashboard";
+    return state?.from || "/app/today";
   }, [location.state]);
 
   useEffect(() => {
     if (user) {
-      navigate("/dashboard", { replace: true });
+      navigate("/app/today", { replace: true });
     }
   }, [navigate, user]);
 
@@ -101,13 +115,8 @@ function AuthPage() {
   return (
     <section className="card auth-card">
       <header>
-        <h1>{view === "sign-up" ? "Create your SavePixie account" : "Welcome back"}</h1>
-        <p>
-          SavePixie uses password-based authentication with Supabase. {" "}
-          {view === "sign-in" && "Sign in to reach your savings goals."}
-          {view === "sign-up" && "Sign up to start tracking your savings journey."}
-          {view === "reset" && "Request a password reset link."}
-        </p>
+        <h1>{heading}</h1>
+        <p>{introduction}</p>
       </header>
 
       <div className="tab-group">
@@ -218,7 +227,11 @@ function AuthPage() {
           </button>
           <p className="form-footnote">
             Already have an account?{" "}
-            <button className="link-button" type="button" onClick={() => handleViewChange("sign-in")}>
+            <button
+              className="link-button"
+              type="button"
+              onClick={() => handleViewChange("sign-in")}
+            >
               Sign in
             </button>
           </p>
@@ -243,7 +256,11 @@ function AuthPage() {
           </button>
           <p className="form-footnote">
             Remembered your password?{" "}
-            <button className="link-button" type="button" onClick={() => handleViewChange("sign-in")}>
+            <button
+              className="link-button"
+              type="button"
+              onClick={() => handleViewChange("sign-in")}
+            >
               Return to sign in
             </button>
           </p>
@@ -251,8 +268,8 @@ function AuthPage() {
       )}
 
       <p className="fine-print">
-        By continuing you agree to the SavePixie {" "}
-        <Link to="/legal/terms">Terms</Link> and <Link to="/legal/privacy">Privacy Policy</Link>.
+        By continuing you agree to the SavePixie <Link to="/legal/terms">Terms</Link> and{" "}
+        <Link to="/legal/privacy">Privacy Policy</Link>.
       </p>
     </section>
   );

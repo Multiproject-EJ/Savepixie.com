@@ -1,0 +1,121 @@
+import { Link, useOutletContext } from "react-router-dom";
+import { useSavings } from "../app/SavingsProvider";
+import type { AppShellOutletContext } from "../components/AppShell";
+import PixieMark from "../components/PixieMark";
+import { formatMoney, goalProgress } from "../lib/format";
+
+export function TodayPage() {
+  const { goals, loading, error, displayName } = useSavings();
+  const { openQuickSave } = useOutletContext<AppShellOutletContext>();
+  const featuredGoal = goals[0] ?? null;
+  const progress = featuredGoal
+    ? goalProgress(featuredGoal.saved_cents, featuredGoal.target_cents)
+    : 0;
+
+  return (
+    <div className="app-page today-page">
+      <header className="page-heading page-heading--today">
+        <div>
+          <span className="eyebrow">Your calm money moment</span>
+          <h1>Hi {displayName},</h1>
+          <p>One tiny choice is enough for today.</p>
+        </div>
+        <div className="streak-pill" aria-label="New streak">
+          <span>✦</span>
+          <strong>Start today</strong>
+        </div>
+      </header>
+
+      {error ? <p className="alert error">{error}</p> : null}
+
+      <section className="daily-quest-card">
+        <div className="quest-copy">
+          <span className="quest-kicker">Today&apos;s tiny quest</span>
+          <h2>
+            {featuredGoal
+              ? `Find £5 for ${featuredGoal.name}`
+              : "Choose something worth saving for"}
+          </h2>
+          <p>
+            {featuredGoal
+              ? "A small save today keeps your real goal moving—no perfect budget required."
+              : "Your Pixie works best when every small action points toward something meaningful."}
+          </p>
+          {featuredGoal ? (
+            <button
+              className="button primary quest-action"
+              type="button"
+              onClick={() => openQuickSave(featuredGoal.id)}
+            >
+              Save £5 now <span aria-hidden="true">✦</span>
+            </button>
+          ) : (
+            <Link className="button primary quest-action" to="/app/goals">
+              Create my first goal
+            </Link>
+          )}
+        </div>
+        <div className="quest-pixie-wrap">
+          <span className="pixie-glow" />
+          <PixieMark size="large" mood={featuredGoal ? "curious" : "calm"} />
+          <span className="pixie-message">
+            {featuredGoal ? "Tiny saves count." : "What are we growing?"}
+          </span>
+        </div>
+      </section>
+
+      <div className="today-grid">
+        <section className="surface-card goal-spotlight">
+          <header className="section-heading">
+            <div>
+              <span className="eyebrow">Your main goal</span>
+              <h2>{featuredGoal?.name || "Your first adventure"}</h2>
+            </div>
+            <Link to="/app/goals">View goals</Link>
+          </header>
+
+          {loading ? (
+            <div className="skeleton-block" />
+          ) : featuredGoal ? (
+            <>
+              <div className="goal-spotlight__numbers">
+                <strong>{formatMoney(featuredGoal.saved_cents)}</strong>
+                <span>of {formatMoney(featuredGoal.target_cents)}</span>
+                <em>{progress}%</em>
+              </div>
+              <div className="progress-track" aria-label={`${progress}% saved`}>
+                <span style={{ width: `${progress}%` }} />
+              </div>
+              <p className="support-copy">
+                {featuredGoal.emoji || "✨"}{" "}
+                {formatMoney(Math.max(0, featuredGoal.target_cents - featuredGoal.saved_cents))}{" "}
+                left to grow.
+              </p>
+            </>
+          ) : (
+            <p className="support-copy">Create a goal and your progress will live here.</p>
+          )}
+        </section>
+
+        <section className="surface-card weekly-signal">
+          <header className="section-heading">
+            <div>
+              <span className="eyebrow">This week</span>
+              <h2>Make a gentle plan</h2>
+            </div>
+            <Link to="/app/plan">Open plan</Link>
+          </header>
+          <div className="weekly-signal__value">
+            <span aria-hidden="true">◎</span>
+            <div>
+              <strong>Know your safe-to-spend</strong>
+              <p>Set three simple weekly numbers—available, committed and saving.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+export default TodayPage;

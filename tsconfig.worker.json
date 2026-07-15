@@ -2,8 +2,10 @@
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
     "composite": true,
+    "tsBuildInfoFile": "./node_modules/.cache/savepixie/tsconfig.worker.tsbuildinfo",
     "lib": ["ESNext", "WebWorker"],
     "types": []
   },
-  "include": ["src/service-worker.ts"]
+  "include": ["src/service-worker.ts"],
+  "exclude": []
 }

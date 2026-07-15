@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { UnderConstructionGate } from "../components/UnderConstructionGate";
+import PixieMark from "../components/PixieMark";
 import { useAuth } from "./AuthProvider";
 
 export function App() {
@@ -16,42 +16,51 @@ export function App() {
   };
 
   return (
-    <>
-      <div className="layout">
-        <header className="site-header">
-          <Link to="/" className="brand">
-            SavePixie
-          </Link>
-          <nav className="nav-links">
-            <Link to="/">Home</Link>
-            {user ? <Link to="/dashboard">Dashboard</Link> : <Link to="/auth">Auth</Link>}
-          </nav>
-          <div className="auth-summary">
-            {loading ? (
-              <span className="badge">Checking session…</span>
-            ) : user ? (
-              <>
-                <span className="badge">{user.email}</span>
-                <button className="link-button" onClick={handleSignOut}>
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <Link className="button" to="/auth">
+    <div className="marketing-shell">
+      <header className="site-header">
+        <Link to="/" className="app-brand">
+          <PixieMark size="small" mood="happy" />
+          <span>SavePixie</span>
+        </Link>
+        <nav className="nav-links" aria-label="Website navigation">
+          <a href="#how-it-works">How it works</a>
+          <a href="#why-savepixie">Why SavePixie</a>
+        </nav>
+        <div className="auth-summary">
+          {loading ? (
+            <span className="badge">One moment…</span>
+          ) : user ? (
+            <>
+              <Link className="button secondary compact-button" to="/app/today">
+                Open app
+              </Link>
+              <button className="link-button" onClick={handleSignOut}>
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link className="link-button" to="/auth">
                 Sign in
               </Link>
-            )}
-          </div>
-        </header>
-        <main className="content">
-          <Outlet />
-        </main>
-        <footer className="site-footer">
-          SavePixie is your friendly savings companion powered by Supabase.
-        </footer>
-      </div>
-      <UnderConstructionGate />
-    </>
+              <Link className="button compact-button" to="/auth#sign-up">
+                Start saving
+              </Link>
+            </>
+          )}
+        </div>
+      </header>
+      <main className="marketing-content">
+        <Outlet />
+      </main>
+      <footer className="site-footer">
+        <Link to="/" className="app-brand">
+          <PixieMark size="small" />
+          <span>SavePixie</span>
+        </Link>
+        <p>Small choices today. Brighter tomorrows.</p>
+      </footer>
+    </div>
   );
 }
 

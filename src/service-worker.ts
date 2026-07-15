@@ -1,6 +1,6 @@
 declare const self: ServiceWorkerGlobalScope;
 
-const CACHE_NAME = "savepixie-shell-v1";
+const CACHE_NAME = "savepixie-shell-v2";
 const ASSETS_TO_CACHE = ["/", "/index.html", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -17,11 +17,7 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
-        )
+        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
       )
       .then(() => self.clients.claim())
   );
@@ -35,7 +31,25 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      caches.match("/index.html").then((cached) => cached ?? fetch(request))
+      fetch(request)
+        .then((response) => {
+          if (response.status === 200) {
+            void caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put("/index.html", response.clone()));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match("/index.html");
+          return (
+            cached ??
+            new Response("SavePixie is offline. Please reconnect and try again.", {
+              status: 503,
+              headers: { "Content-Type": "text/plain" },
+            })
+          );
+        })
     );
     return;
   }
@@ -54,7 +68,10 @@ self.addEventListener("fetch", (event) => {
             }
             return response;
           })
-          .catch(() => caches.match("/index.html"))
+          .catch(async () => {
+            const fallback = await caches.match("/index.html");
+            return fallback ?? new Response(null, { status: 503 });
+          })
       );
     })
   );
