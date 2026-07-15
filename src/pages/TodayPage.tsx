@@ -2,12 +2,14 @@ import { Link, useOutletContext } from "react-router-dom";
 import { useSavings } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
 import PixieMark from "../components/PixieMark";
+import { getDailySavingsMove } from "../data/savingsMoves";
 import { formatMoney, goalProgress } from "../lib/format";
 
 export function TodayPage() {
   const { goals, loading, error, displayName } = useSavings();
-  const { openQuickSave } = useOutletContext<AppShellOutletContext>();
+  const { openQuickSave, basePath } = useOutletContext<AppShellOutletContext>();
   const featuredGoal = goals[0] ?? null;
+  const savingMove = getDailySavingsMove();
   const progress = featuredGoal
     ? goalProgress(featuredGoal.saved_cents, featuredGoal.target_cents)
     : 0;
@@ -30,15 +32,11 @@ export function TodayPage() {
 
       <section className="daily-quest-card">
         <div className="quest-copy">
-          <span className="quest-kicker">Today&apos;s tiny quest</span>
-          <h2>
-            {featuredGoal
-              ? `Find £5 for ${featuredGoal.name}`
-              : "Choose something worth saving for"}
-          </h2>
+          <span className="quest-kicker">Today&apos;s Savings Move · {savingMove.name}</span>
+          <h2>{featuredGoal ? savingMove.headline : "Choose something worth saving for"}</h2>
           <p>
             {featuredGoal
-              ? "A small save today keeps your real goal moving—no perfect budget required."
+              ? savingMove.description
               : "Your Pixie works best when every small action points toward something meaningful."}
           </p>
           {featuredGoal ? (
@@ -47,10 +45,10 @@ export function TodayPage() {
               type="button"
               onClick={() => openQuickSave(featuredGoal.id)}
             >
-              Save £5 now <span aria-hidden="true">✦</span>
+              Try it with {formatMoney(savingMove.suggestedCents)} <span aria-hidden="true">✦</span>
             </button>
           ) : (
-            <Link className="button primary quest-action" to="/app/goals">
+            <Link className="button primary quest-action" to={`${basePath}/goals`}>
               Create my first goal
             </Link>
           )}
@@ -59,7 +57,7 @@ export function TodayPage() {
           <span className="pixie-glow" />
           <PixieMark size="large" mood={featuredGoal ? "curious" : "calm"} />
           <span className="pixie-message">
-            {featuredGoal ? "Tiny saves count." : "What are we growing?"}
+            {featuredGoal ? savingMove.principle : "What are we growing?"}
           </span>
         </div>
       </section>
@@ -71,7 +69,7 @@ export function TodayPage() {
               <span className="eyebrow">Your main goal</span>
               <h2>{featuredGoal?.name || "Your first adventure"}</h2>
             </div>
-            <Link to="/app/goals">View goals</Link>
+            <Link to={`${basePath}/goals`}>View goals</Link>
           </header>
 
           {loading ? (
@@ -103,7 +101,7 @@ export function TodayPage() {
               <span className="eyebrow">This week</span>
               <h2>Make a gentle plan</h2>
             </div>
-            <Link to="/app/plan">Open plan</Link>
+            <Link to={`${basePath}/plan`}>Open plan</Link>
           </header>
           <div className="weekly-signal__value">
             <span aria-hidden="true">◎</span>

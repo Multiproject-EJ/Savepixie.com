@@ -178,6 +178,108 @@ export function SavingsProvider({ children }: PropsWithChildren) {
   return <SavingsContext.Provider value={value}>{children}</SavingsContext.Provider>;
 }
 
+const previewProfile: ProfileRow = {
+  id: "preview-user",
+  username: "maya",
+  display_name: "Maya",
+  avatar_url: null,
+  created_at: "2026-07-15T12:00:00.000Z",
+};
+
+const previewGoals: Goal[] = [
+  {
+    id: "preview-japan",
+    user_id: "preview-user",
+    name: "Japan trip",
+    target_cents: 120000,
+    saved_cents: 42000,
+    emoji: "🌸",
+    color: "#7b3fff",
+    deadline_date: "2027-04-01",
+    created_at: "2026-07-15T12:00:00.000Z",
+  },
+  {
+    id: "preview-buffer",
+    user_id: "preview-user",
+    name: "Peace-of-mind fund",
+    target_cents: 50000,
+    saved_cents: 13500,
+    emoji: "🌿",
+    color: "#38dfc6",
+    deadline_date: null,
+    created_at: "2026-07-15T12:00:00.000Z",
+  },
+];
+
+export function SavingsPreviewProvider({ children }: PropsWithChildren) {
+  const [goals, setGoals] = useState(previewGoals);
+
+  const refresh = useCallback(async () => undefined, []);
+
+  const addGoal = useCallback(async (input: NewGoalInput) => {
+    const goal: Goal = {
+      id: `preview-${Date.now()}`,
+      user_id: previewProfile.id,
+      name: input.name,
+      target_cents: input.targetCents,
+      saved_cents: 0,
+      emoji: input.emoji || "✨",
+      color: input.color || "#7b3fff",
+      deadline_date: input.deadlineDate || null,
+      created_at: new Date().toISOString(),
+    };
+    setGoals((current) => [...current, goal]);
+    return goal;
+  }, []);
+
+  const startFirstGoal = useCallback(
+    async (input: NewGoalInput & { initialDepositCents: number }) => {
+      const goal: Goal = {
+        id: `preview-${Date.now()}`,
+        user_id: previewProfile.id,
+        name: input.name,
+        target_cents: input.targetCents,
+        saved_cents: input.initialDepositCents,
+        emoji: input.emoji || "✨",
+        color: input.color || "#7b3fff",
+        deadline_date: input.deadlineDate || null,
+        created_at: new Date().toISOString(),
+      };
+      setGoals((current) => [...current, goal]);
+      return { goal, initialSaveRecorded: true };
+    },
+    []
+  );
+
+  const deposit = useCallback(
+    async (goalId: string, amountCents: number) => {
+      const goal = goals.find((item) => item.id === goalId);
+      if (!goal) throw new Error("Choose a goal for this save.");
+      const updated = { ...goal, saved_cents: goal.saved_cents + amountCents };
+      setGoals((current) => current.map((item) => (item.id === goalId ? updated : item)));
+      return updated;
+    },
+    [goals]
+  );
+
+  const value = useMemo<SavingsContextValue>(
+    () => ({
+      profile: previewProfile,
+      goals,
+      loading: false,
+      error: null,
+      displayName: previewProfile.display_name || "Saver",
+      refresh,
+      addGoal,
+      startFirstGoal,
+      deposit,
+    }),
+    [addGoal, deposit, goals, refresh, startFirstGoal]
+  );
+
+  return <SavingsContext.Provider value={value}>{children}</SavingsContext.Provider>;
+}
+
 export function useSavings() {
   const context = useContext(SavingsContext);
   if (!context) throw new Error("useSavings must be used within SavingsProvider");

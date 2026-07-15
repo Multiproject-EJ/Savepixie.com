@@ -16,6 +16,18 @@ Saving and simple budgeting should feel light, visual, achievable, and rewarding
 3. complete one short lesson or money action;
 4. see that action move both their real goal and their in-app journey forward.
 
+## Core differentiator: Savings Moves and the Dream Library
+
+SavePixie should not be positioned as another cute goal tracker. Its ownable value is a growing set of practical, lightly gameified **Savings Moves** connected to a motivating **Dream Library**.
+
+- **Savings Moves** turn proven saving behaviours into short, friendly actions such as Swap & Save, Pause Power, Round-up Rally, Found Money, Tiny Treat Tax, and No-spend Sprints.
+- **The Dream Library** helps users discover meaningful things to save for, understand a realistic starter target, and turn an idea into a personal goal in one tap.
+- **Today** recommends one useful Savings Move connected to the user's featured goal.
+- **Goals** houses the Dream Library without adding another primary tab.
+- **Journey** becomes the user's growing toolkit of techniques learned and tried.
+
+The techniques must remain financially useful rather than becoming arbitrary game tasks. Motivation comes from visible mastery, variety, and real goal progress—not random rewards or pressure.
+
 ## Platform strategy
 
 SavePixie is first and foremost a portrait phone app.

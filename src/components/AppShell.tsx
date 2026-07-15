@@ -1,32 +1,63 @@
-import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../app/AuthProvider";
 import { useSavings } from "../app/SavingsProvider";
+import { gentleHaptic } from "../lib/feedback";
 import PixieMark from "./PixieMark";
 import QuickSaveDialog from "./QuickSaveDialog";
 
 export type AppShellOutletContext = {
   openQuickSave: (goalId?: string) => void;
+  basePath: "/app" | "/preview/app";
 };
 
 const navItems = [
-  { to: "/app/today", label: "Today", icon: "home" },
-  { to: "/app/goals", label: "Goals", icon: "goal" },
-  { to: "/app/plan", label: "Plan", icon: "plan" },
-  { to: "/app/journey", label: "Journey", icon: "journey" },
+  { path: "today", label: "Today", icon: "home" },
+  { path: "goals", label: "Goals", icon: "goal" },
+  { path: "plan", label: "Plan", icon: "plan" },
+  { path: "journey", label: "Journey", icon: "journey" },
 ] as const;
 
-export function AppShell() {
+type AppShellProps = {
+  basePath?: "/app" | "/preview/app";
+};
+
+export function AppShell({ basePath = "/app" }: AppShellProps) {
   const { signOut } = useAuth();
   const { displayName } = useSavings();
   const navigate = useNavigate();
+  const location = useLocation();
   const [quickSaveOpen, setQuickSaveOpen] = useState(false);
   const [quickSaveGoalId, setQuickSaveGoalId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [saveMoment, setSaveMoment] = useState(0);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timeout = window.setTimeout(() => setNotice(null), 4400);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
+
+  useEffect(() => {
+    if (!saveMoment) return;
+    const timeout = window.setTimeout(() => setSaveMoment(0), 1700);
+    return () => window.clearTimeout(timeout);
+  }, [saveMoment]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname]);
 
   const openQuickSave = (goalId?: string) => {
+    gentleHaptic();
     setQuickSaveGoalId(goalId || null);
     setQuickSaveOpen(true);
+  };
+
+  const handleSaved = (message: string) => {
+    setNotice(message);
+    setSaveMoment((current) => current + 1);
+    gentleHaptic("success");
   };
 
   const handleSignOut = async () => {
@@ -34,19 +65,19 @@ export function AppShell() {
     navigate("/");
   };
 
-  const outletContext: AppShellOutletContext = { openQuickSave };
+  const outletContext: AppShellOutletContext = { openQuickSave, basePath };
 
   return (
     <div className="app-shell">
       <aside className="desktop-rail">
-        <NavLink to="/app/today" className="app-brand" aria-label="SavePixie Today">
+        <NavLink to={`${basePath}/today`} className="app-brand" aria-label="SavePixie Today">
           <PixieMark size="small" mood="happy" />
           <span>SavePixie</span>
         </NavLink>
 
         <nav className="desktop-nav" aria-label="Main app navigation">
-          {navItems.map((item) => (
-            <AppNavLink key={item.to} {...item} />
+          {navItems.map(({ path, ...item }) => (
+            <AppNavLink key={path} to={`${basePath}/${path}`} {...item} />
           ))}
         </nav>
 
@@ -63,7 +94,7 @@ export function AppShell() {
 
       <section className="app-stage">
         <header className="mobile-app-header">
-          <NavLink to="/app/today" className="app-brand">
+          <NavLink to={`${basePath}/today`} className="app-brand">
             <PixieMark size="small" mood="happy" />
             <span>SavePixie</span>
           </NavLink>
@@ -88,7 +119,9 @@ export function AppShell() {
         ) : null}
 
         <main className="app-content">
-          <Outlet context={outletContext} />
+          <div className="app-route" key={location.pathname}>
+            <Outlet context={outletContext} />
+          </div>
         </main>
 
         <button className="quick-save-fab" type="button" onClick={() => openQuickSave()}>
@@ -97,17 +130,31 @@ export function AppShell() {
         </button>
 
         <nav className="mobile-bottom-nav" aria-label="Main app navigation">
-          {navItems.map((item) => (
-            <AppNavLink key={item.to} {...item} />
+          {navItems.map(({ path, ...item }) => (
+            <AppNavLink key={path} to={`${basePath}/${path}`} {...item} />
           ))}
         </nav>
       </section>
+
+      {saveMoment ? (
+        <div className="save-celebration" key={saveMoment} role="status" aria-live="polite">
+          <div className="save-celebration__halo" />
+          <div className="save-celebration__sparks" aria-hidden="true">
+            {Array.from({ length: 10 }, (_, index) => (
+              <span key={index}>✦</span>
+            ))}
+          </div>
+          <PixieMark size="medium" mood="happy" />
+          <strong>Goal glowing!</strong>
+          <small>Your tiny save made real progress.</small>
+        </div>
+      ) : null}
 
       <QuickSaveDialog
         open={quickSaveOpen}
         initialGoalId={quickSaveGoalId}
         onClose={() => setQuickSaveOpen(false)}
-        onSaved={(message) => setNotice(message)}
+        onSaved={handleSaved}
       />
     </div>
   );
@@ -126,8 +173,14 @@ function AppNavLink({
     <NavLink
       to={to}
       className={({ isActive }) => (isActive ? "app-nav-link active" : "app-nav-link")}
+      onClick={() => gentleHaptic()}
     >
-      <NavIcon name={icon} />
+      <span className="app-nav-icon">
+        <NavIcon name={icon} />
+        <span className="app-nav-spark" aria-hidden="true">
+          ✦
+        </span>
+      </span>
       <span>{label}</span>
     </NavLink>
   );

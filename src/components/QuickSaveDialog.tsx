@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useSavings } from "../app/SavingsProvider";
+import { gentleHaptic } from "../lib/feedback";
 import { formatMoney } from "../lib/format";
 
 type QuickSaveDialogProps = {
@@ -24,6 +25,17 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
     setNote("");
     setError(null);
   }, [goals, initialGoalId, open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [onClose, open]);
 
   if (!open) return null;
 
@@ -122,7 +134,16 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
             </label>
             <div className="quick-amounts" aria-label="Suggested amounts">
               {[5, 10, 20, 50].map((value) => (
-                <button key={value} type="button" onClick={() => setAmount(String(value))}>
+                <button
+                  className={amount === String(value) ? "selected" : ""}
+                  key={value}
+                  type="button"
+                  aria-pressed={amount === String(value)}
+                  onClick={() => {
+                    gentleHaptic();
+                    setAmount(String(value));
+                  }}
+                >
                   £{value}
                 </button>
               ))}
