@@ -54,6 +54,8 @@ disabled until their server-side dependencies and customer safeguards pass the g
       confirmation on the real domain.
 - [ ] Configure production SMTP, branded confirmation/recovery templates, sender authentication, and
       delivery monitoring.
+- [x] Record the existing Mailgun DNS, shared Supabase sender, observed email-rate-limit failure, safe
+      SMTP procedure, and external acceptance suite in `EMAIL-DELIVERY.md`.
 - [ ] Add production error monitoring and a minimal privacy-respecting analytics funnel.
 - [ ] Deploy and test the new Pact client against production authentication with two real beta accounts.
 - [x] Confirm production-origin CORS for authenticated browser functions.

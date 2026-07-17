@@ -95,6 +95,10 @@ The checked cutover and rollback records are captured in `DOMAIN-CUTOVER.md`. Cu
 DNS is still at GoDaddy and the public redirect chain still ends at AlphaStocks; no live DNS change has
 been made.
 
+The email gap is captured in `EMAIL-DELIVERY.md`. Public Mailgun MX/SPF and DMARC records exist, but the
+live Auth log proves Supabase still sends through its shared sender and has already rejected a signup
+at the default email rate limit. Mailgun inbound support routing and custom Auth SMTP remain unproven.
+
 ## Safety boundary
 
 SavePixie records promises and evidence; it does not take custody of savings. Manual saves are visibly
