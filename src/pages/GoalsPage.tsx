@@ -1,20 +1,53 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
+import { useAuth } from "../app/AuthProvider";
 import { useSavings } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
 import { goalIdeas, type GoalIdea } from "../data/savingsMoves";
 import { formatMoney, formatShortDate, goalProgress } from "../lib/format";
 
 export function GoalsPage() {
-  const { goals, loading, error, addGoal } = useSavings();
-  const { openQuickSave } = useOutletContext<AppShellOutletContext>();
+  const { user } = useAuth();
+  const { goals, loading, error, addGoal, createInvite, joinSharedPact } = useSavings();
+  const { openQuickSave, basePath } = useOutletContext<AppShellOutletContext>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedIdea, setSelectedIdea] = useState<GoalIdea | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [joinOpen, setJoinOpen] = useState(false);
+  const [joinToken, setJoinToken] = useState("");
+  const [sharedInviteUrl, setSharedInviteUrl] = useState<string | null>(null);
 
   const openGoalDialog = (idea: GoalIdea | null = null) => {
     setSelectedIdea(idea);
     setDialogOpen(true);
+  };
+
+  const handleInvite = async (pactId: string) => {
+    try {
+      const token = await createInvite(pactId);
+      const url = `${window.location.origin}/app?join=${token}`;
+      setSharedInviteUrl(url);
+      setNotice("Your private seven-day invitation is ready.");
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url).catch(() => undefined);
+      }
+    } catch (cause) {
+      setNotice(cause instanceof Error ? cause.message : "We couldn't create an invitation.");
+    }
+  };
+
+  const handleJoin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const token = joinToken.trim().split("join=").pop()?.split("&")[0] || "";
+    if (!token) return;
+    try {
+      const joined = await joinSharedPact(token);
+      setNotice(`${joined.name} is now part of your SavePixie space.`);
+      setJoinToken("");
+      setJoinOpen(false);
+    } catch (cause) {
+      setNotice(cause instanceof Error ? cause.message : "That invitation could not be joined.");
+    }
   };
 
   return (
@@ -22,16 +55,58 @@ export function GoalsPage() {
       <header className="page-heading">
         <div>
           <span className="eyebrow">Make it feel real</span>
-          <h1>Your goals</h1>
-          <p>Give every small save somewhere meaningful to go.</p>
+          <h1>Your Pacts</h1>
+          <p>Solo promises and shared Circles, backed by money in each person&apos;s own bank.</p>
         </div>
-        <button className="button secondary" type="button" onClick={() => openGoalDialog()}>
-          <span aria-hidden="true">＋</span> New goal
-        </button>
+        <div className="page-heading__actions">
+          <button
+            className="button ghost"
+            type="button"
+            onClick={() => setJoinOpen((open) => !open)}
+          >
+            Join a Pact
+          </button>
+          <button className="button secondary" type="button" onClick={() => openGoalDialog()}>
+            <span aria-hidden="true">＋</span> New Pact
+          </button>
+        </div>
       </header>
 
       {error ? <p className="alert error">{error}</p> : null}
       {notice ? <p className="alert success">{notice}</p> : null}
+      {joinOpen ? (
+        <form className="join-pact-bar" onSubmit={handleJoin}>
+          <div>
+            <strong>Join a family or friend&apos;s Pact</strong>
+            <small>Paste the private invitation link or code.</small>
+          </div>
+          <input
+            value={joinToken}
+            onChange={(event) => setJoinToken(event.target.value)}
+            placeholder="Paste invitation"
+            autoFocus
+          />
+          <button className="button primary" type="submit">
+            Join
+          </button>
+        </form>
+      ) : null}
+      {sharedInviteUrl ? (
+        <div className="pact-invite-result" role="status">
+          <span aria-hidden="true">◎</span>
+          <div>
+            <strong>Invitation copied</strong>
+            <small>{sharedInviteUrl}</small>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSharedInviteUrl(null)}
+            aria-label="Dismiss invitation"
+          >
+            ×
+          </button>
+        </div>
+      ) : null}
 
       {loading ? (
         <div className="goal-gallery">
@@ -47,7 +122,7 @@ export function GoalsPage() {
           <h2>What would make future-you smile?</h2>
           <p>A trip, an emergency cushion, a new laptop—start with one thing you genuinely want.</p>
           <button className="button primary" type="button" onClick={() => openGoalDialog()}>
-            Create my first goal
+            Create my first Pact
           </button>
         </section>
       ) : (
@@ -66,10 +141,13 @@ export function GoalsPage() {
                   >
                     {goal.emoji || "✨"}
                   </span>
+                  <span className={`pact-mode-pill ${goal.mode}`}>
+                    {goal.mode === "shared" ? "◎ Shared Pact" : "✦ Solo Pact"}
+                  </span>
                   <span className="goal-deadline">{formatShortDate(goal.deadline_date)}</span>
                 </header>
                 <div>
-                  <span className="eyebrow">{index === 0 ? "Primary goal" : "Savings goal"}</span>
+                  <span className="eyebrow">{index === 0 ? "Featured Pact" : "Savings Pact"}</span>
                   <h2>{goal.name}</h2>
                 </div>
                 <div className="goal-amount-line">
@@ -80,18 +158,28 @@ export function GoalsPage() {
                   <span style={{ width: `${progress}%`, background: goal.color || "#7b3fff" }} />
                 </div>
                 <footer>
-                  <span>{progress}% complete</span>
-                  <button type="button" onClick={() => openQuickSave(goal.id)}>
-                    Add money
-                  </button>
+                  <span>
+                    {progress}% reported · {formatMoney(goal.verified_cents)} verified
+                  </span>
+                  <div className="goal-card-actions">
+                    <Link to={`${basePath}/goals/${goal.id}`}>Open Pact</Link>
+                    {goal.mode === "shared" && goal.user_id === user?.id ? (
+                      <button type="button" onClick={() => void handleInvite(goal.id)}>
+                        Invite
+                      </button>
+                    ) : null}
+                    <button type="button" onClick={() => openQuickSave(goal.id)}>
+                      Add money
+                    </button>
+                  </div>
                 </footer>
               </article>
             );
           })}
           <button className="add-goal-card" type="button" onClick={() => openGoalDialog()}>
             <span aria-hidden="true">＋</span>
-            <strong>Add another goal</strong>
-            <small>Keep secondary goals quiet and focused.</small>
+            <strong>Add another Pact</strong>
+            <small>Save solo or invite a trusted Circle.</small>
           </button>
         </section>
       )}
@@ -153,6 +241,7 @@ type NewGoalDialogProps = {
   idea?: GoalIdea | null;
   onClose: () => void;
   onCreate: (values: {
+    mode?: "solo" | "shared";
     name: string;
     targetCents: number;
     emoji?: string;
@@ -163,6 +252,7 @@ type NewGoalDialogProps = {
 
 function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
   const [name, setName] = useState("");
+  const [mode, setMode] = useState<"solo" | "shared">("solo");
   const [target, setTarget] = useState("");
   const [emoji, setEmoji] = useState("✈️");
   const [deadline, setDeadline] = useState("");
@@ -195,6 +285,7 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
     setError(null);
     try {
       await onCreate({
+        mode,
         name: name.trim(),
         targetCents: Math.round(targetValue * 100),
         emoji: emoji.trim() || "✨",
@@ -232,8 +323,24 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
         </header>
         <form className="form" onSubmit={handleSubmit}>
           {error ? <p className="alert error">{error}</p> : null}
+          <div className="compact-mode-picker" aria-label="Pact type">
+            <button
+              type="button"
+              className={mode === "solo" ? "selected" : ""}
+              onClick={() => setMode("solo")}
+            >
+              ✦ Solo
+            </button>
+            <button
+              type="button"
+              className={mode === "shared" ? "selected" : ""}
+              onClick={() => setMode("shared")}
+            >
+              ◎ Together
+            </button>
+          </div>
           <label className="form-control">
-            <span>Goal name</span>
+            <span>Pact name</span>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -253,7 +360,7 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
             <label className="form-control amount-control">
               <span>Target</span>
               <span className="amount-input">
-                <strong>£</strong>
+                <strong>kr</strong>
                 <input
                   type="number"
                   min="1"

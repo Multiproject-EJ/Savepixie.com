@@ -12,8 +12,10 @@ import GoalsPage from "./pages/GoalsPage";
 import HomePage from "./pages/HomePage";
 import JourneyPage from "./pages/JourneyPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import PactDetailPage from "./pages/PactDetailPage";
 import PlanPage from "./pages/PlanPage";
 import SavingsEntryPage from "./pages/SavingsEntryPage";
+import SettingsPage from "./pages/SettingsPage";
 import TodayPage from "./pages/TodayPage";
 import "./styles/global.css";
 
@@ -49,9 +51,11 @@ const router = createBrowserRouter([
         children: [
           { path: "today", element: <TodayPage /> },
           { path: "goals", element: <GoalsPage /> },
+          { path: "goals/:pactId", element: <PactDetailPage /> },
           { path: "plan", element: <PlanPage /> },
           { path: "plan/account-check", element: <AccountCheckPage /> },
           { path: "journey", element: <JourneyPage /> },
+          { path: "settings", element: <SettingsPage /> },
         ],
       },
     ],
@@ -81,9 +85,11 @@ const router = createBrowserRouter([
             { index: true, element: <Navigate to="today" replace /> },
             { path: "today", element: <TodayPage /> },
             { path: "goals", element: <GoalsPage /> },
+            { path: "goals/:pactId", element: <PactDetailPage /> },
             { path: "plan", element: <PlanPage /> },
             { path: "plan/account-check", element: <AccountCheckPage /> },
             { path: "journey", element: <JourneyPage /> },
+            { path: "settings", element: <SettingsPage /> },
           ],
         },
       ]

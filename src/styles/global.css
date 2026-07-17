@@ -822,6 +822,22 @@ p {
   background: rgba(255, 255, 255, 0.035);
   color: var(--muted);
 }
+.sync-status--saved {
+  border-color: rgba(56, 223, 198, 0.22);
+  background: rgba(56, 223, 198, 0.08);
+  color: var(--mint);
+}
+.sync-status--saving,
+.sync-status--unsaved {
+  border-color: rgba(255, 200, 87, 0.2);
+  background: rgba(255, 200, 87, 0.07);
+  color: var(--gold);
+}
+.sync-status--error {
+  border-color: rgba(255, 119, 138, 0.26);
+  background: rgba(255, 119, 138, 0.08);
+  color: #ff8ca0;
+}
 .surface-card {
   border-radius: var(--radius-md);
   background: var(--surface);
@@ -1062,7 +1078,8 @@ p {
   color: var(--muted);
   font-size: 0.7rem;
 }
-.savings-goal-card footer button {
+.savings-goal-card footer button,
+.savings-goal-card footer a {
   background: none;
   color: var(--mint);
   font-weight: 800;
@@ -1346,6 +1363,10 @@ p {
   color: var(--muted);
   font-size: 0.75rem;
   line-height: 1.55;
+}
+.plan-note .plan-sync-error {
+  margin-top: 0.55rem;
+  color: #ff9bad;
 }
 
 .account-check-invite {
@@ -3496,5 +3517,783 @@ p {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Savings Pacts and Savings Home */
+.button.ghost {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--violet-light);
+}
+
+.settings-page {
+  gap: 1.1rem;
+}
+.settings-heading {
+  align-items: center;
+}
+.settings-profile-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  background:
+    radial-gradient(circle at 92% 20%, rgba(123, 63, 255, 0.18), transparent 36%), var(--surface);
+}
+.profile-avatar--large {
+  width: 58px;
+  height: 58px;
+  font-size: 1.2rem;
+}
+.settings-profile-card h2,
+.settings-control-card h2,
+.settings-account-actions h2,
+.settings-section h2 {
+  margin: 0.2rem 0 0.3rem;
+}
+.settings-profile-card p,
+.settings-profile-card small,
+.settings-section header p,
+.settings-control-card p,
+.settings-account-actions p,
+.settings-account-actions > small {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+.settings-plan-pill,
+.home-status-dot {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  border: 1px solid rgba(56, 223, 198, 0.22);
+  border-radius: 999px;
+  padding: 0.48rem 0.65rem;
+  background: rgba(56, 223, 198, 0.07);
+  color: var(--mint);
+  font-size: 0.64rem;
+  font-weight: 800;
+}
+.settings-section {
+  display: grid;
+  gap: 0.8rem;
+}
+.settings-home-grid,
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+.savings-home-editor {
+  display: grid;
+  gap: 1rem;
+}
+.savings-home-editor > header,
+.savings-home-editor > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+.savings-home-editor h3 {
+  margin: 0.25rem 0 0;
+  font-size: 1rem;
+}
+.settings-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+.settings-form-grid label {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+.settings-form-grid input {
+  min-width: 0;
+  width: 100%;
+  padding: 0.72rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(7, 4, 17, 0.6);
+  outline: none;
+}
+.settings-form-grid input:focus {
+  border-color: rgba(123, 63, 255, 0.68);
+  box-shadow: 0 0 0 3px rgba(123, 63, 255, 0.1);
+}
+.settings-money-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.settings-money-input input {
+  padding-right: 2.2rem;
+}
+.settings-money-input small {
+  position: absolute;
+  right: 0.72rem;
+  color: var(--faint);
+}
+.home-editor-message,
+.settings-inline-message {
+  color: var(--mint);
+  font-size: 0.68rem;
+}
+.home-editor-message--error {
+  color: #ff9bad;
+}
+.settings-control-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.9rem;
+}
+.settings-control-card__icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(123, 63, 255, 0.13);
+  color: var(--violet-light);
+  font-weight: 900;
+}
+.settings-control-card .button,
+.settings-control-card .settings-inline-message {
+  grid-column: 2;
+  width: max-content;
+}
+.settings-account-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  border-color: rgba(255, 119, 138, 0.18);
+}
+.settings-account-actions__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+.settings-account-actions > small {
+  grid-column: 1 / -1;
+}
+.danger-button {
+  border-color: rgba(255, 119, 138, 0.26);
+  background: rgba(255, 119, 138, 0.08);
+  color: #ff9bad;
+}
+.danger-button:hover {
+  border-color: rgba(255, 119, 138, 0.5);
+  background: rgba(255, 119, 138, 0.13);
+}
+
+@media (max-width: 760px) {
+  .settings-heading {
+    align-items: flex-start;
+  }
+  .settings-heading .button {
+    display: none;
+  }
+  .settings-profile-card {
+    grid-template-columns: auto 1fr;
+  }
+  .settings-plan-pill {
+    grid-column: 1 / -1;
+  }
+  .settings-home-grid,
+  .settings-grid,
+  .settings-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .savings-home-editor > header,
+  .savings-home-editor > footer {
+    align-items: flex-start;
+  }
+  .savings-home-editor > footer {
+    flex-direction: column;
+  }
+  .settings-account-actions {
+    grid-template-columns: 1fr;
+  }
+  .settings-account-actions__buttons {
+    justify-content: flex-start;
+  }
+}
+
+.page-heading__actions,
+.goal-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.pact-detail-page {
+  gap: 1rem;
+}
+.pact-detail-heading {
+  align-items: center;
+}
+.pact-back-link {
+  display: inline-flex;
+  color: var(--mint);
+}
+.pact-detail-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.15rem;
+  padding: 1.35rem;
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 92% 10%, rgba(123, 63, 255, 0.2), transparent 40%),
+    radial-gradient(circle at 8% 110%, rgba(56, 223, 198, 0.12), transparent 42%),
+    linear-gradient(145deg, rgba(29, 19, 60, 0.96), rgba(15, 9, 32, 0.96));
+}
+.pact-detail-hero__icon {
+  width: 74px;
+  height: 74px;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  font-size: 2rem;
+}
+.pact-detail-hero__progress > strong {
+  display: block;
+  margin: 0.35rem 0 0;
+  font-size: clamp(2.5rem, 7vw, 4.6rem);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+.pact-detail-hero__progress > p {
+  margin: 0.4rem 0 0.8rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+.pact-detail-stats {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+.pact-detail-stats div {
+  min-width: 126px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(8, 4, 21, 0.42);
+}
+.pact-detail-stats dt {
+  color: var(--faint);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.pact-detail-stats dd {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.pact-detail-hero__actions {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.pact-detail-invite {
+  grid-column: 2 / -1;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--mint);
+}
+.pact-circle-section {
+  display: grid;
+  gap: 1rem;
+}
+.pact-circle-section .section-heading p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+.pact-member-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+.pact-member-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.pact-member-card > div {
+  display: grid;
+  gap: 0.15rem;
+}
+.pact-member-card > div strong {
+  font-size: 0.78rem;
+}
+.pact-member-card > div small {
+  color: var(--faint);
+  font-size: 0.62rem;
+}
+.member-progress {
+  display: grid;
+  justify-items: end;
+  gap: 0.12rem;
+  color: var(--muted);
+}
+.member-progress strong {
+  font-size: 0.72rem;
+}
+.member-progress small {
+  color: var(--faint);
+  font-size: 0.58rem;
+}
+.member-progress--exact,
+.member-progress--on {
+  color: var(--mint);
+}
+.pact-preferences-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+  gap: 0.85rem;
+}
+.pact-preferences {
+  display: grid;
+  gap: 0.9rem;
+}
+.pact-preferences header h2,
+.pact-safety-card h2,
+.pact-danger-zone h2 {
+  margin: 0.25rem 0 0.35rem;
+}
+.pact-preferences header p,
+.pact-safety-card p,
+.pact-danger-zone p,
+.pact-confirm-modal p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+.pact-preferences select {
+  width: 100%;
+  padding: 0.78rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(7, 4, 17, 0.84);
+  color: var(--ink);
+  outline: none;
+}
+.pact-preferences .form-control small {
+  color: var(--faint);
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+.pact-private-note {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: rgba(56, 223, 198, 0.07);
+  color: var(--mint);
+}
+.pact-private-note p {
+  margin: 0;
+  font-size: 0.72rem;
+}
+.pact-safety-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  border-color: rgba(56, 223, 198, 0.2);
+}
+.pact-safety-card > span {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 15px;
+  background: rgba(56, 223, 198, 0.09);
+  color: var(--mint);
+}
+.pact-danger-zone {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  border-color: rgba(255, 119, 138, 0.17);
+}
+.pact-confirm-modal {
+  display: grid;
+  gap: 0.8rem;
+}
+.pact-confirm-modal h2 {
+  margin: 0;
+}
+.pact-confirm-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+@media (max-width: 760px) {
+  .pact-detail-heading {
+    align-items: flex-start;
+  }
+  .pact-detail-hero {
+    grid-template-columns: auto 1fr;
+    padding: 1rem;
+  }
+  .pact-detail-hero__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 19px;
+    font-size: 1.5rem;
+  }
+  .pact-detail-hero__progress > strong {
+    font-size: clamp(2.35rem, 15vw, 3.8rem);
+  }
+  .pact-detail-stats {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+  .pact-detail-stats div {
+    min-width: 0;
+    padding: 0.55rem;
+  }
+  .pact-detail-hero__actions,
+  .pact-detail-invite {
+    grid-column: 1 / -1;
+  }
+  .pact-detail-hero__actions .button {
+    flex: 1;
+  }
+  .pact-member-grid,
+  .pact-preferences-layout {
+    grid-template-columns: 1fr;
+  }
+  .pact-member-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .member-progress {
+    grid-column: 2;
+    justify-items: start;
+  }
+  .pact-danger-zone {
+    grid-template-columns: 1fr;
+  }
+  .pact-confirm-modal__actions {
+    justify-content: stretch;
+  }
+  .pact-confirm-modal__actions .button {
+    flex: 1;
+  }
+}
+
+.pact-mode-grid {
+  width: min(680px, 100%);
+  margin: 0 auto 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.pact-mode-card {
+  position: relative;
+  min-height: 116px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.pact-mode-card.solo {
+  background: linear-gradient(145deg, rgba(56, 223, 198, 0.14), rgba(8, 4, 21, 0.7));
+}
+
+.pact-mode-card.shared {
+  background: linear-gradient(145deg, rgba(123, 63, 255, 0.2), rgba(8, 4, 21, 0.72));
+}
+
+.pact-mode-card:hover,
+.pact-mode-card.selected {
+  transform: translateY(-2px);
+  border-color: var(--border-bright);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
+}
+
+.pact-mode-card__icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--mint);
+  font-size: 1.25rem;
+}
+
+.pact-mode-card.shared .pact-mode-card__icon {
+  color: var(--violet-light);
+}
+
+.pact-mode-card strong,
+.pact-mode-card small {
+  display: block;
+}
+
+.pact-mode-card small {
+  margin-top: 0.25rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.pact-mode-card__check {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: transparent;
+}
+
+.pact-mode-card.selected .pact-mode-card__check {
+  border-color: transparent;
+  background: var(--mint);
+  color: #080415;
+}
+
+.onboarding-section-divider {
+  width: min(680px, 100%);
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--faint);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.onboarding-section-divider::before,
+.onboarding-section-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--border);
+}
+
+.savings-home-setup {
+  width: min(620px, 100%);
+  margin: 0 auto 1.1rem;
+  padding: 1rem;
+  border: 1px solid rgba(56, 223, 198, 0.25);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(56, 223, 198, 0.09), rgba(8, 4, 21, 0.62));
+}
+
+.savings-home-setup__heading,
+.pending-save-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.savings-home-setup__heading {
+  margin-bottom: 0.9rem;
+}
+
+.savings-home-setup__heading > span,
+.pending-save-note > span {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: rgba(56, 223, 198, 0.13);
+  color: var(--mint);
+}
+
+.savings-home-setup__heading strong,
+.savings-home-setup__heading small,
+.pending-save-note strong,
+.pending-save-note small {
+  display: block;
+}
+
+.savings-home-setup__heading small,
+.pending-save-note small,
+.savings-home-setup > p {
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.savings-home-setup > p {
+  margin-bottom: 0;
+}
+
+.savings-home-setup .two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pending-save-note {
+  padding: 0.8rem;
+  border: 1px solid rgba(56, 223, 198, 0.18);
+  border-radius: 16px;
+  background: rgba(56, 223, 198, 0.06);
+}
+
+.pact-mode-pill {
+  margin-left: auto;
+  padding: 0.36rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+
+.pact-mode-pill.solo {
+  background: rgba(56, 223, 198, 0.11);
+  color: var(--mint);
+}
+
+.pact-mode-pill.shared {
+  background: rgba(123, 63, 255, 0.16);
+  color: var(--violet-light);
+}
+
+.savings-goal-card > header {
+  gap: 0.55rem;
+}
+
+.goal-deadline {
+  margin-left: 0;
+}
+
+.goal-card-actions button + button {
+  color: var(--mint);
+}
+
+.compact-mode-picker {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.55rem;
+}
+
+.compact-mode-picker button {
+  min-height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.compact-mode-picker button.selected {
+  border-color: var(--border-bright);
+  background: rgba(123, 63, 255, 0.15);
+  color: var(--ink);
+}
+
+.join-pact-bar,
+.pact-invite-result {
+  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.4fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border-bright);
+  border-radius: 18px;
+  background: rgba(123, 63, 255, 0.08);
+}
+
+.join-pact-bar strong,
+.join-pact-bar small,
+.pact-invite-result strong,
+.pact-invite-result small {
+  display: block;
+}
+
+.join-pact-bar small,
+.pact-invite-result small {
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  overflow-wrap: anywhere;
+}
+
+.join-pact-bar input {
+  min-height: 44px;
+  padding: 0 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(8, 4, 21, 0.6);
+  color: var(--ink);
+}
+
+.pact-invite-result {
+  grid-template-columns: auto 1fr auto;
+}
+
+.pact-invite-result > span {
+  color: var(--violet-light);
+  font-size: 1.25rem;
+}
+
+.pact-invite-result > button {
+  background: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .pact-mode-grid,
+  .join-pact-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .page-heading__actions {
+    width: 100%;
+  }
+
+  .page-heading__actions .button {
+    flex: 1;
+  }
+
+  .savings-goal-card footer {
+    align-items: flex-start;
+    gap: 0.6rem;
+    flex-direction: column;
   }
 }

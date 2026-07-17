@@ -5,16 +5,17 @@ Updated: 2026-07-17
 ## Current release boundary
 
 SavePixie is preparing for a closed customer beta. The interface, PWA shell, authentication client,
-goals, deposits, onboarding, and Account Check prototype exist. Real payments and real Account Check
-recommendations remain disabled until their server-side dependencies and customer safeguards pass the
-gates below.
+solo/shared Savings Pact schema, Savings Homes, pending/verified ledger, secure invitations, synced
+weekly plans, onboarding, and Account Check prototype exist. The expanded client is being prepared for
+deployment. Real payments, real bank verification, and real Account Check recommendations remain
+disabled until their server-side dependencies and customer safeguards pass the gates below.
 
 ## Gate 1 — shared suite production backend
 
 - [x] Create the shared WalletHabit Suite Supabase project in `eu-west-1`.
 - [x] Apply the savings-ledger, suite-entitlement, and advisor-remediation migrations.
-- [ ] Configure the SavePixie site URL and allowed auth redirect URLs.
-- [ ] Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` as GitHub repository variables.
+- [x] Configure the SavePixie site URL and allowed auth redirect URLs.
+- [x] Configure the production build with the public Supabase URL and publishable browser key.
 - [x] Confirm Data API exposure and explicit grants for each public table and function.
 - [x] Generate database TypeScript types from the live project and wire them into the client.
 - [x] Run Supabase security and performance advisors with no unresolved launch blocker.
@@ -28,6 +29,12 @@ gates below.
 - [x] Concurrent deposits both contribute to the final balance without a lost update.
 - [x] A failed deposit leaves neither an event nor a changed balance.
 - [x] Normal clients cannot directly change `saved_cents`, update history, or delete history.
+- [x] Shared Pact members cannot discover another member's Savings Home or private exact entries.
+- [x] Circle summaries enforce exact, on-track-only, and organiser-only member visibility in SQL.
+- [x] Pact invitations expire, require authentication, and cannot expose non-member Pact data.
+- [x] Verified allocations cannot exceed the linked Savings Home's verified balance.
+- [x] Weekly plans are isolated by user and cannot be read or written across accounts.
+- [x] Leaving a Pact preserves ledger history, removes access, and supports controlled reactivation.
 
 ## Gate 3 — web deployment
 
@@ -36,6 +43,7 @@ gates below.
 - [ ] Confirm direct-route refreshes use the generated `404.html` SPA fallback.
 - [ ] Test PWA installation, update behavior, offline shell, password reset, and email confirmation.
 - [ ] Add production error monitoring and a minimal privacy-respecting analytics funnel.
+- [ ] Deploy and test the new Pact client against production authentication with two real beta accounts.
 
 ## Gate 4 — paid product
 

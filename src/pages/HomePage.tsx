@@ -39,7 +39,7 @@ function HomePage() {
             <div>
               <small>Japan trip</small>
               <strong>
-                £420 <em>of £1,200</em>
+                4 200 kr <em>of 12 000 kr</em>
               </strong>
               <div className="progress-track">
                 <span style={{ width: "35%" }} />
@@ -107,7 +107,7 @@ function HomePage() {
         <PixieMark size="medium" mood="happy" />
         <div>
           <span className="eyebrow">Ready when you are</span>
-          <h2>What should your first £5 grow into?</h2>
+          <h2>What should your first 50 kr grow into?</h2>
         </div>
         <Link className="button primary" to="/auth#sign-up">
           Meet your Pixie

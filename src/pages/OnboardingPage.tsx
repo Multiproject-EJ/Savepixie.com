@@ -22,7 +22,7 @@ const goalIdeas: GoalIdea[] = [
     name: "My safety cushion",
     emoji: "🛟",
     color: "#38dfc6",
-    target: 500,
+    target: 5000,
   },
   {
     id: "trip",
@@ -31,7 +31,7 @@ const goalIdeas: GoalIdea[] = [
     name: "My next adventure",
     emoji: "✈️",
     color: "#7b3fff",
-    target: 1200,
+    target: 12000,
   },
   {
     id: "treat",
@@ -40,7 +40,7 @@ const goalIdeas: GoalIdea[] = [
     name: "Something brilliant",
     emoji: "✨",
     color: "#ffc857",
-    target: 800,
+    target: 8000,
   },
   {
     id: "future",
@@ -49,21 +49,25 @@ const goalIdeas: GoalIdea[] = [
     name: "Future me fund",
     emoji: "🌱",
     color: "#8aa4ff",
-    target: 1000,
+    target: 10000,
   },
 ];
 
-const targetSuggestions = [250, 500, 1000, 2000];
-const firstSaveOptions = [0, 100, 300, 500, 1000];
+const targetSuggestions = [2500, 5000, 10000, 20000];
+const firstSaveOptions = [0, 5000, 10000, 20000, 50000];
 
 export function OnboardingPage() {
   const { goals, loading, displayName, startFirstGoal } = useSavings();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [mode, setMode] = useState<"solo" | "shared">("solo");
   const [ideaId, setIdeaId] = useState(goalIdeas[0].id);
   const [goalName, setGoalName] = useState(goalIdeas[0].name);
   const [target, setTarget] = useState(String(goalIdeas[0].target));
   const [firstSave, setFirstSave] = useState(300);
+  const [savingsHomeLabel, setSavingsHomeLabel] = useState("My dedicated savings account");
+  const [providerName, setProviderName] = useState("");
+  const [accountHint, setAccountHint] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdGoalName, setCreatedGoalName] = useState<string | null>(null);
@@ -118,12 +122,20 @@ export function OnboardingPage() {
 
     try {
       const result = await startFirstGoal({
+        mode,
         name: goalName.trim(),
         targetCents: Math.round(targetValue * 100),
         emoji: selectedIdea.emoji,
         color: selectedIdea.color,
         deadlineDate: null,
+        contributionRule: mode === "shared" ? "equal" : "flexible",
+        privacyMode: mode === "shared" ? "on_track_only" : "private",
         initialDepositCents: firstSave,
+        savingsHome: {
+          label: savingsHomeLabel.trim() || "My dedicated savings account",
+          providerName: providerName.trim() || null,
+          accountHint: accountHint.trim() || null,
+        },
       });
       setCreatedGoalName(result.goal.name);
       setInitialSaveRecorded(result.initialSaveRecorded);
@@ -184,10 +196,47 @@ export function OnboardingPage() {
         {step === 1 ? (
           <section className="onboarding-step">
             <StepIntro
-              kicker="First, choose a spark"
-              title="What should your tiny saves grow into?"
-              body="Pick the feeling that fits. You can change every detail next."
+              kicker="Choose your Pact"
+              title="Are you saving solo or together?"
+              body="Both choices keep each person's money in their own real Savings Home."
             />
+            <div className="pact-mode-grid" aria-label="Savings Pact type">
+              <button
+                className={mode === "solo" ? "pact-mode-card solo selected" : "pact-mode-card solo"}
+                type="button"
+                onClick={() => setMode("solo")}
+                aria-pressed={mode === "solo"}
+              >
+                <span className="pact-mode-card__icon" aria-hidden="true">
+                  ✦
+                </span>
+                <span>
+                  <strong>Save solo</strong>
+                  <small>A promise to future you</small>
+                </span>
+                <span className="pact-mode-card__check">✓</span>
+              </button>
+              <button
+                className={
+                  mode === "shared" ? "pact-mode-card shared selected" : "pact-mode-card shared"
+                }
+                type="button"
+                onClick={() => setMode("shared")}
+                aria-pressed={mode === "shared"}
+              >
+                <span className="pact-mode-card__icon" aria-hidden="true">
+                  ◎
+                </span>
+                <span>
+                  <strong>Save together</strong>
+                  <small>Family, friends or a trusted Circle</small>
+                </span>
+                <span className="pact-mode-card__check">✓</span>
+              </button>
+            </div>
+            <div className="onboarding-section-divider">
+              <span>Now choose what this Pact should grow</span>
+            </div>
             <div className="idea-grid">
               {goalIdeas.map((idea) => (
                 <button
@@ -221,13 +270,13 @@ export function OnboardingPage() {
           <section className="onboarding-step">
             <StepIntro
               kicker="Make it yours"
-              title="Give your goal a little personality."
-              body="A clear, meaningful goal is easier to come back to."
+              title="Give your Pact a little personality."
+              body="A clear, meaningful promise is easier to come back to."
             />
             <form className="onboarding-form" onSubmit={handleGoalDetails}>
               {error ? <p className="alert error">{error}</p> : null}
               <label className="form-control">
-                <span>Goal name</span>
+                <span>Pact name</span>
                 <div className="onboarding-name-input">
                   <span>{selectedIdea.emoji}</span>
                   <input
@@ -241,7 +290,7 @@ export function OnboardingPage() {
               <label className="form-control">
                 <span>Dream target</span>
                 <span className="amount-input onboarding-amount-input">
-                  <strong>£</strong>
+                  <strong>kr</strong>
                   <input
                     type="number"
                     min="1"
@@ -260,12 +309,12 @@ export function OnboardingPage() {
                     key={amount}
                     onClick={() => setTarget(String(amount))}
                   >
-                    £{amount.toLocaleString("en-GB")}
+                    {amount.toLocaleString("nb-NO")} kr
                   </button>
                 ))}
               </div>
               <button className="button primary onboarding-next" type="submit">
-                Build my goal <span aria-hidden="true">→</span>
+                Build my Pact <span aria-hidden="true">→</span>
               </button>
             </form>
           </section>
@@ -281,9 +330,57 @@ export function OnboardingPage() {
             <StepIntro
               kicker="One tiny win"
               title={`What feels easy to put toward ${goalName}?`}
-              body="This records a manual save—no bank connection and no money is moved."
+              body="First give the money a real Savings Home. SavePixie records the Pact; your bank keeps the money."
             />
             {error ? <p className="alert error">{error}</p> : null}
+            <div className="savings-home-setup">
+              <div className="savings-home-setup__heading">
+                <span aria-hidden="true">⌂</span>
+                <div>
+                  <strong>Your Savings Home</strong>
+                  <small>
+                    Use a dedicated savings account you own. We never ask for bank credentials.
+                  </small>
+                </div>
+              </div>
+              <label className="form-control">
+                <span>Account nickname</span>
+                <input
+                  value={savingsHomeLabel}
+                  onChange={(event) => setSavingsHomeLabel(event.target.value)}
+                  maxLength={64}
+                  placeholder="My dedicated savings account"
+                />
+              </label>
+              <div className="form-row two-columns">
+                <label className="form-control">
+                  <span>
+                    Bank <em>optional</em>
+                  </span>
+                  <input
+                    value={providerName}
+                    onChange={(event) => setProviderName(event.target.value)}
+                    maxLength={80}
+                    placeholder="Your bank"
+                  />
+                </label>
+                <label className="form-control">
+                  <span>
+                    Last digits <em>optional</em>
+                  </span>
+                  <input
+                    value={accountHint}
+                    onChange={(event) => setAccountHint(event.target.value)}
+                    maxLength={24}
+                    placeholder="••42"
+                  />
+                </label>
+              </div>
+              <p>
+                <strong>Manual for now:</strong> saves stay pending until authorised bank
+                verification is available.
+              </p>
+            </div>
             <div className="first-save-grid">
               {firstSaveOptions.map((amount) => (
                 <button
@@ -295,7 +392,7 @@ export function OnboardingPage() {
                 >
                   <strong>{amount === 0 ? "Later" : formatMoney(amount)}</strong>
                   <small>
-                    {amount === 0 ? "Goal only" : amount <= 300 ? "Tiny start" : "Bright start"}
+                    {amount === 0 ? "Pact only" : amount <= 10000 ? "Tiny start" : "Bright start"}
                   </small>
                 </button>
               ))}
@@ -341,11 +438,11 @@ function WelcomeStep({ displayName, onContinue }: { displayName: string; onConti
         <span className="eyebrow">Your first minute</span>
         <h1>Hi {displayName}. Meet your tiny savings sidekick.</h1>
         <p>
-          We&apos;ll create one meaningful goal and one easy first win. No spreadsheets, no bank
-          connection, no judgement.
+          We&apos;ll make one meaningful Savings Pact, give the money a real home, and record one
+          easy first win. No spreadsheets and no bank passwords.
         </p>
         <div className="onboarding-promise-row">
-          <span>1 goal</span>
+          <span>1 Pact</span>
           <span>3 easy choices</span>
           <span>about 60 seconds</span>
         </div>

@@ -11,9 +11,9 @@ type QuickSaveDialogProps = {
 };
 
 export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: QuickSaveDialogProps) {
-  const { goals, deposit } = useSavings();
+  const { goals, savingsHomes, deposit } = useSavings();
   const [goalId, setGoalId] = useState("");
-  const [amount, setAmount] = useState("5");
+  const [amount, setAmount] = useState("50");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -21,7 +21,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
   useEffect(() => {
     if (!open) return;
     setGoalId(initialGoalId || goals[0]?.id || "");
-    setAmount("5");
+    setAmount("50");
     setNote("");
     setError(null);
   }, [goals, initialGoalId, open]);
@@ -44,7 +44,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
     const amountValue = Number.parseFloat(amount);
 
     if (!goalId) {
-      setError("Create or choose a goal first.");
+      setError("Create or choose a Pact first.");
       return;
     }
 
@@ -60,7 +60,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
     setError(null);
     try {
       await deposit(goalId, cents, note.trim() || undefined);
-      onSaved(`${formatMoney(cents)} moved toward ${goal?.name || "your goal"}.`);
+      onSaved(`${formatMoney(cents)} recorded as pending for ${goal?.name || "your Pact"}.`);
       onClose();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We couldn't record that save.");
@@ -98,7 +98,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
 
         {goals.length === 0 ? (
           <div className="empty-state compact">
-            <h3>Create a goal first</h3>
+            <h3>Create a Savings Pact first</h3>
             <p>Your Pixie needs somewhere meaningful to send this save.</p>
             <button className="button secondary" type="button" onClick={onClose}>
               Back to goals
@@ -108,7 +108,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
           <form className="form" onSubmit={handleSubmit}>
             {error ? <p className="alert error">{error}</p> : null}
             <label className="form-control">
-              <span>Goal</span>
+              <span>Savings Pact</span>
               <select value={goalId} onChange={(event) => setGoalId(event.target.value)}>
                 {goals.map((goal) => (
                   <option key={goal.id} value={goal.id}>
@@ -120,7 +120,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
             <label className="form-control amount-control">
               <span>Amount</span>
               <span className="amount-input">
-                <strong>£</strong>
+                <strong>kr</strong>
                 <input
                   type="number"
                   min="0.01"
@@ -133,7 +133,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
               </span>
             </label>
             <div className="quick-amounts" aria-label="Suggested amounts">
-              {[5, 10, 20, 50].map((value) => (
+              {[50, 100, 200, 500].map((value) => (
                 <button
                   className={amount === String(value) ? "selected" : ""}
                   key={value}
@@ -144,7 +144,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
                     setAmount(String(value));
                   }}
                 >
-                  £{value}
+                  {value} kr
                 </button>
               ))}
             </div>
@@ -159,8 +159,18 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
                 placeholder="Skipped takeaway"
               />
             </label>
+            <div className="pending-save-note" role="note">
+              <span aria-hidden="true">⌂</span>
+              <div>
+                <strong>{savingsHomes[0]?.label || "Savings Home required"}</strong>
+                <small>
+                  Move the money in your bank, then record it here. It stays pending—not
+                  verified—until a bank connection confirms it.
+                </small>
+              </div>
+            </div>
             <button className="button primary" type="submit" disabled={submitting}>
-              {submitting ? "Saving…" : "Add to goal"}
+              {submitting ? "Recording…" : "Record pending save"}
             </button>
           </form>
         )}

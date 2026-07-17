@@ -1,5 +1,5 @@
-export function formatMoney(cents: number, currency = "GBP"): string {
-  return new Intl.NumberFormat("en-GB", {
+export function formatMoney(cents: number, currency = "NOK"): string {
+  return new Intl.NumberFormat("nb-NO", {
     style: "currency",
     currency,
     minimumFractionDigits: 0,
@@ -13,7 +13,7 @@ export function formatShortDate(value: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "No deadline";
 
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat("nb-NO", {
     day: "numeric",
     month: "short",
     year: "numeric",

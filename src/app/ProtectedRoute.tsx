@@ -15,7 +15,13 @@ export function ProtectedRoute({ children }: PropsWithChildren) {
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
+    return (
+      <Navigate
+        to="/auth"
+        replace
+        state={{ from: `${location.pathname}${location.search}${location.hash}` }}
+      />
+    );
   }
 
   return <>{children}</>;

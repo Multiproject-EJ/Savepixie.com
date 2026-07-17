@@ -1,44 +1,144 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
+import { useAuth } from "../app/AuthProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
+import {
+  currentWeekStart,
+  fetchWeeklyPlan,
+  saveWeeklyPlan,
+  type WeeklyPlan,
+} from "../features/plans/api";
+import { formatMoney } from "../lib/format";
 
 const STORAGE_KEY = "savepixie.weekly-plan.v1";
 
-type WeeklyPlan = {
-  available: number;
-  committed: number;
-  saving: number;
+const weekStart = currentWeekStart();
+const defaultPlan: WeeklyPlan = {
+  weekStart,
+  availableCents: 180000,
+  committedCents: 83000,
+  savingCents: 35000,
+  updatedAt: null,
 };
 
-const defaultPlan: WeeklyPlan = { available: 180, committed: 83, saving: 35 };
+type SyncStatus = "loading" | "saved" | "unsaved" | "saving" | "error" | "preview";
 
-function loadPlan(): WeeklyPlan {
+function loadLegacyPlan(): WeeklyPlan | null {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored
-      ? { ...defaultPlan, ...(JSON.parse(stored) as Partial<WeeklyPlan>) }
-      : defaultPlan;
+    if (!stored) return null;
+    const legacy = JSON.parse(stored) as Partial<{
+      available: number;
+      committed: number;
+      saving: number;
+    }>;
+    return {
+      ...defaultPlan,
+      availableCents: Math.max(0, Math.round((legacy.available ?? 1800) * 100)),
+      committedCents: Math.max(0, Math.round((legacy.committed ?? 830) * 100)),
+      savingCents: Math.max(0, Math.round((legacy.saving ?? 350) * 100)),
+    };
   } catch {
-    return defaultPlan;
+    return null;
   }
 }
 
 export function PlanPage() {
   const { basePath } = useOutletContext<AppShellOutletContext>();
-  const [plan, setPlan] = useState<WeeklyPlan>(loadPlan);
+  const { user } = useAuth();
+  const isPreview = basePath === "/preview/app";
+  const [plan, setPlan] = useState<WeeklyPlan>(defaultPlan);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(isPreview ? "preview" : "loading");
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const revision = useRef(0);
   const safeToSpend = useMemo(
-    () => Math.max(0, plan.available - plan.committed - plan.saving),
+    () => Math.max(0, plan.availableCents - plan.committedCents - plan.savingCents),
     [plan]
   );
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(plan));
-  }, [plan]);
+    if (isPreview || !user?.id) return;
 
-  const update = (key: keyof WeeklyPlan, value: string) => {
+    let active = true;
+    setSyncStatus("loading");
+    setSyncError(null);
+
+    void (async () => {
+      try {
+        const remotePlan = await fetchWeeklyPlan(user.id, weekStart);
+        if (!active) return;
+
+        if (remotePlan) {
+          setPlan(remotePlan);
+          setSyncStatus("saved");
+          return;
+        }
+
+        const firstPlan = loadLegacyPlan() ?? defaultPlan;
+        setPlan(firstPlan);
+        setSyncStatus("saving");
+        const saved = await saveWeeklyPlan(user.id, firstPlan);
+        if (!active) return;
+        setPlan(saved);
+        setSyncStatus("saved");
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch (cause) {
+        if (!active) return;
+        setSyncStatus("error");
+        setSyncError(cause instanceof Error ? cause.message : "We couldn't load your weekly plan.");
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [isPreview, user?.id]);
+
+  useEffect(() => {
+    if (isPreview || !user?.id || !dirty) return;
+
+    const currentRevision = revision.current;
+    const timer = window.setTimeout(() => {
+      setSyncStatus("saving");
+      setSyncError(null);
+      void saveWeeklyPlan(user.id, plan)
+        .then((saved) => {
+          if (revision.current !== currentRevision) return;
+          setPlan(saved);
+          setDirty(false);
+          setSyncStatus("saved");
+          window.localStorage.removeItem(STORAGE_KEY);
+        })
+        .catch((cause) => {
+          if (revision.current !== currentRevision) return;
+          setSyncStatus("error");
+          setSyncError(cause instanceof Error ? cause.message : "We couldn't sync your changes.");
+        });
+    }, 700);
+
+    return () => window.clearTimeout(timer);
+  }, [dirty, isPreview, plan, user?.id]);
+
+  const update = (key: "availableCents" | "committedCents" | "savingCents", value: string) => {
     const next = Number.parseFloat(value);
-    setPlan((current) => ({ ...current, [key]: Number.isFinite(next) ? Math.max(0, next) : 0 }));
+    revision.current += 1;
+    setPlan((current) => ({
+      ...current,
+      [key]: Number.isFinite(next) ? Math.max(0, Math.round(next * 100)) : 0,
+    }));
+    setDirty(true);
+    setSyncStatus(isPreview ? "preview" : "unsaved");
   };
+
+  const syncLabel = {
+    loading: "Loading your week…",
+    saved: "Synced to your account",
+    unsaved: "Saving shortly…",
+    saving: "Saving…",
+    error: "Not synced yet",
+    preview: "Interactive preview",
+  }[syncStatus];
 
   return (
     <div className="app-page plan-page">
@@ -48,24 +148,27 @@ export function PlanPage() {
           <h1>This week</h1>
           <p>Three numbers are enough to make spending feel calmer.</p>
         </div>
-        <span className="device-draft-badge">Saved on this device</span>
+        <span className={`device-draft-badge sync-status sync-status--${syncStatus}`}>
+          <span aria-hidden="true">{syncStatus === "saved" ? "✓" : "✦"}</span>
+          {syncLabel}
+        </span>
       </header>
 
       <section className="safe-to-spend-card">
         <span className="eyebrow">Safe to spend</span>
-        <strong>£{safeToSpend.toFixed(0)}</strong>
+        <strong>{formatMoney(safeToSpend)}</strong>
         <p>after commitments and your goal contribution</p>
         <div className="plan-balance-bar" aria-hidden="true">
           <span
             className="plan-balance-bar__committed"
             style={{
-              width: `${Math.min(100, (plan.committed / Math.max(1, plan.available)) * 100)}%`,
+              width: `${Math.min(100, (plan.committedCents / Math.max(1, plan.availableCents)) * 100)}%`,
             }}
           />
           <span
             className="plan-balance-bar__saving"
             style={{
-              width: `${Math.min(100, (plan.saving / Math.max(1, plan.available)) * 100)}%`,
+              width: `${Math.min(100, (plan.savingCents / Math.max(1, plan.availableCents)) * 100)}%`,
             }}
           />
           <span className="plan-balance-bar__flex" />
@@ -83,22 +186,22 @@ export function PlanPage() {
           <PlanField
             label="Available"
             helper="Money you can use this week"
-            value={plan.available}
-            onChange={(value) => update("available", value)}
+            value={plan.availableCents}
+            onChange={(value) => update("availableCents", value)}
             tone="violet"
           />
           <PlanField
             label="Committed"
             helper="Bills, travel and essentials"
-            value={plan.committed}
-            onChange={(value) => update("committed", value)}
+            value={plan.committedCents}
+            onChange={(value) => update("committedCents", value)}
             tone="gold"
           />
           <PlanField
             label="Saving"
             helper="Your planned goal contribution"
-            value={plan.saving}
-            onChange={(value) => update("saving", value)}
+            value={plan.savingCents}
+            onChange={(value) => update("savingCents", value)}
             tone="mint"
           />
         </div>
@@ -109,11 +212,14 @@ export function PlanPage() {
           ✦
         </span>
         <div>
-          <h2>{safeToSpend >= 0 ? "Your week has breathing room" : "Let's soften the plan"}</h2>
+          <h2>Your week has breathing room</h2>
           <p>
-            SavePixie keeps this intentionally simple. Categories and cloud sync come after this
-            core weekly view is proven.
+            SavePixie keeps this intentionally simple. Your three numbers now follow your account,
+            while categories and accounting stay out of the way.
           </p>
+          {syncError ? (
+            <p className="plan-sync-error">{syncError} Change any number to retry.</p>
+          ) : null}
         </div>
       </section>
 
@@ -158,13 +264,13 @@ function PlanField({
         <small>{helper}</small>
       </span>
       <span className="plan-field__input">
-        <span>£</span>
+        <span>kr</span>
         <input
           type="number"
           min="0"
           step="1"
           inputMode="decimal"
-          value={value}
+          value={value / 100}
           onChange={(event) => onChange(event.target.value)}
         />
       </span>
