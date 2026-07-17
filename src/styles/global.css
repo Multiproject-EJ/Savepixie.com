@@ -590,6 +590,121 @@ p {
   color: var(--faint);
   font-size: 0.8rem;
 }
+.footer-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.85rem;
+}
+.footer-legal-links a {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+.footer-legal-links a:hover {
+  color: var(--text);
+}
+.landing-status-banner {
+  width: min(1080px, calc(100% - 2rem));
+  margin: 1.2rem auto 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(104, 241, 190, 0.22);
+  border-radius: 18px;
+  background: rgba(104, 241, 190, 0.08);
+}
+.landing-status-banner > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: rgba(104, 241, 190, 0.15);
+  color: var(--mint);
+  font-weight: 950;
+}
+.landing-status-banner div {
+  display: grid;
+  gap: 0.1rem;
+}
+.landing-status-banner small {
+  color: var(--text-soft);
+}
+.legal-page {
+  width: min(900px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: clamp(2.5rem, 8vw, 5rem) 0;
+}
+.legal-hero {
+  display: grid;
+  gap: 0.7rem;
+  max-width: 760px;
+}
+.legal-hero h1 {
+  margin: 0;
+  font-size: clamp(2.35rem, 6vw, 4.5rem);
+  letter-spacing: -0.055em;
+}
+.legal-hero p {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+.legal-draft-badge {
+  width: max-content;
+  padding: 0.42rem 0.68rem;
+  border: 1px solid rgba(255, 190, 92, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 190, 92, 0.07);
+  color: #ffd58f;
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+.legal-switcher {
+  display: flex;
+  gap: 0.4rem;
+  margin: 2rem 0 0.8rem;
+}
+.legal-switcher a {
+  padding: 0.55rem 0.85rem;
+  border-radius: 12px;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+.legal-switcher a.active {
+  background: rgba(123, 63, 255, 0.15);
+  color: var(--violet-light);
+}
+.legal-document {
+  display: grid;
+  gap: 2rem;
+  padding: clamp(1.2rem, 4vw, 2.2rem);
+}
+.legal-document section {
+  display: grid;
+  gap: 0.7rem;
+}
+.legal-document h2,
+.legal-document p {
+  margin: 0;
+}
+.legal-document h2 {
+  font-size: 1.15rem;
+}
+.legal-document p {
+  color: var(--text-soft);
+  line-height: 1.75;
+}
+.legal-back-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
 
 /* Auth */
 .card.auth-card {
@@ -3692,6 +3807,51 @@ p {
   border-color: rgba(255, 119, 138, 0.5);
   background: rgba(255, 119, 138, 0.13);
 }
+.account-delete-modal {
+  display: grid;
+  gap: 0.9rem;
+}
+.account-delete-modal h2,
+.account-delete-modal p {
+  margin: 0;
+}
+.account-delete-modal label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--text-soft);
+}
+.account-delete-modal input {
+  width: 100%;
+  min-height: 48px;
+}
+.account-delete-modal__notice {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(255, 190, 92, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 190, 92, 0.07);
+  color: var(--text-soft);
+  font-size: 0.86rem;
+}
+.account-delete-modal__notice strong {
+  color: #ffd58f;
+}
+.account-delete-modal__error {
+  padding: 0.7rem 0.8rem;
+  border-radius: 14px;
+  background: rgba(255, 119, 138, 0.1);
+  color: #ffacb9;
+  font-size: 0.86rem;
+}
+.account-delete-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  margin-top: 0.25rem;
+}
 
 @media (max-width: 760px) {
   .settings-heading {
@@ -3723,6 +3883,12 @@ p {
   }
   .settings-account-actions__buttons {
     justify-content: flex-start;
+  }
+  .account-delete-modal__actions {
+    flex-direction: column;
+  }
+  .account-delete-modal__actions .button {
+    width: 100%;
   }
 }
 

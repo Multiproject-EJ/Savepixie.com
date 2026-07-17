@@ -35,6 +35,10 @@ disabled until their server-side dependencies and customer safeguards pass the g
 - [x] Verified allocations cannot exceed the linked Savings Home's verified balance.
 - [x] Weekly plans are isolated by user and cannot be read or written across accounts.
 - [x] Leaving a Pact preserves ledger history, removes access, and supports controlled reactivation.
+- [x] Self-service deletion requires password reconfirmation and refuses to orphan an active Stripe
+      subscription.
+- [x] Account deletion transfers active shared Pacts, repairs their totals, and preserves remaining
+      members' history.
 
 ## Gate 3 — web deployment
 
@@ -44,6 +48,7 @@ disabled until their server-side dependencies and customer safeguards pass the g
 - [ ] Test PWA installation, update behavior, offline shell, password reset, and email confirmation.
 - [ ] Add production error monitoring and a minimal privacy-respecting analytics funnel.
 - [ ] Deploy and test the new Pact client against production authentication with two real beta accounts.
+- [x] Confirm production-origin CORS for authenticated browser functions.
 
 ## Gate 4 — paid product
 
@@ -58,8 +63,11 @@ disabled until their server-side dependencies and customer safeguards pass the g
 
 ## Gate 5 — customer safeguards
 
-- [ ] Publish reviewed Terms, Privacy Policy, subscription terms, and refund/cancellation copy.
-- [ ] Add account deletion, data export, retention automation, and a support contact.
+- [ ] Legally review and publish the drafted Terms, Privacy Policy, subscription terms, and
+      refund/cancellation copy after adding the operator identity and jurisdiction.
+- [x] Add self-service account deletion, a private data export, and a support contact.
+- [ ] Finalize legally required billing retention and automate retention for future server-side
+      Account Check reports.
 - [ ] Keep customer savings outside SavePixie; the app records commitments and verified balances only.
 - [ ] Keep Pixie Account Check in sample mode until the real provider agreement, attribution, data
       freshness, completeness, monitoring, and paid-report rules are verified.

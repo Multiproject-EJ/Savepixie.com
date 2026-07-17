@@ -11,6 +11,7 @@ import AuthPage from "./pages/AuthPage";
 import GoalsPage from "./pages/GoalsPage";
 import HomePage from "./pages/HomePage";
 import JourneyPage from "./pages/JourneyPage";
+import LegalPage from "./pages/LegalPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import PactDetailPage from "./pages/PactDetailPage";
 import PlanPage from "./pages/PlanPage";
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
       {
         path: "auth",
         element: <AuthPage />,
+      },
+      {
+        path: "legal/:document",
+        element: <LegalPage />,
       },
     ],
   },
@@ -108,7 +113,7 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <AuthProvider>
-      <RouterProvider router={router} />
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />
     </AuthProvider>
   </React.StrictMode>
 );

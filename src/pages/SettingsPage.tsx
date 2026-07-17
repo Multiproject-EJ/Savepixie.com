@@ -4,6 +4,7 @@ import { useAuth } from "../app/AuthProvider";
 import { useSavings, type SavingsHomeInput } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
 import { createAccountExport, downloadAccountExport } from "../features/account/export";
+import { deleteAccount } from "../features/account/api";
 import type { SavingsHome } from "../features/goals/types";
 
 export function SettingsPage() {
@@ -14,6 +15,11 @@ export function SettingsPage() {
   const isPreview = basePath === "/preview/app";
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
 
   const exportData = async () => {
     if (!user?.id || isPreview) return;
@@ -39,10 +45,25 @@ export function SettingsPage() {
     navigate("/");
   };
 
-  const deletionSubject = encodeURIComponent("SavePixie account deletion request");
-  const deletionBody = encodeURIComponent(
-    `Please delete my SavePixie account${user?.email ? ` for ${user.email}` : ""}.`
-  );
+  const handleDeleteAccount = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (deleteConfirmation !== "DELETE" || !deletePassword || isPreview) return;
+
+    setDeleting(true);
+    setDeleteMessage(null);
+    try {
+      await deleteAccount(deletePassword);
+      navigate("/?account=deleted", { replace: true });
+    } catch (cause) {
+      setDeleteMessage(
+        cause instanceof Error
+          ? cause.message
+          : "We couldn't safely delete your account. Please contact support."
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="app-page settings-page">
@@ -127,7 +148,7 @@ export function SettingsPage() {
       <section className="surface-card settings-account-actions">
         <div>
           <span className="eyebrow">Account controls</span>
-          <h2>Sign out or request deletion</h2>
+          <h2>Sign out or delete your account</h2>
           <p>
             Deletion removes the SavePixie account and saving records. It never affects money held
             at your bank.
@@ -137,18 +158,104 @@ export function SettingsPage() {
           <button className="button secondary" type="button" onClick={handleSignOut}>
             {isPreview ? "Leave preview" : "Sign out"}
           </button>
-          <a
+          <button
             className="button danger-button"
-            href={`mailto:support@savepixie.com?subject=${deletionSubject}&body=${deletionBody}`}
+            type="button"
+            onClick={() => setDeleteDialogOpen(true)}
           >
-            Request account deletion
-          </a>
+            {isPreview ? "Preview deletion safety" : "Delete account"}
+          </button>
         </div>
         <small>
-          Self-service deletion is still a launch blocker; this request route remains available in
-          the meantime.
+          This permanently removes your SavePixie records. A shared Pact with active members is
+          handed to its longest-standing remaining member; export anything you want to keep first.
         </small>
       </section>
+
+      {deleteDialogOpen ? (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onMouseDown={() => !deleting && setDeleteDialogOpen(false)}
+        >
+          <form
+            className="pixie-modal account-delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="account-delete-title"
+            onSubmit={handleDeleteAccount}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <span className="eyebrow">Permanent account action</span>
+            <h2 id="account-delete-title">Delete your SavePixie account?</h2>
+            <p>
+              This deletes your login, profile, Savings Homes, plans, and personal saving records.
+              Shared Pacts continue for their remaining members. It does not—and cannot—touch money
+              held in your real bank account.
+            </p>
+            <div className="account-delete-modal__notice">
+              <strong>Before you continue</strong>
+              <span>
+                Download your data first if you want a copy. If you have Pro, cancel it in Billing
+                before deleting the account.
+              </span>
+            </div>
+            <label>
+              <span>Current password</span>
+              <input
+                type="password"
+                autoComplete="current-password"
+                value={deletePassword}
+                onChange={(event) => setDeletePassword(event.target.value)}
+                disabled={deleting}
+                required
+              />
+            </label>
+            <label>
+              <span>
+                Type <strong>DELETE</strong> to confirm
+              </span>
+              <input
+                value={deleteConfirmation}
+                onChange={(event) => setDeleteConfirmation(event.target.value)}
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                disabled={deleting}
+                required
+              />
+            </label>
+            {deleteMessage ? (
+              <p className="account-delete-modal__error" role="alert">
+                {deleteMessage}
+              </p>
+            ) : null}
+            <div className="account-delete-modal__actions">
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setDeleteDialogOpen(false)}
+                disabled={deleting}
+              >
+                Keep my account
+              </button>
+              <button
+                className="button danger-button"
+                type="submit"
+                disabled={
+                  isPreview || deleting || deleteConfirmation !== "DELETE" || !deletePassword
+                }
+              >
+                {isPreview
+                  ? "Preview only"
+                  : deleting
+                    ? "Deleting securely…"
+                    : "Permanently delete"}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </div>
   );
 }

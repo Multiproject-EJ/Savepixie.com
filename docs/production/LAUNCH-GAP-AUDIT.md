@@ -23,7 +23,14 @@ Updated: 2026-07-17
 - Weekly plans now sync per account and week, migrate an existing device-only plan once, preserve week
   history, and pass a separate two-user RLS isolation test against the live project.
 - The avatar now opens account settings with editable Savings Home details, a private JSON account
-  export, a support route, and honest interim deletion-request copy.
+  export, a support route, and secure self-service deletion with password reconfirmation.
+- The protected deletion function is live, rejects anonymous callers, checks Stripe directly before
+  deleting a mapped customer, transfers active shared Pacts, repairs their totals, and removes
+  Auth-linked SavePixie records through verified cascades.
+- All four rollback-safe Supabase acceptance suites pass, production-origin CORS is verified for the
+  signed-in browser functions, and the live security advisor remains clean.
+- Terms and Privacy routes now exist as clearly labelled closed-beta drafts; operator identity,
+  jurisdiction, subscription/refund language, and legal approval remain explicit release gates.
 - Pact detail now includes privacy-filtered Circle progress, each member's commitment and visibility
   controls, safe leaving/reactivation, owner archiving, invitations, and explicit 1:1/non-custody copy.
 - A rollback-safe three-person acceptance test proves that direct table access cannot bypass Circle
@@ -37,8 +44,8 @@ Updated: 2026-07-17
 ### Product
 
 - Test the new client with two real authenticated beta accounts and confirm invitation recovery paths.
-- Replace the interim deletion-request route with secure self-service deletion; verify retention and
-  the new data export end to end with a real beta account.
+- Verify deletion and the data export end to end with a disposable authenticated beta account.
+- Finalize legally required billing retention and the future Account Check server-side retention job.
 - Finish accessible empty, offline, loading, and error states for every core path.
 
 ### Commercial

@@ -512,6 +512,10 @@ export type Database = {
         Args: { p_pact_id: string };
         Returns: undefined;
       };
+      prepare_savepixie_account_deletion: {
+        Args: { p_user_id: string };
+        Returns: number;
+      };
       process_stripe_subscription_event: {
         Args: {
           p_cancel_at: string;

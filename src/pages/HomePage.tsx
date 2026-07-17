@@ -1,9 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import PixieMark from "../components/PixieMark";
 
 function HomePage() {
+  const [searchParams] = useSearchParams();
+  const accountDeleted = searchParams.get("account") === "deleted";
+
   return (
     <div className="landing-page">
+      {accountDeleted ? (
+        <div className="landing-status-banner" role="status">
+          <span aria-hidden="true">✓</span>
+          <div>
+            <strong>Your SavePixie account has been deleted.</strong>
+            <small>Your real bank account and savings were never changed.</small>
+          </div>
+        </div>
+      ) : null}
       <section className="landing-hero">
         <div className="landing-hero__copy">
           <span className="landing-pill">

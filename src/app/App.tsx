@@ -59,6 +59,11 @@ export function App() {
           <span>SavePixie</span>
         </Link>
         <p>Small choices today. Brighter tomorrows.</p>
+        <nav className="footer-legal-links" aria-label="Legal and support">
+          <Link to="/legal/terms">Terms</Link>
+          <Link to="/legal/privacy">Privacy</Link>
+          <a href="mailto:support@savepixie.com">Support</a>
+        </nav>
       </footer>
     </div>
   );
