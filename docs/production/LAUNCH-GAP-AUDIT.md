@@ -51,6 +51,9 @@ Updated: 2026-07-17
   callback deadlock, and a live client probe proved that a follow-up Data API request completes. The
   private savings provider is keyed by Auth user ID so an account switch cannot retain the previous
   account's in-memory goals while the new account loads.
+- Sign-in, sign-up, reset, and password-update failures now map documented Supabase Auth error codes to
+  calm customer copy. Sign-up requires an eight-character password and an explicit matching
+  confirmation before any account request is sent.
 
 ## Launch blockers
 
@@ -58,6 +61,8 @@ Updated: 2026-07-17
 
 - Test the new client with two real authenticated beta accounts and confirm invitation recovery paths.
 - Verify deletion and the data export end to end with a disposable authenticated beta account.
+- Configure a branded production SMTP sender and Auth email templates; the default Supabase sender is
+  rate-limited for development and is not a customer launch path.
 - Finalize legally required billing retention and the future Account Check server-side retention job.
 - Finish recoverable action-level data-error states for the remaining secondary paths; session,
   initial-data, offline, and fatal-render states are complete.

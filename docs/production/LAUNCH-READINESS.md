@@ -48,6 +48,8 @@ disabled until their server-side dependencies and customer safeguards pass the g
 - [x] Verify the production offline shell for `/` and a direct `/auth` route with the server unavailable.
 - [ ] Test PWA installation and update behavior on a physical phone, plus password reset and email
       confirmation on the real domain.
+- [ ] Configure production SMTP, branded confirmation/recovery templates, sender authentication, and
+      delivery monitoring.
 - [ ] Add production error monitoring and a minimal privacy-respecting analytics funnel.
 - [ ] Deploy and test the new Pact client against production authentication with two real beta accounts.
 - [x] Confirm production-origin CORS for authenticated browser functions.
