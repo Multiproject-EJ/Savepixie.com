@@ -46,6 +46,11 @@ Updated: 2026-07-17
   and Chrome proved that both `/` and a direct `/auth` load reopen from the cached shell after the
   preview server is stopped. A global connection notice explains that writes need a connection, and a
   branded render-error recovery screen protects customers from a blank application.
+- Session initialization and the first private-data load now have branded, accessible retry states.
+  Profile preparation is deferred outside Supabase's auth-state callback to avoid its documented
+  callback deadlock, and a live client probe proved that a follow-up Data API request completes. The
+  private savings provider is keyed by Auth user ID so an account switch cannot retain the previous
+  account's in-memory goals while the new account loads.
 
 ## Launch blockers
 
@@ -54,8 +59,8 @@ Updated: 2026-07-17
 - Test the new client with two real authenticated beta accounts and confirm invitation recovery paths.
 - Verify deletion and the data export end to end with a disposable authenticated beta account.
 - Finalize legally required billing retention and the future Account Check server-side retention job.
-- Finish accessible loading and recoverable data-error states for every core path; the global offline
-  and fatal-render states are complete.
+- Finish recoverable action-level data-error states for the remaining secondary paths; session,
+  initial-data, offline, and fatal-render states are complete.
 
 ### Commercial
 

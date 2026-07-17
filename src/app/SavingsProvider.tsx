@@ -43,6 +43,7 @@ type SavingsContextValue = {
   profile: ProfileRow | null;
   goals: Goal[];
   savingsHomes: SavingsHome[];
+  ready: boolean;
   loading: boolean;
   error: string | null;
   displayName: string;
@@ -71,6 +72,7 @@ export function SavingsProvider({ children }: PropsWithChildren) {
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [savingsHomes, setSavingsHomes] = useState<SavingsHome[]>([]);
+  const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,6 +81,7 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       setProfile(null);
       setGoals([]);
       setSavingsHomes([]);
+      setReady(false);
       setLoading(false);
       return;
     }
@@ -95,6 +98,7 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       setProfile(nextProfile);
       setGoals(nextGoals);
       setSavingsHomes(nextHomes);
+      setReady(true);
     } catch (cause) {
       setError(errorMessage(cause, "We couldn't load your SavePixie space."));
     } finally {
@@ -210,6 +214,7 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       profile,
       goals,
       savingsHomes,
+      ready,
       loading,
       error,
       displayName,
@@ -231,6 +236,7 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       joinSharedPact,
       loading,
       profile,
+      ready,
       refresh,
       savingsHomes,
       startFirstGoal,
@@ -386,6 +392,7 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
       profile: previewProfile,
       goals,
       savingsHomes: [previewHome],
+      ready: true,
       loading: false,
       error: null,
       displayName: previewProfile.display_name || "Saver",

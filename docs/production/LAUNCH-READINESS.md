@@ -51,6 +51,8 @@ disabled until their server-side dependencies and customer safeguards pass the g
 - [ ] Add production error monitoring and a minimal privacy-respecting analytics funnel.
 - [ ] Deploy and test the new Pact client against production authentication with two real beta accounts.
 - [x] Confirm production-origin CORS for authenticated browser functions.
+- [x] Add recoverable session and initial private-data loading states, and defer database calls outside
+      the Supabase auth-state callback.
 
 ## Gate 4 — paid product
 

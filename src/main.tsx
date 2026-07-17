@@ -2,8 +2,9 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import App from "./app/App";
-import { AuthProvider } from "./app/AuthProvider";
+import { AuthProvider, useAuth } from "./app/AuthProvider";
 import ProtectedRoute from "./app/ProtectedRoute";
+import SavingsGate from "./app/SavingsGate";
 import { SavingsPreviewProvider, SavingsProvider } from "./app/SavingsProvider";
 import AppShell from "./components/AppShell";
 import AppErrorBoundary from "./components/AppErrorBoundary";
@@ -45,9 +46,7 @@ const router = createBrowserRouter([
     path: "/app",
     element: (
       <ProtectedRoute>
-        <SavingsProvider>
-          <Outlet />
-        </SavingsProvider>
+        <AuthenticatedSavingsArea />
       </ProtectedRoute>
     ),
     children: [
@@ -103,6 +102,18 @@ const router = createBrowserRouter([
     : []),
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
+
+function AuthenticatedSavingsArea() {
+  const { user } = useAuth();
+
+  return (
+    <SavingsProvider key={user?.id}>
+      <SavingsGate>
+        <Outlet />
+      </SavingsGate>
+    </SavingsProvider>
+  );
+}
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {

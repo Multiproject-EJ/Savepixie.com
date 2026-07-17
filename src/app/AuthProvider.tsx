@@ -15,7 +15,9 @@ type AuthContextValue = {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  sessionError: string | null;
   recoveryMode: boolean;
+  retrySession: () => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signUpWithPassword: (
     email: string,
@@ -33,6 +35,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   const [recoveryMode, setRecoveryMode] = useState(
     () =>
       window.location.hash.includes("type=recovery") ||
@@ -41,26 +44,45 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     let mounted = true;
+    let authEventReceived = false;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-      if (data.session?.user) {
-        void ensureProfile(data.session.user);
-      }
-    });
+    void supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (error) throw error;
+        if (!mounted || authEventReceived) return;
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        setSessionError(null);
+      })
+      .catch(() => {
+        if (!mounted || authEventReceived) return;
+        setSession(null);
+        setUser(null);
+        setSessionError(
+          "We couldn’t check your SavePixie session. Check your connection and retry."
+        );
+      })
+      .finally(() => {
+        if (mounted && !authEventReceived) setLoading(false);
+      });
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      authEventReceived = true;
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setLoading(false);
+      setSessionError(null);
       if (event === "PASSWORD_RECOVERY") {
         setRecoveryMode(true);
       }
       if (nextSession?.user) {
-        void ensureProfile(nextSession.user);
+        // Supabase warns against starting another API request inside this callback.
+        window.setTimeout(() => {
+          void ensureProfile(nextSession.user).catch((error) =>
+            console.error("SavePixie could not prepare the customer profile", error)
+          );
+        }, 0);
       }
     });
 
@@ -68,6 +90,23 @@ export function AuthProvider({ children }: PropsWithChildren) {
       mounted = false;
       listener.subscription.unsubscribe();
     };
+  }, []);
+
+  const retrySession = useCallback(async () => {
+    setLoading(true);
+    setSessionError(null);
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+    } catch {
+      setSession(null);
+      setUser(null);
+      setSessionError("We couldn’t check your SavePixie session. Check your connection and retry.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const signInWithPassword = useCallback(async (email: string, password: string) => {
@@ -129,7 +168,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       session,
       user,
       loading,
+      sessionError,
       recoveryMode,
+      retrySession,
       signInWithPassword,
       signUpWithPassword,
       signOut,
@@ -140,7 +181,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       loading,
       recoveryMode,
       resetPassword,
+      retrySession,
       session,
+      sessionError,
       signInWithPassword,
       signOut,
       signUpWithPassword,
