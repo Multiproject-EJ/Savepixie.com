@@ -42,6 +42,8 @@ disabled until their server-side dependencies and customer safeguards pass the g
 
 ## Gate 3 — web deployment
 
+- [x] Capture the current AlphaStocks forwarding chain, authoritative DNS, exact GitHub Pages records,
+      acceptance checks, and rollback values in `DOMAIN-CUTOVER.md`.
 - [ ] Point `savepixie.com` and `www.savepixie.com` to the selected GitHub Pages deployment.
 - [ ] Confirm HTTPS and canonical-host redirects.
 - [ ] Confirm direct-route refreshes use the generated `404.html` SPA fallback.

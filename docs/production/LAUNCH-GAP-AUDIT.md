@@ -87,6 +87,10 @@ Updated: 2026-07-17
   reset, and email confirmation on the real domain.
 - Add privacy-respecting error monitoring and a minimal conversion funnel.
 
+The checked cutover and rollback records are captured in `DOMAIN-CUTOVER.md`. Current authoritative
+DNS is still at GoDaddy and the public redirect chain still ends at AlphaStocks; no live DNS change has
+been made.
+
 ## Safety boundary
 
 SavePixie records promises and evidence; it does not take custody of savings. Manual saves are visibly
