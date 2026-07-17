@@ -12,6 +12,7 @@ import {
   type Entitlement,
 } from "../features/billing/api";
 import type { SavingsHome } from "../features/goals/types";
+import { useModalDialog } from "../lib/useModalDialog";
 
 export function SettingsPage() {
   const { basePath } = useOutletContext<AppShellOutletContext>();
@@ -31,6 +32,11 @@ export function SettingsPage() {
     isPreview ? "ready" : "loading"
   );
   const [billingMessage, setBillingMessage] = useState<string | null>(null);
+  const deleteDialogRef = useModalDialog<HTMLFormElement>(
+    deleteDialogOpen,
+    () => setDeleteDialogOpen(false),
+    !deleting
+  );
   const billingEnabled = import.meta.env.VITE_STRIPE_ENABLED === "true";
   const hasPro = entitlement?.has_pro_access === true;
   const hasManageableSubscription = Boolean(
@@ -315,10 +321,12 @@ export function SettingsPage() {
           onMouseDown={() => !deleting && setDeleteDialogOpen(false)}
         >
           <form
+            ref={deleteDialogRef}
             className="pixie-modal account-delete-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="account-delete-title"
+            tabIndex={-1}
             onSubmit={handleDeleteAccount}
             onMouseDown={(event) => event.stopPropagation()}
           >

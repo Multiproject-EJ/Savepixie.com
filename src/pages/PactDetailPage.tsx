@@ -12,6 +12,7 @@ import {
 } from "../features/goals/api";
 import type { PactMemberSummary, PactMembership, PactPrivacyMode } from "../features/goals/types";
 import { formatMoney, formatShortDate, goalProgress } from "../lib/format";
+import { useModalDialog } from "../lib/useModalDialog";
 
 const privacyOptions: Array<{
   value: PactPrivacyMode;
@@ -55,6 +56,11 @@ export function PactDetailPage() {
   const [confirmAction, setConfirmAction] = useState<"leave" | "archive" | null>(null);
   const [acting, setActing] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const confirmDialogRef = useModalDialog<HTMLElement>(
+    confirmAction !== null,
+    () => setConfirmAction(null),
+    !acting
+  );
 
   const loadMembers = async () => {
     if (!goal || !currentUserId) return;
@@ -398,13 +404,15 @@ export function PactDetailPage() {
         <div
           className="modal-backdrop"
           role="presentation"
-          onMouseDown={() => setConfirmAction(null)}
+          onMouseDown={() => !acting && setConfirmAction(null)}
         >
           <section
+            ref={confirmDialogRef}
             className="pixie-modal pact-confirm-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="pact-confirm-title"
+            tabIndex={-1}
             onMouseDown={(event) => event.stopPropagation()}
           >
             <span className="eyebrow">Please check</span>
@@ -420,6 +428,7 @@ export function PactDetailPage() {
                 className="button secondary"
                 type="button"
                 onClick={() => setConfirmAction(null)}
+                disabled={acting}
               >
                 Keep Pact
               </button>

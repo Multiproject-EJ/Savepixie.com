@@ -5,6 +5,7 @@ import { useSavings } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
 import { goalIdeas, type GoalIdea } from "../data/savingsMoves";
 import { formatMoney, formatShortDate, goalProgress } from "../lib/format";
+import { useModalDialog } from "../lib/useModalDialog";
 
 export function GoalsPage() {
   const { user } = useAuth();
@@ -258,6 +259,7 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
   const [deadline, setDeadline] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const dialogRef = useModalDialog<HTMLElement>(open, onClose, !submitting);
 
   useEffect(() => {
     if (!open || !idea) return;
@@ -303,12 +305,18 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
   };
 
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+    <div
+      className="modal-backdrop"
+      role="presentation"
+      onMouseDown={() => !submitting && onClose()}
+    >
       <section
+        ref={dialogRef}
         className="pixie-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="new-goal-title"
+        tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="pixie-modal__header">
@@ -317,7 +325,13 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
             <h2 id="new-goal-title">What are you saving for?</h2>
             {idea ? <p className="dialog-motivation">{idea.motivation}</p> : null}
           </div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
+          <button
+            className="icon-button"
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            disabled={submitting}
+          >
             ×
           </button>
         </header>

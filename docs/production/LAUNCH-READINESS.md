@@ -79,6 +79,8 @@ disabled until their server-side dependencies and customer safeguards pass the g
 - [ ] Legally review and publish the drafted Terms, Privacy Policy, subscription terms, and
       refund/cancellation copy after adding the operator identity and jurisdiction.
 - [x] Add self-service account deletion, a private data export, and a support contact.
+- [x] Trap and restore focus, support Escape, lock background scrolling, and prevent accidental closure
+      during saving or destructive modal actions.
 - [ ] Finalize legally required billing retention and automate retention for future server-side
       Account Check reports.
 - [ ] Keep customer savings outside SavePixie; the app records commitments and verified balances only.

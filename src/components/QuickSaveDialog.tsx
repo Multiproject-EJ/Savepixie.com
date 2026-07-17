@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useSavings } from "../app/SavingsProvider";
 import { gentleHaptic } from "../lib/feedback";
 import { formatMoney } from "../lib/format";
+import { useModalDialog } from "../lib/useModalDialog";
 
 type QuickSaveDialogProps = {
   open: boolean;
@@ -17,6 +18,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const dialogRef = useModalDialog<HTMLElement>(open, onClose, !submitting);
 
   useEffect(() => {
     if (!open) return;
@@ -25,17 +27,6 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
     setNote("");
     setError(null);
   }, [goals, initialGoalId, open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [onClose, open]);
 
   if (!open) return null;
 
@@ -70,12 +61,18 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
   };
 
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+    <div
+      className="modal-backdrop"
+      role="presentation"
+      onMouseDown={() => !submitting && onClose()}
+    >
       <section
+        ref={dialogRef}
         className="pixie-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="quick-save-title"
+        tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="pixie-modal__header">
@@ -91,6 +88,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
             type="button"
             onClick={onClose}
             aria-label="Close Quick Save"
+            disabled={submitting}
           >
             ×
           </button>

@@ -60,6 +60,10 @@ Updated: 2026-07-17
 - Returning installed-app customers now receive a compact, dismissible “fresh SavePixie is ready”
   notice when a replacement service worker finishes installing. The app checks again when it returns
   to the foreground and lets the customer choose the safe reload moment.
+- Quick Save, new Pact, Pact archive/leave, and account deletion now share a keyboard-safe modal
+  contract: focus enters and stays inside the dialog, Escape closes only when safe, background scroll
+  is locked, focus returns to the launching control, and an in-flight save or destructive action
+  cannot be dismissed accidentally.
 
 ## Launch blockers
 
