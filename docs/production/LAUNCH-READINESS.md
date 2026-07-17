@@ -45,7 +45,9 @@ disabled until their server-side dependencies and customer safeguards pass the g
 - [ ] Point `savepixie.com` and `www.savepixie.com` to the selected GitHub Pages deployment.
 - [ ] Confirm HTTPS and canonical-host redirects.
 - [ ] Confirm direct-route refreshes use the generated `404.html` SPA fallback.
-- [ ] Test PWA installation, update behavior, offline shell, password reset, and email confirmation.
+- [x] Verify the production offline shell for `/` and a direct `/auth` route with the server unavailable.
+- [ ] Test PWA installation and update behavior on a physical phone, plus password reset and email
+      confirmation on the real domain.
 - [ ] Add production error monitoring and a minimal privacy-respecting analytics funnel.
 - [ ] Deploy and test the new Pact client against production authentication with two real beta accounts.
 - [x] Confirm production-origin CORS for authenticated browser functions.

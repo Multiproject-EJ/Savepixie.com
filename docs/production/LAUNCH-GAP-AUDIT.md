@@ -42,6 +42,10 @@ Updated: 2026-07-17
 - The client compiles and builds after moving its goal API onto Savings Pacts and Savings Homes.
 - Chrome visual QA passed at 390 × 844 and 1440 × 900 for onboarding, Pact choice, Savings Home setup,
   Pact cards, join controls, pending Quick Save, and the synced weekly plan.
+- The production service worker now uses a network-first asset strategy with type-safe offline failures,
+  and Chrome proved that both `/` and a direct `/auth` load reopen from the cached shell after the
+  preview server is stopped. A global connection notice explains that writes need a connection, and a
+  branded render-error recovery screen protects customers from a blank application.
 
 ## Launch blockers
 
@@ -50,7 +54,8 @@ Updated: 2026-07-17
 - Test the new client with two real authenticated beta accounts and confirm invitation recovery paths.
 - Verify deletion and the data export end to end with a disposable authenticated beta account.
 - Finalize legally required billing retention and the future Account Check server-side retention job.
-- Finish accessible empty, offline, loading, and error states for every core path.
+- Finish accessible loading and recoverable data-error states for every core path; the global offline
+  and fatal-render states are complete.
 
 ### Commercial
 

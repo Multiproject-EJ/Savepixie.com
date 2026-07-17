@@ -6,6 +6,8 @@ import { AuthProvider } from "./app/AuthProvider";
 import ProtectedRoute from "./app/ProtectedRoute";
 import { SavingsPreviewProvider, SavingsProvider } from "./app/SavingsProvider";
 import AppShell from "./components/AppShell";
+import AppErrorBoundary from "./components/AppErrorBoundary";
+import NetworkStatus from "./components/NetworkStatus";
 import AccountCheckPage from "./pages/AccountCheckPage";
 import AuthPage from "./pages/AuthPage";
 import GoalsPage from "./pages/GoalsPage";
@@ -112,8 +114,11 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} future={{ v7_startTransition: true }} />
-    </AuthProvider>
+    <AppErrorBoundary>
+      <AuthProvider>
+        <NetworkStatus />
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      </AuthProvider>
+    </AppErrorBoundary>
   </React.StrictMode>
 );

@@ -1,6 +1,6 @@
 declare const self: ServiceWorkerGlobalScope;
 
-const CACHE_NAME = "savepixie-shell-v2";
+const CACHE_NAME = "savepixie-shell-v3";
 const ASSETS_TO_CACHE = ["/", "/index.html", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -55,24 +55,17 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) {
-        return cached;
+    caches.open(CACHE_NAME).then(async (cache) => {
+      try {
+        const response = await fetch(request);
+        if (response.status === 200 && response.type === "basic") {
+          void cache.put(request, response.clone());
+        }
+        return response;
+      } catch {
+        const cached = await cache.match(request);
+        return cached ?? new Response(null, { status: 503, statusText: "Offline" });
       }
-
-      return caches.open(CACHE_NAME).then((cache) =>
-        fetch(request)
-          .then((response) => {
-            if (response && response.status === 200 && response.type === "basic") {
-              cache.put(request, response.clone());
-            }
-            return response;
-          })
-          .catch(async () => {
-            const fallback = await caches.match("/index.html");
-            return fallback ?? new Response(null, { status: 503 });
-          })
-      );
     })
   );
 });

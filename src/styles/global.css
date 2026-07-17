@@ -807,6 +807,113 @@ p {
   border: 1px solid rgba(56, 223, 198, 0.25);
 }
 
+.network-status {
+  position: fixed;
+  z-index: 120;
+  top: max(0.75rem, env(safe-area-inset-top));
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(calc(100vw - 1.5rem), 28rem);
+  padding: 0.72rem 0.9rem;
+  border: 1px solid var(--border-bright);
+  border-radius: 1rem;
+  background: rgba(25, 17, 51, 0.96);
+  box-shadow: 0 12px 34px rgba(2, 0, 12, 0.42);
+  color: var(--ink);
+  transform: translateX(-50%);
+  backdrop-filter: blur(16px);
+  animation: network-status-in 240ms ease-out both;
+}
+
+.network-status > span {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.8rem;
+  background: rgba(179, 148, 255, 0.14);
+  color: var(--violet-light);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.network-status p {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+}
+
+.network-status small {
+  color: var(--muted);
+  line-height: 1.25;
+}
+
+.network-status--restored {
+  border-color: rgba(56, 223, 198, 0.3);
+}
+
+.network-status--restored > span {
+  background: rgba(56, 223, 198, 0.13);
+  color: var(--mint-light);
+}
+
+.fatal-error-shell {
+  display: grid;
+  min-height: 100dvh;
+  padding: max(1.5rem, env(safe-area-inset-top)) 1rem max(1.5rem, env(safe-area-inset-bottom));
+  place-items: center;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(123, 63, 255, 0.24), transparent 36rem),
+    radial-gradient(circle at 90% 85%, rgba(56, 223, 198, 0.12), transparent 34rem), var(--bg);
+}
+
+.fatal-error-card {
+  display: grid;
+  justify-items: center;
+  width: min(100%, 33rem);
+  padding: clamp(1.6rem, 6vw, 3rem);
+  border: 1px solid var(--border);
+  border-radius: 1.8rem;
+  background: rgba(25, 17, 51, 0.86);
+  box-shadow: var(--shadow);
+  text-align: center;
+  backdrop-filter: blur(18px);
+}
+
+.fatal-error-card h1 {
+  margin: 0.45rem 0 0.6rem;
+}
+
+.fatal-error-card p {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+}
+
+.fatal-error-card .button-row {
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 1.1rem;
+}
+
+.fatal-error-card .button {
+  flex: 1 1 10rem;
+}
+
+.fatal-error-card > a {
+  color: var(--mint);
+  font-weight: 700;
+}
+
+@keyframes network-status-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -0.6rem);
+  }
+}
+
 /* App shell */
 .app-shell {
   min-height: 100vh;
