@@ -73,6 +73,8 @@ disabled until their server-side dependencies and customer safeguards pass the g
       production feature flag.
 - [x] Recheck Stripe customer ownership in Checkout/Portal, bind subscription webhooks to the private
       customer mapping, and probe the deployed anonymous/unsigned rejection boundary.
+- [x] Scan the tracked launch tree for Stripe, SMTP, Mailgun, Supabase secret, service-role value, and
+      secret-bearing `VITE_` patterns; only SQL role names remain and no credential value is present.
 - [ ] Verify Stripe webhooks, store webhook IDs for idempotency, and derive entitlements server-side.
 - [ ] Complete upgrade, cancellation, failed-payment, refund, and restore-purchase flows.
 - [x] Add an honest feature-flagged Settings offer with first-trial and returning-customer copy.
