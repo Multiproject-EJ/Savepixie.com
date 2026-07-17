@@ -71,6 +71,8 @@ disabled until their server-side dependencies and customer safeguards pass the g
 - [ ] Create Stripe product, price, seven-day trial, and tax configuration.
 - [x] Create and deploy authenticated server-side Checkout and customer-portal sessions behind the
       production feature flag.
+- [x] Recheck Stripe customer ownership in Checkout/Portal, bind subscription webhooks to the private
+      customer mapping, and probe the deployed anonymous/unsigned rejection boundary.
 - [ ] Verify Stripe webhooks, store webhook IDs for idempotency, and derive entitlements server-side.
 - [ ] Complete upgrade, cancellation, failed-payment, refund, and restore-purchase flows.
 - [x] Add an honest feature-flagged Settings offer with first-trial and returning-customer copy.

@@ -61,6 +61,19 @@ Deno.serve(async (request) => {
 
     let customerId = mapping?.stripe_customer_id as string | undefined;
 
+    if (customerId) {
+      const customer = await stripe.customers.retrieve(customerId);
+      if (customer.deleted) {
+        customerId = undefined;
+      } else if (customer.metadata.supabase_user_id !== user.id) {
+        return jsonResponse(
+          request,
+          { error: "This billing account needs support before Checkout can open." },
+          409
+        );
+      }
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create(
         {

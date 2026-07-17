@@ -28,6 +28,9 @@ acceptance passes.
   subscription Checkout Session. It rejects any configured price that is not an active recurring
   29 NOK monthly price and grants the seven-day trial only when no prior SavePixie entitlement exists.
 - `create-portal-session` verifies the user and creates a short-lived Stripe Billing Portal Session.
+- Checkout re-retrieves any mapped Stripe customer before reuse; a deleted customer is replaced and a
+  customer whose immutable SavePixie user metadata does not match is rejected. Portal performs the
+  same ownership check and refuses deleted or mismatched customers.
 - `stripe-webhook` is intentionally configured with `verify_jwt = false`; it verifies the raw request
   body with `STRIPE_WEBHOOK_SIGNING_SECRET` before accepting an event.
 - `billing_customers` maps one Supabase user to one Stripe customer.
@@ -37,13 +40,16 @@ acceptance passes.
   and transactional.
 - The webhook refuses to grant SavePixie Pro when the subscription item does not match the configured
   SavePixie price ID.
+- Subscription events resolve their owner from the private `billing_customers` mapping and reject any
+  conflicting metadata UUID. Completed Checkout events must be subscription-mode events for a
+  recognized suite product before they may update that mapping.
 
 The Edge Functions pin Stripe SDK `22.3.2`, whose default API version is `2026-06-24.dahlia`, and
 Supabase JavaScript SDK `2.75.0`.
 
 ## Required Supabase secrets
 
-Set these only on the dedicated SavePixie project:
+Set these only on the shared WalletHabit Suite project used by SavePixie:
 
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SIGNING_SECRET`
@@ -69,7 +75,9 @@ service-role value must never be added to GitHub Pages variables or any `VITE_` 
 
 ## Test-mode acceptance
 
-- A signed-out request cannot create Checkout or Portal sessions.
+- [x] A signed-out request cannot create Checkout or Portal sessions: both deployed functions return
+      `401` without an authorization header.
+- [x] An unsigned webhook request returns `400` before processing.
 - A signed-in free user receives a Stripe-hosted Checkout URL.
 - A returning customer who previously had an entitlement receives no second free trial.
 - Checkout displays the 29 kr monthly price and seven-day trial before confirmation.
@@ -83,7 +91,8 @@ service-role value must never be added to GitHub Pages variables or any `VITE_` 
 
 ## Activation sequence
 
-The migrations, three function shells, Settings offer, and server-side Pro boundary are deployed.
+The migrations, ownership-hardened functions, Settings offer, and server-side Pro boundary are
+deployed. Checkout v5 and Portal/Webhook v4 are active but customer activation remains disabled.
 Next, set test-mode secrets, configure the webhook and portal, run the acceptance suite, and review
 the final conversion screen against the owner's reference video. Set `VITE_STRIPE_ENABLED=true` only
 after those checks pass; that single production flag activates the visible Stripe action.

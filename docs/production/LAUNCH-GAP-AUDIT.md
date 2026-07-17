@@ -33,6 +33,10 @@ Updated: 2026-07-17
   Basic, additional Pacts and groups of up to ten on Pro, with no destructive downgrade behavior.
 - The feature-flagged Settings offer shows the seven-day trial and 29 kr renewal plainly; Checkout
   validates the exact price configuration, and the webhook rejects mismatched price IDs.
+- Checkout and Portal now re-retrieve the mapped Stripe customer and require matching SavePixie user
+  metadata before opening any hosted billing surface. Webhooks resolve subscription ownership from
+  the private customer mapping and reject conflicting metadata. The active deployed versions reject
+  anonymous Checkout/Portal requests with `401` and unsigned webhook requests with `400`.
 - Terms and Privacy routes now exist as clearly labelled closed-beta drafts; operator identity,
   jurisdiction, subscription/refund language, and legal approval remain explicit release gates.
 - Pact detail now includes privacy-filtered Circle progress, each member's commitment and visibility
