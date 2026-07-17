@@ -1,158 +1,75 @@
 # SavePixie Supabase and RLS Audit
 
-Status: local repository audit complete; live SavePixie project verification pending  
-Audited: 2026-07-15
+Status: shared production foundation installed and live authorization tests passed
+Verified: 2026-07-17
 
-## Scope
+## Production project
 
-This audit covers:
+- Project: `WalletHabit Suite`
+- Project reference: `iuqgfpcsaclbaveamhvg`
+- Region: `eu-west-1`
+- Postgres: 17
+- Intended products: SavePixie and WalletHabit
+- Shared resources: authentication, customer profiles, Stripe customer mapping, and the savings
+  ledger
+- Product-specific resource: subscription entitlements keyed by `product_key`
 
-- the Supabase browser client;
-- authentication and profile creation;
-- `profiles`, `goals`, and `goal_events` migrations;
-- frontend goal and deposit queries;
-- environment-variable handling;
-- deployment configuration;
-- the Supabase projects currently visible through the connected account.
+The older `WalletHabit.com` project remains inactive and was not changed. `LifeGoalApp.com` is an
+unrelated product and was not inspected or changed as part of this setup.
 
-No live database changes were made during this audit.
+## Applied migrations
 
-## Remote-project finding
+1. `harden_savings_ledger`
+2. `add_suite_billing_entitlements`
+3. `clarify_service_tables_and_goal_owner_index`
 
-The connected Supabase account currently exposes two projects:
+The corresponding source files live in `supabase/migrations/`.
 
-- `LifeGoalApp.com` — active, but its `goals` and `profiles` schemas do not match SavePixie;
-- `WalletHabit.com` — inactive and unavailable during the audit.
+## Verified controls
 
-There is no identifiable SavePixie project in the connected account. The SavePixie migrations must not be applied to either visible project. Live policy tests, database advisors, grants, and migration history therefore remain unverified until the correct project is connected or created.
+- RLS is enabled on every exposed application table.
+- `anon` has no access to private saving or billing data.
+- Authenticated users can access only their own profile, goals, events, and entitlement summaries.
+- Goal/event ownership is enforced with a composite foreign key.
+- Deposits are append-only and update the goal balance atomically through
+  `record_goal_deposit` and a private trigger.
+- Normal clients cannot directly update `goals.saved_cents`, rewrite event history, or grant paid
+  access.
+- Stripe customer mappings and webhook idempotency records are service-only.
+- SavePixie and WalletHabit entitlements are independent rows keyed by both user and product.
+- The browser uses a modern publishable key; no service-role or Stripe secret enters the PWA.
+- Supabase Security Advisor returns no findings.
+- The only Performance Advisor notices are unused-index informational notices on an empty database.
 
-## Controls that are already good
+## Live rollback test
 
-- RLS is enabled in the repository migrations for all three exposed tables.
-- Every existing policy compares the authenticated user ID with an ownership column.
-- The frontend contains no service-role key, secret key, database password, or private Stripe credential.
-- `.env` and local environment variants are ignored by Git; only `.env.example` is tracked.
-- The frontend selects explicit columns instead of using `select('*')`.
-- User metadata is used only to seed display profile fields, not for authorization.
-- Goals and profiles reference `auth.users` with cascading cleanup.
+A transactional test created two temporary users and verified that:
 
-## Required remediation
+1. User A could create and read User A's profile and goal.
+2. User A could not see User B's profile or SavePixie entitlement.
+3. User A could not add a deposit to User B's goal.
+4. `record_goal_deposit` added an event and changed the saved balance together.
+5. User A could not directly rewrite the saved balance.
+6. User A could not insert a paid entitlement.
 
-### P0 — identify and connect the correct project
+The test ended with `ROLLBACK`. A follow-up count confirmed zero auth users, profiles, goals,
+events, and entitlements remained.
 
-Before any schema change:
+## Remaining backend work
 
-1. identify or create the dedicated SavePixie Supabase project;
-2. confirm its project reference and region;
-3. compare live tables, policies, grants, functions, and migration history with this repository;
-4. run both security and performance advisors;
-5. test policies as two different authenticated users plus an unauthenticated client.
-
-### P0 — make deposits transactional and concurrency-safe
-
-`recordDeposit` currently performs two separate browser requests:
-
-1. insert a `goal_events` row;
-2. calculate and write a replacement `goals.saved_cents` value.
-
-This can leave an event without updated goal progress if the second request fails. Two deposits made close together can also calculate from the same old balance and overwrite one another.
-
-Replace this with one database transaction. The preferred first implementation is an insert-only event flow with a database trigger that atomically increments the owned goal. The browser should not receive general permission to rewrite `saved_cents` directly.
-
-### P0 — enforce goal/event ownership at the database relationship
-
-The `goal_events` policy checks that the event's `user_id` is the current user, but the foreign key only checks that `goal_id` exists. It does not prove that the referenced goal belongs to the same user.
-
-Add a database-enforced relationship between `(goal_id, user_id)` and `goals(id, user_id)`. This closes the cross-owner reference gap even if a goal UUID is ever disclosed.
-
-### P1 — constrain monetary values in the database
-
-The frontend rejects non-positive deposits, but a client can call the Data API directly. Add database checks appropriate to the supported product behaviour:
-
-- `goal_events.delta_cents > 0` while the product supports deposits only;
-- `goals.saved_cents >= 0`;
-- reasonable upper bounds if product research shows they are needed;
-- a later explicit adjustment or withdrawal event type instead of accepting arbitrary negative deltas.
-
-### P1 — split and scope RLS policies
-
-The current `FOR ALL` policies are compact but hard to audit. Replace them with explicit `SELECT`, `INSERT`, `UPDATE`, and `DELETE` policies as required by the product.
-
-Each policy should:
-
-- use `TO authenticated`;
-- use `(select auth.uid())` for the ownership comparison;
-- include both `USING` and `WITH CHECK` on updates;
-- omit operations the browser does not need;
-- keep event history append-only unless a specific correction workflow is approved.
-
-### P1 — verify grants and Data API exposure
-
-RLS and object grants are separate controls. On the actual project, explicitly verify that:
-
-- `anon` has no table privileges for private saving data;
-- `authenticated` has only the operations used by the app;
-- the tables are exposed to the Data API if the browser client is meant to access them;
-- any helper functions have `EXECUTE` revoked from roles that do not need them.
-
-New Supabase projects can be configured not to expose `public` tables automatically, so migration and deployment checks must cover both grants and RLS.
-
-### P1 — add ownership indexes
-
-Add indexes for the columns used by policies and relationships:
-
-- `goals(user_id)`;
-- `goal_events(user_id)`;
-- `goal_events(goal_id)`;
-- the composite key needed for `(goal_id, user_id)` ownership enforcement.
-
-### P1 — make profile creation race-safe
-
-`ensureProfile` performs a read followed by an insert. Multiple auth callbacks can race and make one request fail on the primary key. Use an idempotent upsert or a database-side new-user profile trigger after its permissions and failure behaviour are reviewed.
-
-### P2 — use the modern publishable key name
-
-The app currently expects `VITE_SUPABASE_ANON_KEY`. Supabase now recommends publishable keys for new applications. Move to a neutral variable such as `VITE_SUPABASE_PUBLISHABLE_KEY`, retain temporary compatibility only if the live project still uses a legacy anon key, and never place a secret or service-role key in a `VITE_` variable.
-
-### P2 — pin the client dependency
-
-`@supabase/supabase-js` is declared with a caret range while the lockfile currently resolves a newer exact version. Pin the intended package version and keep the lockfile committed so authentication behaviour does not drift between deployments.
-
-### P2 — fix deployment environment injection
-
-The GitHub Pages workflow does not currently pass Supabase URL or publishable-key variables to the Vite build. Confirm the intended deployment surface and inject only public build-time values through protected GitHub variables or secrets. Keep all server credentials outside the static build.
-
-## Required verification tests
-
-Run these against a disposable development branch or local Supabase instance before production:
-
-1. User A can create, read, and update only User A's profile and goals.
-2. User B cannot read or change User A's rows even when exact UUIDs are supplied.
-3. An unauthenticated request cannot read or mutate any private table.
-4. User B cannot insert an event referencing User A's goal.
-5. A deposit creates its event and increments the goal in one transaction.
-6. Two simultaneous deposits both contribute to the final balance without a lost update.
-7. A failed deposit leaves neither a partial event nor a partial balance change.
-8. Negative and zero deposits are rejected by the database.
-9. Event history cannot be rewritten or deleted by a normal client.
-10. Security and performance advisors return no unresolved issue for the changed objects.
-
-## Stripe boundary for the later monetisation phase
-
-Stripe must remain server-authoritative:
-
-- checkout and customer-portal sessions are created by an authenticated server or Edge Function;
-- Stripe secret keys and webhook signing secrets never enter the PWA bundle;
-- webhook event IDs are stored for idempotency;
-- subscription and trial status is derived from verified webhooks, not client claims;
-- a seven-day trial is stated plainly before checkout and represented consistently in Stripe, the app, and cancellation copy;
-- RLS allows users to read only their own entitlement summary and never to grant themselves paid access.
-
-The final pricing and conversion screen will be designed after reviewing the user's reference video.
+- Configure SavePixie auth site URL, redirect URLs, email templates, and production SMTP.
+- Add the public project URL and publishable key to the GitHub deployment variables.
+- Generate and commit database TypeScript types. The first generation request returned an
+  `exceed_db_size_quota` restriction even though the new database reports only 10 MB and accepts
+  normal queries; verify organization usage in the Dashboard before retrying.
+- Add a concurrency test proving simultaneous deposits cannot lose an update.
+- Test auth from the deployed domain, including confirmation and password reset.
+- Configure Stripe only after the product, price, webhook secret, and acceptance tests are ready.
 
 ## Official references
 
 - Row Level Security: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Securing the Data API: https://supabase.com/docs/guides/api/securing-your-api
-- Secure data overview: https://supabase.com/docs/guides/database/secure-data
-- April 2026 Data API exposure change: https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically
+- Project regions: https://supabase.com/docs/guides/troubleshooting/change-project-region-eWJo5Z
+- Data API exposure change:
+  https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically

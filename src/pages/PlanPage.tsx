@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useOutletContext } from "react-router-dom";
+import type { AppShellOutletContext } from "../components/AppShell";
 
 const STORAGE_KEY = "savepixie.weekly-plan.v1";
 
@@ -22,6 +24,7 @@ function loadPlan(): WeeklyPlan {
 }
 
 export function PlanPage() {
+  const { basePath } = useOutletContext<AppShellOutletContext>();
   const [plan, setPlan] = useState<WeeklyPlan>(loadPlan);
   const safeToSpend = useMemo(
     () => Math.max(0, plan.available - plan.committed - plan.saving),
@@ -112,6 +115,23 @@ export function PlanPage() {
             core weekly view is proven.
           </p>
         </div>
+      </section>
+
+      <section className="account-check-invite">
+        <div className="account-check-invite__icon" aria-hidden="true">
+          <span>✦</span>
+          <span>⌕</span>
+        </div>
+        <div>
+          <span className="eyebrow">Experimental · 29 kr one-time</span>
+          <h2>Could your savings have a better home?</h2>
+          <p>
+            Let Pixie Scout compare suitable account options and explain the trade-offs clearly.
+          </p>
+        </div>
+        <Link className="button secondary" to={`${basePath}/plan/account-check`}>
+          Preview Account Check
+        </Link>
       </section>
     </div>
   );

@@ -1,9 +1,18 @@
+import { copyFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: "github-pages-spa-fallback",
+      closeBundle() {
+        copyFileSync(resolve(__dirname, "dist/index.html"), resolve(__dirname, "dist/404.html"));
+      },
+    },
+  ],
   build: {
     rollupOptions: {
       input: {

@@ -6,6 +6,7 @@ import { AuthProvider } from "./app/AuthProvider";
 import ProtectedRoute from "./app/ProtectedRoute";
 import { SavingsPreviewProvider, SavingsProvider } from "./app/SavingsProvider";
 import AppShell from "./components/AppShell";
+import AccountCheckPage from "./pages/AccountCheckPage";
 import AuthPage from "./pages/AuthPage";
 import GoalsPage from "./pages/GoalsPage";
 import HomePage from "./pages/HomePage";
@@ -49,6 +50,7 @@ const router = createBrowserRouter([
           { path: "today", element: <TodayPage /> },
           { path: "goals", element: <GoalsPage /> },
           { path: "plan", element: <PlanPage /> },
+          { path: "plan/account-check", element: <AccountCheckPage /> },
           { path: "journey", element: <JourneyPage /> },
         ],
       },
@@ -80,6 +82,7 @@ const router = createBrowserRouter([
             { path: "today", element: <TodayPage /> },
             { path: "goals", element: <GoalsPage /> },
             { path: "plan", element: <PlanPage /> },
+            { path: "plan/account-check", element: <AccountCheckPage /> },
             { path: "journey", element: <JourneyPage /> },
           ],
         },
