@@ -1,11 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="pixie" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#22d3ee" />
-      <stop offset="100%" stop-color="#a855f7" />
+    <radialGradient id="bg192" cx="35%" cy="18%" r="90%">
+      <stop offset="0" stop-color="#241548" />
+      <stop offset="0.55" stop-color="#110b25" />
+      <stop offset="1" stop-color="#0b0718" />
+    </radialGradient>
+    <linearGradient id="wing192" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#b394ff" />
+      <stop offset="1" stop-color="#38dfc6" stop-opacity="0.6" />
     </linearGradient>
+    <linearGradient id="hood192" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#65419a" />
+      <stop offset="0.62" stop-color="#352254" />
+      <stop offset="1" stop-color="#211638" />
+    </linearGradient>
+    <filter id="glow192" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12" />
+    </filter>
   </defs>
-  <rect width="192" height="192" rx="48" fill="#0f172a" />
-  <path d="M96 44l32 104-32-20-32 20z" fill="url(#pixie)" />
-  <circle cx="96" cy="88" r="18" fill="#f8fafc" />
+  <rect width="512" height="512" rx="112" fill="url(#bg192)" />
+  <circle cx="256" cy="266" r="178" fill="#7b3fff" opacity="0.14" filter="url(#glow192)" />
+  <path d="M188 242c-63-38-104 7-91 80 12 66 77 67 122 16z" fill="url(#wing192)" opacity="0.82" />
+  <path d="M324 242c63-38 104 7 91 80-12 66-77 67-122 16z" fill="url(#wing192)" opacity="0.82" />
+  <path d="M212 153 269 65l32 105z" fill="#52357e" />
+  <path d="M256 128c-84 0-117 78-103 180 12 87 57 124 103 124s91-37 103-124c14-102-19-180-103-180z" fill="url(#hood192)" />
+  <ellipse cx="256" cy="272" rx="78" ry="92" fill="#090612" />
+  <path d="M204 278c10 18 28 18 38 0" fill="none" stroke="#b394ff" stroke-width="10" stroke-linecap="round" />
+  <path d="M270 278c10 18 28 18 38 0" fill="none" stroke="#b394ff" stroke-width="10" stroke-linecap="round" />
+  <path d="m256 207 7 17 18 7-18 7-7 18-7-18-18-7 18-7z" fill="#9af8e8" />
+  <circle cx="256" cy="407" r="43" fill="#38dfc6" opacity="0.18" filter="url(#glow192)" />
+  <path d="m256 378 15 29-15 29-15-29z" fill="#9af8e8" />
 </svg>

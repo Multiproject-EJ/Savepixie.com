@@ -46,6 +46,7 @@ disabled until their server-side dependencies and customer safeguards pass the g
 - [ ] Confirm HTTPS and canonical-host redirects.
 - [ ] Confirm direct-route refreshes use the generated `404.html` SPA fallback.
 - [x] Verify the production offline shell for `/` and a direct `/auth` route with the server unavailable.
+- [x] Ship and build-verify 192 px, 512 px, maskable Android, and Apple touch install icons.
 - [ ] Test PWA installation and update behavior on a physical phone, plus password reset and email
       confirmation on the real domain.
 - [ ] Configure production SMTP, branded confirmation/recovery templates, sender authentication, and

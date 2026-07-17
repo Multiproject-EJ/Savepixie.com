@@ -54,6 +54,9 @@ Updated: 2026-07-17
 - Sign-in, sign-up, reset, and password-update failures now map documented Supabase Auth error codes to
   calm customer copy. Sign-up requires an eight-character password and an explicit matching
   confirmation before any account request is sent.
+- The install package now carries the approved Petal Hood identity as real 192 px and 512 px PNGs, an
+  opaque maskable Android icon, and an opaque 180 px Apple touch icon. The manifest uses the product's
+  actual dark-violet theme, declares a stable app ID, and its built output resolves every icon asset.
 
 ## Launch blockers
 
