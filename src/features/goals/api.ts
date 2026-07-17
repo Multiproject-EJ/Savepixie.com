@@ -1,17 +1,8 @@
 import { supabase } from "../../lib/supabase";
+import type { Tables } from "../../types/database";
 import type { CreateGoalInput, DepositInput, Goal } from "./types";
 
-type GoalRow = {
-  id: string;
-  user_id: string;
-  name: string;
-  target_cents: number | string;
-  saved_cents: number | string;
-  emoji: string | null;
-  color: string | null;
-  deadline_date: string | null;
-  created_at: string;
-};
+type GoalRow = Tables<"goals">;
 
 function normalizeGoal(row: GoalRow): Goal {
   const target = typeof row.target_cents === "string" ? Number(row.target_cents) : row.target_cents;
@@ -35,7 +26,7 @@ export async function fetchGoals(userId: string): Promise<Goal[]> {
     throw error;
   }
 
-  return (data as GoalRow[] | null)?.map((row) => normalizeGoal(row)) ?? [];
+  return data?.map((row) => normalizeGoal(row)) ?? [];
 }
 
 export async function createGoal(input: CreateGoalInput): Promise<Goal> {
@@ -58,36 +49,30 @@ export async function createGoal(input: CreateGoalInput): Promise<Goal> {
     throw error ?? new Error("Failed to create goal");
   }
 
-  return normalizeGoal(data as GoalRow);
+  return normalizeGoal(data);
 }
 
 export async function recordDeposit(input: DepositInput): Promise<Goal> {
   const { goal, amountCents, note, userId } = input;
 
-  const { error: eventError } = await supabase.from("goal_events").insert({
-    user_id: userId,
-    goal_id: goal.id,
-    delta_cents: amountCents,
-    note: note ?? null,
+  if (goal.user_id !== userId) {
+    throw new Error("Choose one of your own goals for this save.");
+  }
+
+  const { data, error } = await supabase.rpc("record_goal_deposit", {
+    p_goal_id: goal.id,
+    p_amount_cents: amountCents,
+    ...(note ? { p_note: note } : {}),
   });
 
-  if (eventError) {
-    throw eventError;
+  if (error || !data) {
+    throw error ?? new Error("Failed to record deposit");
   }
 
-  const newSavedCents = goal.saved_cents + amountCents;
-
-  const { data: updatedGoal, error: goalError } = await supabase
-    .from("goals")
-    .update({ saved_cents: newSavedCents })
-    .eq("id", goal.id)
-    .eq("user_id", userId)
-    .select("id, user_id, name, target_cents, saved_cents, emoji, color, deadline_date, created_at")
-    .single();
-
-  if (goalError || !updatedGoal) {
-    throw goalError ?? new Error("Failed to update goal after deposit");
+  const updatedGoal = Array.isArray(data) ? data[0] : data;
+  if (!updatedGoal) {
+    throw new Error("The deposit was recorded, but the updated goal was not returned.");
   }
 
-  return normalizeGoal(updatedGoal as GoalRow);
+  return normalizeGoal(updatedGoal);
 }

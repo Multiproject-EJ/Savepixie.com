@@ -23,8 +23,9 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-      - run: npm install
-      - run: npm run build
+      - run: npm ci
+      - name: Build production PWA
+        run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

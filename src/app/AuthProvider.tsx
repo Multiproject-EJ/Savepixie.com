@@ -15,6 +15,7 @@ type AuthContextValue = {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  recoveryMode: boolean;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signUpWithPassword: (
     email: string,
@@ -23,6 +24,7 @@ type AuthContextValue = {
   ) => Promise<{ requiresEmailConfirmation: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -31,6 +33,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recoveryMode, setRecoveryMode] = useState(
+    () =>
+      window.location.hash.includes("type=recovery") ||
+      new URLSearchParams(window.location.search).get("type") === "recovery"
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -45,10 +52,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setLoading(false);
+      if (event === "PASSWORD_RECOVERY") {
+        setRecoveryMode(true);
+      }
       if (nextSession?.user) {
         void ensureProfile(nextSession.user);
       }
@@ -108,17 +118,35 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (error) throw error;
   }, []);
 
+  const updatePassword = useCallback(async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+    setRecoveryMode(false);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
       user,
       loading,
+      recoveryMode,
       signInWithPassword,
       signUpWithPassword,
       signOut,
       resetPassword,
+      updatePassword,
     }),
-    [loading, resetPassword, session, signInWithPassword, signOut, signUpWithPassword, user]
+    [
+      loading,
+      recoveryMode,
+      resetPassword,
+      session,
+      signInWithPassword,
+      signOut,
+      signUpWithPassword,
+      updatePassword,
+      user,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -55,6 +55,7 @@ This command checks TypeScript types and outputs the static bundle in `dist/`.
   row level security policies tied to the authenticated Supabase user.
 
 ## Guiding Codex Through the Plan
+
 To have Codex implement the product incrementally, reference the roadmap step you want to tackle and ask Codex to begin that
 step. Example prompt:
 
@@ -65,12 +66,23 @@ Codex can then consult [`docs/specs/roadmap.md`](docs/specs/roadmap.md) for the 
 record progress in `docs/worklog/`. Repeat this pattern for each subsequent step (Step 2, Step 3, etc.).
 
 ## Stack & Hosting
+
 - **Hosting:** GitHub Pages (static deploy from `main`).
 - **Client:** Vite + React + TypeScript, PWA-first.
-- **Backend:** Supabase Auth + Postgres with strict Row Level Security (RLS).
-- **Environment:** `.env.example` will expose `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (do not commit secrets).
+- **Backend:** the shared EU `WalletHabit Suite` Supabase project, with common Auth and Postgres
+  services plus strict product-aware Row Level Security (RLS).
+- **Environment:** `.env.example` exposes `VITE_SUPABASE_URL` and the public
+  `VITE_SUPABASE_PUBLISHABLE_KEY`. The deployment workflow reads both values from GitHub repository
+  variables; secret or service-role keys must never enter the static build.
+- **Database migrations:** `supabase/migrations/` is the production migration source. The older
+  `sql/migrations/` files remain as implementation history only.
+- **Server-side billing:** `supabase/functions/` contains inactive Stripe Checkout, Portal, and signed
+  webhook infrastructure. Entitlements are keyed by product so SavePixie and WalletHabit plans cannot
+  unlock one another. Functions must be deployed only after test-mode secrets and the billing
+  acceptance suite are ready.
 
 ## Repository Structure
+
 ```
 savepixie/
 ├── CNAME
@@ -104,13 +116,17 @@ savepixie/
 As implementation progresses, each directory will be populated with application code, assets, SQL migrations, and documentation.
 
 ## Development Roadmap
+
 The full step-by-step roadmap (including goals, tasks, SQL migrations, acceptance criteria, and "what's next" notes) lives in [`docs/specs/roadmap.md`](docs/specs/roadmap.md). Each numbered step is intended to become its own feature branch, pull request, and tagged release.
 
 ## Worklog Template
+
 For every completed step, create a worklog entry in `docs/worklog/STEP-<nn>.md` following the template provided at the bottom of the roadmap document. This ensures we capture the goal, changes, SQL, testing notes, screenshots, and next actions for each iteration.
 
 ## GitHub Issues & Iteration Rhythm
+
 Create GitHub issues #1–#13 to mirror Steps 0–12. For each step:
+
 1. Branch from `dev` using `feature/<step-number>-<short-name>`.
 2. Implement the tasks and SQL migrations for that step.
 3. Commit changes with conventional commit messages.
@@ -119,6 +135,7 @@ Create GitHub issues #1–#13 to mirror Steps 0–12. For each step:
 6. Update the roadmap/worklog and open the next issue.
 
 ## Security & RLS Principles
+
 - Enable RLS on every Supabase table that stores user data.
 - Use `auth.uid()` checks (or equivalent joins) to restrict CRUD operations to the owning user.
 - Never expose the Supabase service role key in the client or repository.

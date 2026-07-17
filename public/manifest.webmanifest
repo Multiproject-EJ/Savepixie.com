@@ -3,7 +3,8 @@
   "short_name": "SavePixie",
   "description": "A mobile-first personal savings coach.",
   "display": "standalone",
-  "start_url": ".",
+  "start_url": "/app",
+  "scope": "/",
   "background_color": "#111827",
   "theme_color": "#1f2937",
   "icons": [
