@@ -9,6 +9,7 @@ import { SavingsPreviewProvider, SavingsProvider } from "./app/SavingsProvider";
 import AppShell from "./components/AppShell";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import NetworkStatus from "./components/NetworkStatus";
+import PwaUpdateNotice, { PWA_UPDATE_EVENT } from "./components/PwaUpdateNotice";
 import AccountCheckPage from "./pages/AccountCheckPage";
 import AuthPage from "./pages/AuthPage";
 import GoalsPage from "./pages/GoalsPage";
@@ -119,6 +120,30 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/service-worker.js")
+      .then((registration) => {
+        const announceWhenInstalled = (worker: ServiceWorker | null) => {
+          if (!worker) return;
+          const announce = () => {
+            if (worker.state === "installed" && navigator.serviceWorker.controller) {
+              window.dispatchEvent(new Event(PWA_UPDATE_EVENT));
+            }
+          };
+          worker.addEventListener("statechange", announce);
+          announce();
+        };
+
+        announceWhenInstalled(registration.waiting);
+        registration.addEventListener("updatefound", () =>
+          announceWhenInstalled(registration.installing)
+        );
+
+        const checkForUpdate = () => {
+          if (document.visibilityState === "visible") {
+            void registration.update();
+          }
+        };
+        document.addEventListener("visibilitychange", checkForUpdate);
+      })
       .catch((error) => console.error("Service worker registration failed", error));
   });
 }
@@ -128,6 +153,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <AppErrorBoundary>
       <AuthProvider>
         <NetworkStatus />
+        <PwaUpdateNotice />
         <RouterProvider router={router} future={{ v7_startTransition: true }} />
       </AuthProvider>
     </AppErrorBoundary>

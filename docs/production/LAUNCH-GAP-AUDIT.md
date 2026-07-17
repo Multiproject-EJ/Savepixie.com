@@ -57,6 +57,9 @@ Updated: 2026-07-17
 - The install package now carries the approved Petal Hood identity as real 192 px and 512 px PNGs, an
   opaque maskable Android icon, and an opaque 180 px Apple touch icon. The manifest uses the product's
   actual dark-violet theme, declares a stable app ID, and its built output resolves every icon asset.
+- Returning installed-app customers now receive a compact, dismissible “fresh SavePixie is ready”
+  notice when a replacement service worker finishes installing. The app checks again when it returns
+  to the foreground and lets the customer choose the safe reload moment.
 
 ## Launch blockers
 
