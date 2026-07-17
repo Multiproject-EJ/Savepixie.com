@@ -27,8 +27,12 @@ Updated: 2026-07-17
 - The protected deletion function is live, rejects anonymous callers, checks Stripe directly before
   deleting a mapped customer, transfers active shared Pacts, repairs their totals, and removes
   Auth-linked SavePixie records through verified cascades.
-- All four rollback-safe Supabase acceptance suites pass, production-origin CORS is verified for the
+- All five rollback-safe Supabase acceptance suites pass, production-origin CORS is verified for the
   signed-in browser functions, and the live security advisor remains clean.
+- The database enforces Basic versus Pro at the real write boundary: one two-person shared Pact on
+  Basic, additional Pacts and groups of up to ten on Pro, with no destructive downgrade behavior.
+- The feature-flagged Settings offer shows the seven-day trial and 29 kr renewal plainly; Checkout
+  validates the exact price configuration, and the webhook rejects mismatched price IDs.
 - Terms and Privacy routes now exist as clearly labelled closed-beta drafts; operator identity,
   jurisdiction, subscription/refund language, and legal approval remain explicit release gates.
 - Pact detail now includes privacy-filtered Circle progress, each member's commitment and visibility
@@ -50,7 +54,6 @@ Updated: 2026-07-17
 
 ### Commercial
 
-- Decide the unmistakable recurring Pro value; billing infrastructure alone is not enough.
 - Create the 29 kr/month Stripe product, seven-day trial, tax settings, webhook, and customer portal in
   test mode, then run the full lifecycle test suite.
 - Publish reviewed subscription, cancellation, refund, Terms, and Privacy copy.

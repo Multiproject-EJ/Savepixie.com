@@ -1,10 +1,16 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useAuth } from "../app/AuthProvider";
 import { useSavings, type SavingsHomeInput } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
 import { createAccountExport, downloadAccountExport } from "../features/account/export";
 import { deleteAccount } from "../features/account/api";
+import {
+  createCheckoutSession,
+  createPortalSession,
+  fetchEntitlement,
+  type Entitlement,
+} from "../features/billing/api";
 import type { SavingsHome } from "../features/goals/types";
 
 export function SettingsPage() {
@@ -20,6 +26,64 @@ export function SettingsPage() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
+  const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
+  const [billingState, setBillingState] = useState<"loading" | "ready" | "opening" | "error">(
+    isPreview ? "ready" : "loading"
+  );
+  const [billingMessage, setBillingMessage] = useState<string | null>(null);
+  const billingEnabled = import.meta.env.VITE_STRIPE_ENABLED === "true";
+  const hasPro = entitlement?.has_pro_access === true;
+  const hasManageableSubscription = Boolean(
+    entitlement &&
+    !["inactive", "canceled", "incomplete_expired"].includes(entitlement.subscription_status)
+  );
+  const billingTiming = entitlement?.cancel_at
+    ? `Cancels ${formatBillingDate(entitlement.cancel_at)}`
+    : entitlement?.subscription_status === "trialing" && entitlement.trial_ends_at
+      ? `Trial ends ${formatBillingDate(entitlement.trial_ends_at)}`
+      : hasPro
+        ? "Active subscription"
+        : null;
+
+  useEffect(() => {
+    if (isPreview || !user?.id) return;
+
+    let active = true;
+    setBillingState("loading");
+    void fetchEntitlement(user.id)
+      .then((nextEntitlement) => {
+        if (!active) return;
+        setEntitlement(nextEntitlement);
+        setBillingState("ready");
+      })
+      .catch((cause) => {
+        if (!active) return;
+        setBillingState("error");
+        setBillingMessage(
+          cause instanceof Error ? cause.message : "We couldn't load your plan status."
+        );
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isPreview, user?.id]);
+
+  const openBilling = async (destination: "checkout" | "portal") => {
+    if (isPreview || !billingEnabled) return;
+    setBillingState("opening");
+    setBillingMessage(null);
+    try {
+      const url =
+        destination === "checkout" ? await createCheckoutSession() : await createPortalSession();
+      window.location.assign(url);
+    } catch (cause) {
+      setBillingState("error");
+      setBillingMessage(
+        cause instanceof Error ? cause.message : "We couldn't open secure billing."
+      );
+    }
+  };
 
   const exportData = async () => {
     if (!user?.id || isPreview) return;
@@ -88,7 +152,79 @@ export function SettingsPage() {
           <p>{user?.email ?? (isPreview ? "preview@savepixie.com" : "Email unavailable")}</p>
           {profile?.username ? <small>@{profile.username}</small> : null}
         </div>
-        <span className="settings-plan-pill">Basic · Free</span>
+        <span className="settings-plan-pill">
+          {billingState === "loading"
+            ? "Checking plan…"
+            : billingState === "error"
+              ? "Plan unavailable"
+              : hasPro
+                ? "Pro · Active"
+                : "Basic · Free"}
+        </span>
+      </section>
+
+      <section className={`surface-card pro-plan-card ${hasPro ? "pro-plan-card--active" : ""}`}>
+        <div className="pro-plan-card__spark" aria-hidden="true">
+          ✦
+        </div>
+        <div className="pro-plan-card__copy">
+          <span className="eyebrow">SavePixie Pro</span>
+          <h2>
+            {hasPro ? "Your bigger Circles are unlocked" : "More Circles, still one calm app"}
+          </h2>
+          <p>
+            Basic includes unlimited solo saving and one shared Pact with one companion. Pro unlocks
+            additional Pacts and family or group Circles with up to ten savers.
+          </p>
+          <ul>
+            <li>Every saver keeps money in their own 1:1 Savings Home</li>
+            <li>Privacy controls stay with each person</li>
+            <li>Existing Circles are never removed if Pro ends</li>
+          </ul>
+          {billingTiming ? <span className="pro-plan-card__status">{billingTiming}</span> : null}
+          {billingMessage ? (
+            <p className="pro-plan-card__message" role="alert">
+              {billingMessage}
+            </p>
+          ) : null}
+        </div>
+        <div className="pro-plan-card__offer">
+          <strong>29 kr</strong>
+          <span>per month</span>
+          {!entitlement ? <small>7 days free first</small> : <small>Renews monthly</small>}
+          <button
+            className="button primary"
+            type="button"
+            onClick={() =>
+              void openBilling(hasPro || hasManageableSubscription ? "portal" : "checkout")
+            }
+            disabled={
+              isPreview ||
+              !billingEnabled ||
+              billingState === "loading" ||
+              billingState === "opening"
+            }
+          >
+            {isPreview
+              ? "Preview only"
+              : !billingEnabled
+                ? "Billing opens after testing"
+                : billingState === "opening"
+                  ? "Opening Stripe…"
+                  : hasPro || hasManageableSubscription
+                    ? "Manage billing"
+                    : entitlement
+                      ? "Restart Pro"
+                      : "Start 7-day free trial"}
+          </button>
+          <small className="pro-plan-card__terms">
+            {!entitlement
+              ? "Then 29 kr/month until cancelled. Cancel before the trial ends to avoid a charge."
+              : hasPro || hasManageableSubscription
+                ? "29 kr/month until cancelled. Manage or cancel securely in Stripe."
+                : "Restart at 29 kr/month with no new free trial. Cancel securely in Stripe."}
+          </small>
+        </div>
       </section>
 
       <section className="settings-section">
@@ -258,6 +394,14 @@ export function SettingsPage() {
       ) : null}
     </div>
   );
+}
+
+function formatBillingDate(value: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 function SavingsHomeEditor({

@@ -31,6 +31,14 @@ begin
   insert into public.savings_pacts (id, created_by, mode, name, target_cents)
   values (shared_pact_id, owner_id, 'shared', 'Deletion handover', 20000);
 
+  -- This fixture intentionally needs a three-person Circle to prove deterministic
+  -- ownership handover, so its owner is a Pro subscriber for the test.
+  insert into public.entitlements (
+    user_id, product_key, plan, has_pro_access, subscription_status
+  ) values (
+    owner_id, 'savepixie', 'pro', true, 'trialing'
+  );
+
   insert into public.savings_pact_members (
     pact_id, user_id, role, display_name, privacy_mode, joined_at
   ) values

@@ -83,6 +83,22 @@ Deno.serve(async (request) => {
       if (saveCustomerError) throw saveCustomerError;
     }
 
+    const priceId = requireEnv("STRIPE_SAVEPIXIE_PRO_PRICE_ID");
+    const price = await stripe.prices.retrieve(priceId);
+
+    if (
+      !price.active ||
+      price.type !== "recurring" ||
+      price.currency !== "nok" ||
+      price.unit_amount !== 2900 ||
+      price.recurring?.interval !== "month" ||
+      price.recurring.interval_count !== 1
+    ) {
+      throw new Error(
+        "The configured SavePixie Pro price is not the approved 29 NOK monthly plan."
+      );
+    }
+
     const siteUrl = new URL(requireEnv("SITE_URL")).origin;
     const checkout = await stripe.checkout.sessions.create(
       {
@@ -90,13 +106,17 @@ Deno.serve(async (request) => {
         customer: customerId,
         client_reference_id: user.id,
         payment_method_collection: "always",
-        line_items: [{ price: requireEnv("STRIPE_SAVEPIXIE_PRO_PRICE_ID"), quantity: 1 }],
+        line_items: [{ price: priceId, quantity: 1 }],
         success_url: `${siteUrl}/app/today?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/app/plan?checkout=cancelled`,
         subscription_data: {
-          trial_period_days: 7,
-          trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
           metadata: { supabase_user_id: user.id, product_key: productKey },
+          ...(entitlement
+            ? {}
+            : {
+                trial_period_days: 7,
+                trial_settings: { end_behavior: { missing_payment_method: "cancel" as const } },
+              }),
         },
         metadata: { supabase_user_id: user.id, product_key: productKey },
       },

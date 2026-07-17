@@ -54,11 +54,14 @@ disabled until their server-side dependencies and customer safeguards pass the g
 
 - [x] Prepare local entitlement, Checkout, Portal, signed-webhook, and idempotency infrastructure.
 - [x] Deploy dormant Checkout, Portal, and signed-webhook function shells.
-- [ ] Finalize the 29 kr/month Pro entitlement and its first unmistakable paid feature.
+- [x] Define and enforce the first Pro boundary: additional shared Pacts and larger family/group
+      Circles, without removing existing data when Pro ends.
 - [ ] Create Stripe product, price, seven-day trial, and tax configuration.
-- [ ] Create authenticated server-side checkout and customer-portal sessions.
+- [x] Create and deploy authenticated server-side Checkout and customer-portal sessions behind the
+      production feature flag.
 - [ ] Verify Stripe webhooks, store webhook IDs for idempotency, and derive entitlements server-side.
 - [ ] Complete upgrade, cancellation, failed-payment, refund, and restore-purchase flows.
+- [x] Add an honest feature-flagged Settings offer with first-trial and returning-customer copy.
 - [ ] Test the full Stripe lifecycle in test mode before switching on live mode.
 
 ## Gate 5 — customer safeguards

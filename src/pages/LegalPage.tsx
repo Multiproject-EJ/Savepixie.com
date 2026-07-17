@@ -87,7 +87,8 @@ const termsDocument: LegalDocument = {
     {
       title: "Paid features",
       paragraphs: [
-        "Paid plans are not active during the initial closed beta. If SavePixie Pro is offered, the checkout will show the exact price, trial length, renewal timing, taxes, and cancellation terms before payment. The current product target is 29 kr per month after a clearly disclosed seven-day trial.",
+        "Paid plans are not active during the initial closed beta. Basic keeps unlimited solo saving and one active shared Pact with one companion. The planned Pro plan unlocks additional shared Pacts and larger family or group Circles; ending Pro does not delete an existing Pact or remove its members.",
+        "If SavePixie Pro is offered, the checkout will show the exact price, trial length, renewal timing, taxes, and cancellation terms before payment. The current product target is 29 kr per month after a clearly disclosed seven-day first trial. A returning customer does not receive another free trial.",
         "Subscriptions will be managed through Stripe. You will be able to cancel from Billing before the next renewal. Refund and statutory withdrawal rights depend on the final seller identity, your location, and applicable consumer law; final reviewed terms must be published before payments are enabled.",
       ],
     },

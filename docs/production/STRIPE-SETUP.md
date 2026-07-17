@@ -1,7 +1,8 @@
 # SavePixie Stripe Setup
 
 Updated: 2026-07-17  
-Status: Edge Function shells deployed; no live product, Stripe keys, webhook endpoint, or payment activation
+Status: Test-ready code and Pro limits deployed; no Stripe product, secrets, webhook endpoint, or
+payment activation
 
 ## Commercial boundary
 
@@ -9,13 +10,23 @@ SavePixie Pro is planned as a 29 NOK monthly subscription with a plainly disclos
 Stripe revenue belongs to SavePixie. Customer savings are never collected, pooled, held, or moved by
 Stripe or SavePixie.
 
-The conversion screen and public upgrade action remain disabled until the paid feature and final copy
-are approved. The deployed functions remain dormant until Stripe test-mode secrets are configured.
+The paid boundary is now real and enforced by PostgreSQL:
+
+- Basic keeps unlimited solo saving and one active shared Pact with one companion.
+- Pro unlocks additional shared Pacts and family/group Circles of up to ten savers.
+- A Basic saver participates in one active shared Pact even when its organiser has Pro.
+- Ending Pro never deletes, hides, or removes an existing Pact or member; it prevents only new
+  Pro-sized creation or joining.
+
+The Settings offer states the seven-day trial, 29 kr monthly renewal, and cancellation timing before
+leaving SavePixie. Its action remains disabled by `VITE_STRIPE_ENABLED=false` until Stripe test-mode
+acceptance passes.
 
 ## Deployed components
 
 - `create-checkout-session` verifies the signed-in Supabase user and creates a Stripe-hosted
-  subscription Checkout Session.
+  subscription Checkout Session. It rejects any configured price that is not an active recurring
+  29 NOK monthly price and grants the seven-day trial only when no prior SavePixie entitlement exists.
 - `create-portal-session` verifies the user and creates a short-lived Stripe Billing Portal Session.
 - `stripe-webhook` is intentionally configured with `verify_jwt = false`; it verifies the raw request
   body with `STRIPE_WEBHOOK_SIGNING_SECRET` before accepting an event.
@@ -24,6 +35,8 @@ are approved. The deployed functions remain dormant until Stripe test-mode secre
   keyed by both user and product so SavePixie and WalletHabit access remain independent.
 - `stripe_webhook_events` and `process_stripe_subscription_event` make webhook processing idempotent
   and transactional.
+- The webhook refuses to grant SavePixie Pro when the subscription item does not match the configured
+  SavePixie price ID.
 
 The Edge Functions pin Stripe SDK `22.3.2`, whose default API version is `2026-06-24.dahlia`, and
 Supabase JavaScript SDK `2.75.0`.
@@ -58,17 +71,19 @@ service-role value must never be added to GitHub Pages variables or any `VITE_` 
 
 - A signed-out request cannot create Checkout or Portal sessions.
 - A signed-in free user receives a Stripe-hosted Checkout URL.
+- A returning customer who previously had an entitlement receives no second free trial.
 - Checkout displays the 29 kr monthly price and seven-day trial before confirmation.
 - Successful Checkout creates `trialing` access only after the signed webhook is processed.
 - Replaying the same webhook event does not apply the update twice.
 - Invalid signatures are rejected without writing database records.
 - Portal cancellation changes access only after the corresponding subscription webhook.
 - Failed, past-due, canceled, incomplete, and expired subscriptions do not retain Pro access.
+- Basic/Pro Pact limits change only future creation and joining; existing Circle data survives.
 - Stripe test clocks cover trial end, successful renewal, failed renewal, and cancellation.
 
 ## Activation sequence
 
-The migrations and three function shells are deployed. Next, set test-mode secrets, configure the
-Stripe webhook and portal, then run the acceptance suite. Only after the conversion screen and paid
-feature are approved should the frontend call `createCheckoutSession()` from a visible upgrade
-action.
+The migrations, three function shells, Settings offer, and server-side Pro boundary are deployed.
+Next, set test-mode secrets, configure the webhook and portal, run the acceptance suite, and review
+the final conversion screen against the owner's reference video. Set `VITE_STRIPE_ENABLED=true` only
+after those checks pass; that single production flag activates the visible Stripe action.

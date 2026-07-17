@@ -26,6 +26,8 @@ jobs:
       - run: npm ci
       - name: Build production PWA
         run: npm run build
+        env:
+          VITE_STRIPE_ENABLED: ${{ vars.VITE_STRIPE_ENABLED || 'false' }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

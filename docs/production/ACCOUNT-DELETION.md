@@ -33,7 +33,7 @@ Updated: 2026-07-17
 
 - `supabase/tests/004_prepare_account_deletion.sql` is rollback-safe and proves ownership handover,
   projection repair, deletion of the departing member's entries, and survival of remaining history.
-- All four Supabase acceptance suites pass after the account-deletion migrations.
+- All five Supabase acceptance suites pass after the account-deletion and Pro-limit migrations.
 - The live security advisor reports no findings.
 - The live endpoint rejects an anonymous POST with `401`.
 - A production-origin preflight returns `204` and `Access-Control-Allow-Origin:

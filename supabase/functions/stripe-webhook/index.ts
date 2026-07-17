@@ -92,6 +92,13 @@ Deno.serve(async (request) => {
         throw new Error("Subscription event has no recognized product key.");
       }
 
+      if (
+        productKey === "savepixie" &&
+        firstItem?.price.id !== requireEnv("STRIPE_SAVEPIXIE_PRO_PRICE_ID")
+      ) {
+        throw new Error("SavePixie subscription event uses an unrecognized price.");
+      }
+
       const { error } = await admin.rpc("process_stripe_subscription_event", {
         p_event_id: event.id,
         p_event_type: event.type,

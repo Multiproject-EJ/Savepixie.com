@@ -3691,6 +3691,93 @@ p {
   font-size: 0.64rem;
   font-weight: 800;
 }
+.pro-plan-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.1rem;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 94% 15%, rgba(255, 200, 87, 0.15), transparent 34%),
+    radial-gradient(circle at 8% 100%, rgba(123, 63, 255, 0.18), transparent 38%), var(--surface);
+}
+.pro-plan-card--active {
+  border-color: rgba(56, 223, 198, 0.28);
+}
+.pro-plan-card__spark {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 200, 87, 0.2);
+  border-radius: 19px;
+  background: rgba(255, 200, 87, 0.09);
+  color: var(--gold);
+  font-size: 1.3rem;
+  box-shadow: 0 12px 32px rgba(255, 200, 87, 0.08);
+}
+.pro-plan-card__copy h2 {
+  margin: 0.22rem 0 0.4rem;
+}
+.pro-plan-card__copy p,
+.pro-plan-card__copy ul {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+.pro-plan-card__copy ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  padding: 0.65rem 0 0;
+  list-style: none;
+}
+.pro-plan-card__copy li::before {
+  content: "✓";
+  margin-right: 0.32rem;
+  color: var(--mint);
+  font-weight: 900;
+}
+.pro-plan-card__status {
+  display: inline-flex;
+  width: max-content;
+  margin-top: 0.65rem;
+  padding: 0.32rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(56, 223, 198, 0.08);
+  color: var(--mint);
+  font-size: 0.65rem;
+  font-weight: 850;
+}
+.pro-plan-card__message {
+  margin-top: 0.65rem !important;
+  color: #ffacb9 !important;
+}
+.pro-plan-card__offer {
+  min-width: 190px;
+  display: grid;
+  justify-items: end;
+  gap: 0.12rem;
+  text-align: right;
+}
+.pro-plan-card__offer > strong {
+  font-size: 1.55rem;
+  line-height: 1;
+}
+.pro-plan-card__offer > span,
+.pro-plan-card__offer > small {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+.pro-plan-card__offer .button {
+  margin-top: 0.55rem;
+}
+.pro-plan-card__terms {
+  max-width: 220px;
+  margin-top: 0.35rem;
+  line-height: 1.45;
+}
 .settings-section {
   display: grid;
   gap: 0.8rem;
@@ -3865,6 +3952,23 @@ p {
   }
   .settings-plan-pill {
     grid-column: 1 / -1;
+  }
+  .pro-plan-card {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+  }
+  .pro-plan-card__offer {
+    min-width: 0;
+    width: 100%;
+    grid-column: 1 / -1;
+    justify-items: stretch;
+    text-align: left;
+  }
+  .pro-plan-card__offer .button {
+    width: 100%;
+  }
+  .pro-plan-card__terms {
+    max-width: none;
   }
   .settings-home-grid,
   .settings-grid,

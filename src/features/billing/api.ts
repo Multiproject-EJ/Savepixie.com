@@ -40,7 +40,21 @@ async function invokeBillingFunction(name: string): Promise<string> {
     body: {},
   });
 
-  if (error) throw error;
+  if (error) {
+    const response = "context" in error ? (error as { context?: Response }).context : null;
+    let message = "Billing could not complete that request. Please try again.";
+
+    if (response) {
+      try {
+        const body = (await response.clone().json()) as { error?: string };
+        if (body.error) message = body.error;
+      } catch {
+        // Keep the customer-safe fallback when the service returns no JSON body.
+      }
+    }
+
+    throw new Error(message);
+  }
   return hostedStripeUrl(data?.url);
 }
 
