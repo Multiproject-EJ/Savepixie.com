@@ -1,6 +1,6 @@
 # SavePixie Email Delivery
 
-Checked: 2026-07-17
+Checked: 2026-07-18
 
 ## Proven current state
 
@@ -45,16 +45,23 @@ documentation, or screenshots.
 
 ### 3. Brand the essential templates
 
-Prepare concise, low-image templates for:
+The repository now contains concise, image-free templates that use only Supabase's trusted action
+URL and do not render user metadata:
 
-- confirm signup;
-- reset password;
-- email change;
-- password-changed security notification.
+- `supabase/templates/confirmation.html` — confirm signup;
+- `supabase/templates/recovery.html` — reset password;
+- `supabase/templates/email_change.html` — confirm an email change;
+- `supabase/templates/password_changed_notification.html` — password-changed security notification.
 
-Every template must name SavePixie, explain why the message was sent, use the configured HTTPS domain,
-state when the customer can ignore it, and link to the monitored support address. Avoid user-provided
-names or other unsanitized metadata in email content.
+Their subjects and local paths are recorded in `supabase/config.toml`. Each template names SavePixie,
+explains why the message was sent, uses the configured HTTPS domain, states when the customer can
+ignore it, and links to the intended support address. Avoid user-provided names or other unsanitized
+metadata in future changes.
+
+These files are prepared, not proof of live delivery. After custom SMTP is active, paste or upload
+the matching template in WalletHabit Suite → Authentication → Emails → Templates and enable the
+password-changed security notification. Send all four messages through the acceptance suite below
+before launch.
 
 ## Acceptance suite
 
