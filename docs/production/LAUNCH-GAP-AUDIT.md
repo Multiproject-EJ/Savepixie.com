@@ -1,13 +1,14 @@
 # SavePixie Launch Gap Audit
 
-Updated: 2026-07-17
+Updated: 2026-07-18
 
 ## Current proven state
 
 - GitHub `main` contains the production and dormant billing foundation from PR #8.
 - The production PWA builds successfully with TypeScript checks and a GitHub Pages SPA fallback.
 - Supabase Auth uses `https://savepixie.com` with production, `www`, and local-development redirects.
-- The shared WalletHabit Suite project has no unresolved Supabase security-advisor findings.
+- The shared WalletHabit Suite project has no database, RLS, or exposed-schema security-advisor
+  findings. One Auth warning remains until leaked-password protection is enabled.
 - Legacy personal goals and atomic deposits are still present for backwards compatibility.
 - The live database now also contains the core Savings Pact model:
   - solo and shared Pacts;
@@ -28,7 +29,7 @@ Updated: 2026-07-17
   deleting a mapped customer, transfers active shared Pacts, repairs their totals, and removes
   Auth-linked SavePixie records through verified cascades.
 - All five rollback-safe Supabase acceptance suites pass, production-origin CORS is verified for the
-  signed-in browser functions, and the live security advisor remains clean.
+  signed-in browser functions, and the 2026-07-18 rerun left zero temporary records.
 - The database enforces Basic versus Pro at the real write boundary: one two-person shared Pact on
   Basic, additional Pacts and groups of up to ten on Pro, with no destructive downgrade behavior.
 - The feature-flagged Settings offer shows the seven-day trial and 29 kr renewal plainly; Checkout
@@ -68,6 +69,10 @@ Updated: 2026-07-17
   contract: focus enters and stays inside the dialog, Escape closes only when safe, background scroll
   is locked, focus returns to the launching control, and an in-flight save or destructive action
   cannot be dismissed accidentally.
+- Authenticated client failures now produce only fixed, deduplicated operational codes in a protected
+  Edge Function log. No message, stack, route, identifier, savings value, device fingerprint, or
+  customer metadata is sent. The beta funnel is derived as aggregate counts from records already
+  required to provide the service.
 
 ## Launch blockers
 
@@ -93,7 +98,8 @@ Updated: 2026-07-17
   selected GitHub Pages deployment.
 - Verify HTTPS, canonical redirects, direct-route refresh, PWA install/update/offline behavior, password
   reset, and email confirmation on the real domain.
-- Add privacy-respecting error monitoring and a minimal conversion funnel.
+- Review operational error codes daily and run the aggregate beta funnel weekly as documented in
+  `MONITORING.md`.
 
 The checked cutover and rollback records are captured in `DOMAIN-CUTOVER.md`. Current authoritative
 DNS is still at GoDaddy and the public redirect chain still ends at AlphaStocks; no live DNS change has

@@ -60,7 +60,10 @@ disabled until their server-side dependencies and customer safeguards pass the g
       delivery monitoring.
 - [x] Record the existing Mailgun DNS, shared Supabase sender, observed email-rate-limit failure, safe
       SMTP procedure, and external acceptance suite in `EMAIL-DELIVERY.md`.
-- [ ] Add production error monitoring and a minimal privacy-respecting analytics funnel.
+- [x] Add authenticated, allow-listed production error signals and an aggregate funnel derived from
+      service records without advertising pixels, free-text errors, identifiers, or page-view tracking.
+- [x] Deploy `report-client-error` v1 with JWT verification and prove an anonymous production-origin
+      request is rejected with `401` before the handler runs.
 - [ ] Deploy and test the new Pact client against production authentication with two real beta accounts.
 - [x] Confirm production-origin CORS for authenticated browser functions.
 - [x] Add recoverable session and initial private-data loading states, and defer database calls outside

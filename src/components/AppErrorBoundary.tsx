@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type PropsWithChildren, type ReactNode } from "react";
+import { reportClientError } from "../lib/telemetry";
 import PixieMark from "./PixieMark";
 
 type ErrorBoundaryState = {
@@ -14,6 +15,7 @@ export class AppErrorBoundary extends Component<PropsWithChildren, ErrorBoundary
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("SavePixie could not render this screen", error, info);
+    reportClientError("render_fatal", "app");
   }
 
   private reload = () => window.location.reload();

@@ -12,6 +12,7 @@ import {
   type Entitlement,
 } from "../features/billing/api";
 import type { SavingsHome } from "../features/goals/types";
+import { reportClientError } from "../lib/telemetry";
 import { useModalDialog } from "../lib/useModalDialog";
 
 export function SettingsPage() {
@@ -64,6 +65,7 @@ export function SettingsPage() {
       })
       .catch((cause) => {
         if (!active) return;
+        reportClientError("billing_status", "billing");
         setBillingState("error");
         setBillingMessage(
           cause instanceof Error ? cause.message : "We couldn't load your plan status."
@@ -84,6 +86,10 @@ export function SettingsPage() {
         destination === "checkout" ? await createCheckoutSession() : await createPortalSession();
       window.location.assign(url);
     } catch (cause) {
+      reportClientError(
+        destination === "checkout" ? "billing_checkout" : "billing_portal",
+        "billing"
+      );
       setBillingState("error");
       setBillingMessage(
         cause instanceof Error ? cause.message : "We couldn't open secure billing."
@@ -100,6 +106,7 @@ export function SettingsPage() {
       downloadAccountExport(data);
       setExportMessage("Your private JSON export is ready.");
     } catch (cause) {
+      reportClientError("account_export", "settings");
       setExportMessage(cause instanceof Error ? cause.message : "We couldn't prepare your export.");
     } finally {
       setExporting(false);
@@ -125,6 +132,7 @@ export function SettingsPage() {
       await deleteAccount(deletePassword);
       navigate("/?account=deleted", { replace: true });
     } catch (cause) {
+      reportClientError("account_delete", "settings");
       setDeleteMessage(
         cause instanceof Error
           ? cause.message

@@ -19,6 +19,7 @@ import {
 } from "../features/goals/api";
 import type { Goal, SavingsHome } from "../features/goals/types";
 import { fetchProfile, type ProfileRow } from "../features/profile/api";
+import { reportClientError } from "../lib/telemetry";
 import { useAuth } from "./AuthProvider";
 
 export type NewGoalInput = {
@@ -100,6 +101,7 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       setSavingsHomes(nextHomes);
       setReady(true);
     } catch (cause) {
+      reportClientError("private_data_load", "app");
       setError(errorMessage(cause, "We couldn't load your SavePixie space."));
     } finally {
       setLoading(false);
@@ -151,6 +153,7 @@ export function SavingsProvider({ children }: PropsWithChildren) {
           });
           initialSaveRecorded = true;
         } catch {
+          reportClientError("save_action", "saving");
           initialSaveRecorded = false;
         }
       }
@@ -184,6 +187,7 @@ export function SavingsProvider({ children }: PropsWithChildren) {
         setGoals((current) => current.map((item) => (item.id === goalId ? updated : item)));
         return updated;
       } catch (cause) {
+        reportClientError("save_action", "saving");
         setGoals((current) => current.map((item) => (item.id === goalId ? goal : item)));
         throw cause;
       }

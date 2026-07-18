@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { reportClientError } from "../../lib/telemetry";
 import type { Tables } from "../../types/database";
 
 type EntitlementRow = Tables<"entitlements">;
@@ -41,6 +42,10 @@ async function invokeBillingFunction(name: string): Promise<string> {
   });
 
   if (error) {
+    reportClientError(
+      name === "create-checkout-session" ? "billing_checkout" : "billing_portal",
+      "billing"
+    );
     const response = "context" in error ? (error as { context?: Response }).context : null;
     let message = "Billing could not complete that request. Please try again.";
 

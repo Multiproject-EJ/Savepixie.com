@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { reportClientError } from "../lib/telemetry";
 import { ensureProfile } from "../features/profile/api";
 
 type AuthContextValue = {
@@ -57,6 +58,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       })
       .catch(() => {
         if (!mounted || authEventReceived) return;
+        reportClientError("session_load", "auth");
         setSession(null);
         setUser(null);
         setSessionError(
@@ -79,9 +81,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (nextSession?.user) {
         // Supabase warns against starting another API request inside this callback.
         window.setTimeout(() => {
-          void ensureProfile(nextSession.user).catch((error) =>
-            console.error("SavePixie could not prepare the customer profile", error)
-          );
+          void ensureProfile(nextSession.user).catch((error) => {
+            reportClientError("profile_prepare", "auth");
+            console.error("SavePixie could not prepare the customer profile", error);
+          });
         }, 0);
       }
     });
@@ -101,6 +104,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setSession(data.session);
       setUser(data.session?.user ?? null);
     } catch {
+      reportClientError("session_load", "auth");
       setSession(null);
       setUser(null);
       setSessionError("We couldn’t check your SavePixie session. Check your connection and retry.");
