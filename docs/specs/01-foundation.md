@@ -1,9 +1,11 @@
 # Step 0 Spec — Initialize Repo & Tooling
 
 ## Goal
+
 Bootstrap the SavePixie project with a Vite + React + TypeScript PWA, Supabase client wiring, and GitHub Pages deployment so future steps can build on a working foundation.
 
 ## Scope
+
 - Project scaffolding with routing placeholders for `/`, `/auth`, and `/dashboard`.
 - PWA manifest and basic service worker that caches the application shell.
 - Supabase client configured from environment variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
@@ -11,6 +13,7 @@ Bootstrap the SavePixie project with a Vite + React + TypeScript PWA, Supabase c
 - GitHub Actions workflow to build and deploy to GitHub Pages (custom domain `savepixie.com`).
 
 ## Deliverables
+
 - Vite project initialized with React + TS entrypoint.
 - Routing structure and placeholder pages.
 - PWA assets (`public/manifest.webmanifest`, icons directory) and `src/service-worker.ts` (or equivalent) registered.
@@ -20,17 +23,20 @@ Bootstrap the SavePixie project with a Vite + React + TypeScript PWA, Supabase c
 - Updated documentation (`README.md`, this spec, worklog entry once implemented).
 
 ## Implementation Snapshot
+
 - `src/main.tsx` bootstraps React Router with placeholder routes for `/`, `/auth`, and `/dashboard`.
 - `src/service-worker.ts` caches the shell (`index.html`, manifest, and runtime requests) for offline access.
 - Global styling lives in `src/styles/global.css` to provide a polished default look for placeholder screens.
 - The GitHub Pages workflow builds on pushes to `main` and publishes the static bundle from `dist/`.
 
 ## Acceptance Criteria
+
 - Local development server runs without errors.
 - Production build succeeds via `npm run build`.
 - Deployed site loads at `https://savepixie.com` and can be installed as a PWA with offline shell.
 
 ## Notes
+
 - Keep dependencies minimal (React Router as primary addition).
 - Ensure environment variables are documented but not committed with secrets.
 - After completion, continue with Step 1: Supabase Auth + Profiles.

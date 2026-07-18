@@ -5,20 +5,24 @@ This roadmap captures the end-to-end plan for building **SavePixie**, a mobile-f
 Each step in the roadmap is designed to become its own pull request and release. Every section below includes the goal, required tasks, database schema work, primary files to touch, acceptance criteria, and a short note about what comes next. Follow the steps sequentially to deliver the full product experience.
 
 > **How to use this with Codex**
+>
 > - Reference the desired step explicitly in your prompt (e.g., "Start Step 3 from the SavePixie roadmap").
 > - Codex should implement the listed tasks, run or document the SQL migration, and update the worklog template for that step.
 > - Once a step is merged, move on to the next numbered step using the same pattern.
 
 > **Workflow conventions**
+>
 > - Branch naming: `feature/<step-number>-<short-name>`
 > - Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`)
 > - Pull request template sections: Goal / Changes / SQL / Testing / Screens / NEXT
 > - Release tagging: `v<major>.<minor>.<patch>` aligned with the step version
 
 ## Step 0 — Initialize Repo & Tooling (v0.0.1)
+
 **Goal:** Bootstrapped Vite + React + TypeScript PWA with GitHub Pages deployment.
 
 **Tasks**
+
 - Initialize the Vite project with React and TypeScript.
 - Wire up React Router with `/`, `/auth`, and `/dashboard` routes.
 - Add the PWA shell: `manifest.webmanifest` and `service-worker.ts` for offline shell caching.
@@ -29,6 +33,7 @@ Each step in the roadmap is designed to become its own pull request and release.
 **Schema/Migrations:** None (client-only setup).
 
 **Files**
+
 - `index.html`, `src/main.tsx`, `src/app/App.tsx`
 - `src/lib/supabase.ts`
 - `public/manifest.webmanifest`, `public/icons/*`
@@ -36,15 +41,18 @@ Each step in the roadmap is designed to become its own pull request and release.
 - `/docs/specs/01-foundation.md`
 
 **Acceptance Criteria**
+
 - App builds successfully and deploys to `https://savepixie.com` (via GitHub Pages + CNAME).
 - PWA installs and loads the blank shell offline.
 
 **NEXT:** Step 1 – Supabase Auth & Profiles.
 
 ## Step 1 — Supabase Auth + Profiles (v0.1.0)
+
 **Goal:** Email/password authentication with a per-user profile record.
 
 **Schema/Migrations** (`/sql/migrations/001_auth_profiles.sql`)
+
 ```sql
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -70,24 +78,29 @@ create policy "insert own profile"
 ```
 
 **Tasks**
+
 - Build authentication screens (`/auth`) with sign-up, sign-in, and password reset.
 - After first login, upsert the `profiles` table with `id = user.id`.
 - Implement a global `AuthProvider` and route guard so `/dashboard` requires authentication.
 
 **Files**
+
 - `src/pages/auth/*`, `src/app/AuthProvider.tsx`
 - `src/features/profile/api.ts`
 
 **Acceptance Criteria**
+
 - A new user can sign up, refresh, and remain logged in.
 - The matching `profiles` row exists and can be edited by the user.
 
 **NEXT:** Step 2 – Goals & Deposits.
 
 ## Step 2 — Savings Goals + Deposits (v0.2.0)
+
 **Goal:** Create savings goals, record deposits, and display progress.
 
 **Schema/Migrations** (`/sql/migrations/002_goals.sql`)
+
 ```sql
 create table public.goals (
   id uuid primary key default gen_random_uuid(),
@@ -121,23 +134,28 @@ for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 ```
 
 **Tasks**
+
 - Display goals on `/dashboard` as progress cards (rings, emoji, colors).
 - Provide "New Goal" and "Deposit" modals with optimistic updates.
 - Persist `goal_events` and update `saved_cents` on deposits/withdrawals.
 
 **Files**
+
 - `src/features/goals/*` (components, hooks, API helpers).
 
 **Acceptance Criteria**
+
 - Users can create goals, deposit funds, and see progress update instantly.
 - Refreshing the app shows the same state from Supabase.
 
 **NEXT:** Step 3 – Streak Engine.
 
 ## Step 3 — Streak Engine (v0.3.0)
+
 **Goal:** Track daily and weekly deposit streaks.
 
 **Schema/Migrations** (`/sql/migrations/003_streaks.sql`)
+
 ```sql
 create table public.streaks (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -155,19 +173,23 @@ for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 ```
 
 **Tasks**
+
 - Implement `useStreaks()` hook and streak display widget.
 - After each deposit, compute streak updates client-side and persist to Supabase.
 
 **Acceptance Criteria**
+
 - Consecutive daily deposits increase the streak counter.
 - Missing a day resets the current streak while preserving best streak.
 
 **NEXT:** Step 4 – Points & Badges.
 
 ## Step 4 — Points Ledger + Badges (v0.4.0)
+
 **Goal:** Reward saving behavior with points and badges.
 
 **Schema/Migrations** (`/sql/migrations/004_points_badges.sql`)
+
 ```sql
 create table public.points_ledger (
   id uuid primary key default gen_random_uuid(),
@@ -204,19 +226,23 @@ create policy "own user_badges" on public.user_badges
 ```
 
 **Tasks**
+
 - Add `awardPoints(source, points, meta)` helper.
 - Implement badge unlocking logic and `/badges` gallery.
 
 **Acceptance Criteria**
+
 - Deposits add ledger entries and accumulate points.
 - Reaching thresholds unlocks badges displayed in the UI.
 
 **NEXT:** Step 5 – Challenges.
 
 ## Step 5 — Challenges (Daily/Weekly Missions) (v0.5.0)
+
 **Goal:** Configurable missions users can enroll in and complete.
 
 **Schema/Migrations** (`/sql/migrations/005_challenges.sql`)
+
 ```sql
 create table public.challenges (
   id uuid primary key default gen_random_uuid(),
@@ -247,19 +273,23 @@ create policy "own enrollments" on public.challenge_enrollments
 ```
 
 **Tasks**
+
 - Build `/challenges` page for browsing, enrolling, and tracking progress.
 - Update deposit handling to advance relevant enrollments and award completion points.
 - Celebrate completion with confetti and badge triggers.
 
 **Acceptance Criteria**
+
 - Users can enroll, progress, and complete challenges with points awarded.
 
 **NEXT:** Step 6 – Budgets & Categories.
 
 ## Step 6 — Budgets & Categories (v0.6.0)
+
 **Goal:** Monthly budgets with category progress tracking.
 
 **Schema/Migrations** (`/sql/migrations/006_budgets.sql`)
+
 ```sql
 create table public.categories (
   id uuid primary key default gen_random_uuid(),
@@ -307,18 +337,22 @@ create policy "own budget_lines" on public.budget_lines
 ```
 
 **Tasks**
+
 - Implement `/budget` page to create monthly budgets and category lines.
 - Add expense logging that increments `spent_cents` with friendly visuals.
 
 **Acceptance Criteria**
+
 - Users see per-category progress (color-coded) with totals and animations.
 
 **NEXT:** Step 7 – Leaderboard.
 
 ## Step 7 — Opt-in Leaderboards (v0.7.0)
+
 **Goal:** Friendly competition using aggregated points.
 
 **Schema/Migrations** (`/sql/migrations/007_leaderboard.sql`)
+
 ```sql
 create table public.leaderboard_optin (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -334,45 +368,55 @@ create policy "own optin" on public.leaderboard_optin
 ```
 
 **Tasks**
+
 - Build `/leaderboard` with weekly and monthly tabs.
 - Aggregate `points_ledger` entries client-side for opted-in users.
 - Display nicknames only to preserve privacy.
 
 **Acceptance Criteria**
+
 - Opted-in users appear with correct weekly and monthly point totals.
 
 **NEXT:** Step 8 – Playful UI Pass.
 
 ## Step 8 — Playful UI Pass (v0.8.0)
+
 **Goal:** Delightful visuals and animations.
 
 **Tasks**
+
 - Create Pixie mascot component with idle, celebrate, and nudge states.
 - Add confetti animations on key achievements (goal completion, badges, challenges).
 - Update copy to be encouraging and playful.
 
 **Acceptance Criteria**
+
 - Interactions feel celebratory and friendly.
 
 **NEXT:** Step 9 – PWA Offline Enhancements.
 
 ## Step 9 — PWA Enhancement & Offline UX (v0.9.0)
+
 **Goal:** Reliable offline experience with action queueing.
 
 **Tasks**
+
 - Enhance service worker to cache the app shell, manifest, and icons.
 - Add client-side queue for offline actions (deposits, expenses) using local storage.
 - Surface offline banners and ensure optimistic UI during outages.
 
 **Acceptance Criteria**
+
 - App remains usable offline, syncing queued actions on reconnect.
 
 **NEXT:** Step 10 – Settings & Personalization.
 
 ## Step 10 — Settings: Themes, Avatars, Notifications (v1.0.0)
+
 **Goal:** Personalization options and in-app reminders.
 
 **Schema/Migrations** (`/sql/migrations/010_settings.sql`)
+
 ```sql
 create table public.settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -390,18 +434,22 @@ create policy "own settings" on public.settings
 ```
 
 **Tasks**
+
 - Build `/settings` page for theme, currency, and reminder toggles.
 - Display in-app reminders (non-push) based on toggle states.
 
 **Acceptance Criteria**
+
 - Settings persist per user and reminders respect preferences.
 
 **NEXT:** Step 11 – Education & Tips.
 
 ## Step 11 — Micro-Lessons & Tips (v1.1.0)
+
 **Goal:** Bite-size financial tips with point rewards.
 
 **Schema/Migrations** (`/sql/migrations/011_tips.sql`)
+
 ```sql
 create table public.tips (
   id uuid primary key default gen_random_uuid(),
@@ -427,30 +475,37 @@ create policy "own user_tips" on public.user_tips
 ```
 
 **Tasks**
+
 - Build `/learn` page with tip carousel and completion flow.
 - Award points when users complete a tip.
 
 **Acceptance Criteria**
+
 - Completed tips persist and reward users.
 
 **NEXT:** Step 12 – Accessibility & Polish.
 
 ## Step 12 — Accessibility, Performance, QA, Docs (v1.2.0)
+
 **Goal:** Ship-quality experience with strong accessibility and documentation.
 
 **Tasks**
+
 - Ensure WCAG-compliant navigation, focus management, and ARIA labeling.
 - Achieve Lighthouse scores above 90 for PWA, Performance, Accessibility, and Best Practices.
 - Create regression checklist and demo seed data script.
 
 **Acceptance Criteria**
+
 - Accessibility and performance audits pass.
 - Documentation is comprehensive for onboarding and QA.
 
 **NEXT:** Public launch and ongoing iteration.
 
 ## Seed Data (Optional — Development Only)
+
 Create `/sql/migrations/999_seed_dev.sql` for local/demo environments. **Never deploy to production.**
+
 ```sql
 insert into public.challenges (title, cadence, rule, points_reward)
 values
@@ -469,12 +524,15 @@ insert into public.tips (title, content, points_reward) values
 ```
 
 ## Security & RLS Checklist
+
 - Enable RLS on every user-data table.
 - Restrict `SELECT`, `INSERT`, `UPDATE`, and `DELETE` operations to the authenticated user via `auth.uid()` checks (or equivalent joins).
 - Use the Supabase anon key in the client; never expose the service key in code or configuration.
 
 ## Initial GitHub Issues
+
 Create the following GitHub issues to mirror each implementation step:
+
 1. Setup: Vite React TS + PWA + GH Pages (Step 0)
 2. Auth + Profiles + RLS (Step 1)
 3. Goals + Deposits + Progress UI (Step 2)
@@ -490,25 +548,33 @@ Create the following GitHub issues to mirror each implementation step:
 13. A11y/Perf/Docs (Step 12)
 
 ## Worklog Template
+
 Every step should document progress in `/docs/worklog/STEP-<nn>.md` using:
+
 ```markdown
 # STEP <nn>: <title>
+
 ## Goal
 
 ## Changes
-- 
+
+-
 
 ## SQL
-- 
+
+-
 
 ## Testing
-- 
+
+-
 
 ## Screens
-- 
+
+-
 
 ## NEXT
-- 
+
+-
 ```
 
 Keep this roadmap updated if priorities shift or new insights emerge.
