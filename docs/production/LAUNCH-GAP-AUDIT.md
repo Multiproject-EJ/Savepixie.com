@@ -69,6 +69,10 @@ Updated: 2026-07-18
   contract: focus enters and stays inside the dialog, Escape closes only when safe, background scroll
   is locked, focus returns to the launching control, and an in-flight save or destructive action
   cannot be dismissed accidentally.
+- Shared invitations now expose a selectable one-use link with honest clipboard feedback, distinguish
+  failed actions from success, validate pasted links before submitting, and genuinely retry a failed
+  invitation instead of only refreshing unrelated savings data. A 390 px portrait check confirms the
+  invitation card spans the available width with 44 px copy controls and no horizontal overflow.
 - Authenticated client failures now produce only fixed, deduplicated operational codes in a protected
   Edge Function log. No message, stack, route, identifier, savings value, device fingerprint, or
   customer metadata is sent. The beta funnel is derived as aggregate counts from records already

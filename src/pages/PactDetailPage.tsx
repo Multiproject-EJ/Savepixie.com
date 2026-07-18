@@ -3,6 +3,7 @@ import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom
 import { useAuth } from "../app/AuthProvider";
 import { useSavings } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
+import InviteLinkCard from "../components/InviteLinkCard";
 import {
   archivePact,
   fetchOwnPactMembership,
@@ -201,9 +202,7 @@ export function PactDetailPage() {
       const token = isPreview ? "preview-invite" : await createInvite(goal.id);
       const url = `${window.location.origin}/app?join=${token}`;
       setInviteUrl(url);
-      if (navigator.clipboard?.writeText)
-        await navigator.clipboard.writeText(url).catch(() => undefined);
-      setNotice("A private seven-day invitation is ready and copied.");
+      setNotice("A private seven-day invitation is ready.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We couldn't create an invitation.");
     }
@@ -288,7 +287,13 @@ export function PactDetailPage() {
             </button>
           ) : null}
         </div>
-        {inviteUrl ? <small className="pact-detail-invite">{inviteUrl}</small> : null}
+        {inviteUrl ? (
+          <InviteLinkCard
+            className="pact-detail-invite"
+            url={inviteUrl}
+            onDismiss={() => setInviteUrl(null)}
+          />
+        ) : null}
       </section>
 
       {goal.mode === "shared" ? (

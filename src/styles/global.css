@@ -4265,11 +4265,8 @@ p {
   flex-wrap: wrap;
   gap: 0.55rem;
 }
-.pact-detail-invite {
+.pact-detail-invite.invite-link-card {
   grid-column: 2 / -1;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  color: var(--mint);
 }
 .pact-circle-section {
   display: grid;
@@ -4437,7 +4434,7 @@ p {
     padding: 0.55rem;
   }
   .pact-detail-hero__actions,
-  .pact-detail-invite {
+  .pact-detail-invite.invite-link-card {
     grid-column: 1 / -1;
   }
   .pact-detail-hero__actions .button {
@@ -4685,7 +4682,7 @@ p {
 }
 
 .join-pact-bar,
-.pact-invite-result {
+.invite-link-card {
   margin-bottom: 1rem;
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.4fr) auto;
@@ -4699,13 +4696,13 @@ p {
 
 .join-pact-bar strong,
 .join-pact-bar small,
-.pact-invite-result strong,
-.pact-invite-result small {
+.invite-link-card strong,
+.invite-link-card small {
   display: block;
 }
 
 .join-pact-bar small,
-.pact-invite-result small {
+.invite-link-card small {
   margin-top: 0.2rem;
   color: var(--muted);
   font-size: 0.68rem;
@@ -4721,26 +4718,50 @@ p {
   color: var(--ink);
 }
 
-.pact-invite-result {
-  grid-template-columns: auto 1fr auto;
+.invite-link-card {
+  grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
-.pact-invite-result > span {
+.invite-link-card__spark {
   color: var(--violet-light);
   font-size: 1.25rem;
 }
 
-.pact-invite-result > button {
-  background: none;
-  color: var(--muted);
-  font-size: 1.2rem;
-  cursor: pointer;
+.invite-link-card__copy {
+  min-width: 0;
+}
+
+.invite-link-card__copy input {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 0.55rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(8, 4, 21, 0.62);
+  color: var(--mint-light);
+  font-size: 0.72rem;
+}
+
+.invite-link-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 
 @media (max-width: 720px) {
   .pact-mode-grid,
-  .join-pact-bar {
+  .join-pact-bar,
+  .invite-link-card {
     grid-template-columns: 1fr;
+  }
+
+  .invite-link-card__spark {
+    display: none;
+  }
+
+  .invite-link-card__actions {
+    justify-content: space-between;
   }
 
   .page-heading__actions {

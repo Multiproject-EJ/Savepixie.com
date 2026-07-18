@@ -9,10 +9,11 @@ export function SavingsEntryPage() {
   const navigate = useNavigate();
   const attemptedInvite = useRef(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [joinAttempt, setJoinAttempt] = useState(0);
   const inviteToken = searchParams.get("join");
 
   useEffect(() => {
-    if (loading || !inviteToken || attemptedInvite.current) return;
+    if (loading || error || !inviteToken || attemptedInvite.current) return;
     attemptedInvite.current = true;
     void joinSharedPact(inviteToken)
       .then(() => navigate("/app/goals", { replace: true }))
@@ -21,7 +22,13 @@ export function SavingsEntryPage() {
           cause instanceof Error ? cause.message : "This Pact invitation could not be joined."
         );
       });
-  }, [inviteToken, joinSharedPact, loading, navigate]);
+  }, [error, inviteToken, joinAttempt, joinSharedPact, loading, navigate]);
+
+  const retryInvite = () => {
+    attemptedInvite.current = false;
+    setJoinError(null);
+    setJoinAttempt((attempt) => attempt + 1);
+  };
 
   if (loading) {
     return (
@@ -40,8 +47,12 @@ export function SavingsEntryPage() {
         <span className="eyebrow">A tiny wobble</span>
         <h1>We couldn&apos;t open your savings space.</h1>
         <p>{joinError || error}</p>
-        <button className="button primary" type="button" onClick={() => void refresh()}>
-          Try again
+        <button
+          className="button primary"
+          type="button"
+          onClick={joinError ? retryInvite : () => void refresh()}
+        >
+          {joinError ? "Try invitation again" : "Try again"}
         </button>
       </main>
     );

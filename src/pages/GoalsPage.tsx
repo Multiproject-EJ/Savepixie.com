@@ -3,6 +3,7 @@ import { Link, useOutletContext } from "react-router-dom";
 import { useAuth } from "../app/AuthProvider";
 import { useSavings } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
+import InviteLinkCard from "../components/InviteLinkCard";
 import { goalIdeas, type GoalIdea } from "../data/savingsMoves";
 import { formatMoney, formatShortDate, goalProgress } from "../lib/format";
 import { useModalDialog } from "../lib/useModalDialog";
@@ -13,7 +14,7 @@ export function GoalsPage() {
   const { openQuickSave, basePath } = useOutletContext<AppShellOutletContext>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedIdea, setSelectedIdea] = useState<GoalIdea | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ tone: "success" | "error"; message: string } | null>(null);
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinToken, setJoinToken] = useState("");
   const [sharedInviteUrl, setSharedInviteUrl] = useState<string | null>(null);
@@ -28,26 +29,38 @@ export function GoalsPage() {
       const token = await createInvite(pactId);
       const url = `${window.location.origin}/app?join=${token}`;
       setSharedInviteUrl(url);
-      setNotice("Your private seven-day invitation is ready.");
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url).catch(() => undefined);
-      }
+      setNotice({ tone: "success", message: "Your private seven-day invitation is ready." });
     } catch (cause) {
-      setNotice(cause instanceof Error ? cause.message : "We couldn't create an invitation.");
+      setNotice({
+        tone: "error",
+        message: cause instanceof Error ? cause.message : "We couldn't create an invitation.",
+      });
     }
   };
 
   const handleJoin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const token = joinToken.trim().split("join=").pop()?.split("&")[0] || "";
-    if (!token) return;
+    const token = parseInviteToken(joinToken);
+    if (!token) {
+      setNotice({
+        tone: "error",
+        message: "That invitation does not look complete. Paste the full link or invitation code.",
+      });
+      return;
+    }
     try {
       const joined = await joinSharedPact(token);
-      setNotice(`${joined.name} is now part of your SavePixie space.`);
+      setNotice({
+        tone: "success",
+        message: `${joined.name} is now part of your SavePixie space.`,
+      });
       setJoinToken("");
       setJoinOpen(false);
     } catch (cause) {
-      setNotice(cause instanceof Error ? cause.message : "That invitation could not be joined.");
+      setNotice({
+        tone: "error",
+        message: cause instanceof Error ? cause.message : "That invitation could not be joined.",
+      });
     }
   };
 
@@ -74,7 +87,11 @@ export function GoalsPage() {
       </header>
 
       {error ? <p className="alert error">{error}</p> : null}
-      {notice ? <p className="alert success">{notice}</p> : null}
+      {notice ? (
+        <p className={`alert ${notice.tone}`} role={notice.tone === "error" ? "alert" : "status"}>
+          {notice.message}
+        </p>
+      ) : null}
       {joinOpen ? (
         <form className="join-pact-bar" onSubmit={handleJoin}>
           <div>
@@ -93,20 +110,7 @@ export function GoalsPage() {
         </form>
       ) : null}
       {sharedInviteUrl ? (
-        <div className="pact-invite-result" role="status">
-          <span aria-hidden="true">◎</span>
-          <div>
-            <strong>Invitation copied</strong>
-            <small>{sharedInviteUrl}</small>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSharedInviteUrl(null)}
-            aria-label="Dismiss invitation"
-          >
-            ×
-          </button>
-        </div>
+        <InviteLinkCard url={sharedInviteUrl} onDismiss={() => setSharedInviteUrl(null)} />
       ) : null}
 
       {loading ? (
@@ -229,12 +233,30 @@ export function GoalsPage() {
         }}
         onCreate={async (values) => {
           const goal = await addGoal(values);
-          setNotice(`${goal.name} is ready for its first save.`);
+          setNotice({ tone: "success", message: `${goal.name} is ready for its first save.` });
           setDialogOpen(false);
         }}
       />
     </div>
   );
+}
+
+const inviteTokenPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function parseInviteToken(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  let candidate = trimmed;
+  try {
+    const parsed = new URL(trimmed, window.location.origin);
+    candidate = parsed.searchParams.get("join")?.trim() || trimmed;
+  } catch {
+    candidate = trimmed;
+  }
+
+  return inviteTokenPattern.test(candidate) ? candidate : null;
 }
 
 type NewGoalDialogProps = {
