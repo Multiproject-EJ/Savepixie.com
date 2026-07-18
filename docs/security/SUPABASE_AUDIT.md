@@ -43,7 +43,22 @@ The corresponding source files live in `supabase/migrations/`.
 - The browser uses a modern publishable key; no service-role or Stripe secret enters the PWA.
 - Supabase Security Advisor reports one Auth warning: leaked-password protection is disabled. No
   database, RLS, function, or exposed-schema vulnerability is reported.
-- The only Performance Advisor notices are unused-index informational notices on an empty database.
+- Performance Advisor reports only informational notices: unused indexes on the near-empty beta
+  database and Auth's fixed ten-connection allocation. Neither is a blocker for the initial 10–20
+  person beta; revisit the percentage-based Auth allocation before increasing compute size.
+
+## Full acceptance rerun — 2026-07-18
+
+The five committed transactional suites were re-run against `WalletHabit Suite` production:
+
+1. `001_savings_pacts.sql` — passed.
+2. `002_weekly_plans.sql` — passed.
+3. `003_pact_member_controls.sql` — passed, including protected membership-column regression checks.
+4. `004_prepare_account_deletion.sql` — passed.
+5. `005_savepixie_pro_limits.sql` — passed.
+
+Every suite ends with `ROLLBACK`. A separate cleanup query immediately afterward confirmed zero
+`@example.invalid` Auth users, zero known test profiles, and zero known test Pacts.
 
 ## Live rollback test
 
