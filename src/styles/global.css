@@ -337,8 +337,16 @@ p {
 .auth-summary {
   justify-self: end;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.6rem;
+}
+.auth-summary__error {
+  width: min(280px, 100%);
+  color: #ff9bad;
+  font-size: 0.68rem;
+  text-align: right;
 }
 .badge {
   padding: 0.5rem 0.75rem;
@@ -4092,6 +4100,12 @@ p {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.55rem;
+}
+.settings-sign-out-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #ff9bad;
+  font-size: 0.72rem;
 }
 .settings-account-actions > small {
   grid-column: 1 / -1;

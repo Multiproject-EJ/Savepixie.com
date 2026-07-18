@@ -29,6 +29,8 @@ export function SettingsPage() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutMessage, setSignOutMessage] = useState<string | null>(null);
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
   const [billingState, setBillingState] = useState<"loading" | "ready" | "opening" | "error">(
     isPreview ? "ready" : "loading"
@@ -122,8 +124,16 @@ export function SettingsPage() {
       navigate("/");
       return;
     }
-    await signOut();
-    navigate("/");
+    setSigningOut(true);
+    setSignOutMessage(null);
+    try {
+      await signOut();
+      navigate("/");
+    } catch {
+      setSignOutMessage("We couldn’t sign you out. Check your connection and try again.");
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   const handleDeleteAccount = async (event: FormEvent<HTMLFormElement>) => {
@@ -316,8 +326,13 @@ export function SettingsPage() {
           </p>
         </div>
         <div className="settings-account-actions__buttons">
-          <button className="button secondary" type="button" onClick={handleSignOut}>
-            {isPreview ? "Leave preview" : "Sign out"}
+          <button
+            className="button secondary"
+            type="button"
+            onClick={handleSignOut}
+            disabled={signingOut}
+          >
+            {isPreview ? "Leave preview" : signingOut ? "Signing out…" : "Sign out"}
           </button>
           <button
             className="button danger-button"
@@ -327,6 +342,11 @@ export function SettingsPage() {
             {isPreview ? "Preview deletion safety" : "Delete account"}
           </button>
         </div>
+        {signOutMessage ? (
+          <p className="settings-sign-out-error" role="alert">
+            {signOutMessage}
+          </p>
+        ) : null}
         <small>
           This permanently removes your SavePixie records. A shared Pact with active members is
           handed to its longest-standing remaining member; export anything you want to keep first.

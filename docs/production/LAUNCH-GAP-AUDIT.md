@@ -76,7 +76,8 @@ Updated: 2026-07-18
 - Weekly-plan sync failures now offer an explicit retry without requiring customers to change a value.
   Account exports and Savings Home updates announce success and failure accessibly, and the Account
   Check prototype remains usable when private browser storage is unavailable instead of getting stuck
-  in its scanning state.
+  in its scanning state. Sign-out failures now stay on the current screen with a clear retryable
+  message instead of silently doing nothing.
 - Authenticated client failures now produce only fixed, deduplicated operational codes in a protected
   Edge Function log. No message, stack, route, identifier, savings value, device fingerprint, or
   customer metadata is sent. The beta funnel is derived as aggregate counts from records already
