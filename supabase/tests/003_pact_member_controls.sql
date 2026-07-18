@@ -54,6 +54,32 @@ select set_config(
 select public.join_savings_pact(invite_token)
 from member_control_test_state;
 
+do $$
+begin
+  begin
+    update public.savings_pact_members
+    set role = 'owner'
+    where pact_id = (select shared_pact from member_control_test_state)
+      and user_id = '66666666-6666-4666-8666-666666666666';
+    raise exception 'A member unexpectedly promoted themselves to Pact owner.';
+  exception
+    when insufficient_privilege then
+      null;
+  end;
+
+  begin
+    update public.savings_pact_members
+    set pact_id = gen_random_uuid()
+    where pact_id = (select shared_pact from member_control_test_state)
+      and user_id = '66666666-6666-4666-8666-666666666666';
+    raise exception 'A member unexpectedly reassigned their membership to another Pact.';
+  exception
+    when insufficient_privilege then
+      null;
+  end;
+end
+$$;
+
 with created as (
   insert into public.savings_homes (user_id, label, reported_balance_cents)
   values (

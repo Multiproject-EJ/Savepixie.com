@@ -1,6 +1,6 @@
 # SavePixie Launch Readiness
 
-Updated: 2026-07-17
+Updated: 2026-07-18
 
 ## Current release boundary
 
@@ -35,10 +35,14 @@ disabled until their server-side dependencies and customer safeguards pass the g
 - [x] Verified allocations cannot exceed the linked Savings Home's verified balance.
 - [x] Weekly plans are isolated by user and cannot be read or written across accounts.
 - [x] Leaving a Pact preserves ledger history, removes access, and supports controlled reactivation.
+- [x] Authenticated Pact members cannot promote themselves, change membership identity, or move their
+      membership to another Pact; only commitment and privacy columns are client-writable.
 - [x] Self-service deletion requires password reconfirmation and refuses to orphan an active Stripe
       subscription.
 - [x] Account deletion transfers active shared Pacts, repairs their totals, and preserves remaining
       members' history.
+- [ ] Enable Supabase leaked-password protection and clear the remaining Auth Security Advisor
+      warning.
 
 ## Gate 3 — web deployment
 

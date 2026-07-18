@@ -1,7 +1,7 @@
 # SavePixie Supabase and RLS Audit
 
 Status: shared production foundation installed and live authorization tests passed
-Verified: 2026-07-17
+Verified: 2026-07-18
 
 ## Production project
 
@@ -35,10 +35,14 @@ The corresponding source files live in `supabase/migrations/`.
   `record_goal_deposit` and a private trigger.
 - Normal clients cannot directly update `goals.saved_cents`, rewrite event history, or grant paid
   access.
+- Pact members receive column-level update permission only for their own `commitment_cents` and
+  `privacy_mode`; protected membership identity, Pact, role, status, and timestamp columns are not
+  writable by authenticated clients.
 - Stripe customer mappings and webhook idempotency records are service-only.
 - SavePixie and WalletHabit entitlements are independent rows keyed by both user and product.
 - The browser uses a modern publishable key; no service-role or Stripe secret enters the PWA.
-- Supabase Security Advisor returns no findings.
+- Supabase Security Advisor reports one Auth warning: leaked-password protection is disabled. No
+  database, RLS, function, or exposed-schema vulnerability is reported.
 - The only Performance Advisor notices are unused-index informational notices on an empty database.
 
 ## Live rollback test
@@ -58,6 +62,7 @@ events, and entitlements remained.
 ## Remaining backend work
 
 - Configure SavePixie auth site URL, redirect URLs, email templates, and production SMTP.
+- Enable leaked-password protection in Supabase Auth and re-run the Security Advisor.
 - Add the public project URL and publishable key to the GitHub deployment variables.
 - Generate and commit database TypeScript types. The first generation request returned an
   `exceed_db_size_quota` restriction even though the new database reports only 10 MB and accepts
