@@ -73,6 +73,10 @@ Updated: 2026-07-18
   failed actions from success, validate pasted links before submitting, and genuinely retry a failed
   invitation instead of only refreshing unrelated savings data. A 390 px portrait check confirms the
   invitation card spans the available width with 44 px copy controls and no horizontal overflow.
+- Weekly-plan sync failures now offer an explicit retry without requiring customers to change a value.
+  Account exports and Savings Home updates announce success and failure accessibly, and the Account
+  Check prototype remains usable when private browser storage is unavailable instead of getting stuck
+  in its scanning state.
 - Authenticated client failures now produce only fixed, deduplicated operational codes in a protected
   Edge Function log. No message, stack, route, identifier, savings value, device fingerprint, or
   customer metadata is sent. The beta funnel is derived as aggregate counts from records already
@@ -87,8 +91,9 @@ Updated: 2026-07-18
 - Configure a branded production SMTP sender and Auth email templates; the default Supabase sender is
   rate-limited for development and is not a customer launch path.
 - Finalize legally required billing retention and the future Account Check server-side retention job.
-- Finish recoverable action-level data-error states for the remaining secondary paths; session,
-  initial-data, offline, and fatal-render states are complete.
+- Continue recoverable action-level data-error review for secondary paths; session, initial-data,
+  weekly-plan sync, core saving actions, exports, Savings Home edits, offline, and fatal-render states
+  are complete.
 
 ### Commercial
 

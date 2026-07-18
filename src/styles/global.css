@@ -1673,6 +1673,14 @@ p {
   margin-top: 0.55rem;
   color: #ff9bad;
 }
+.plan-sync-recovery {
+  display: grid;
+  justify-items: start;
+  gap: 0.55rem;
+}
+.plan-sync-recovery .button {
+  min-height: 44px;
+}
 
 .account-check-invite {
   position: relative;
@@ -1865,6 +1873,16 @@ p {
 }
 .account-check-sample-note strong {
   color: var(--gold);
+}
+.account-check-storage-message {
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(255, 155, 173, 0.22);
+  border-radius: 16px;
+  background: rgba(255, 155, 173, 0.07);
+  color: #ffc2cd;
+  font-size: 0.68rem;
+  line-height: 1.55;
 }
 .account-check-layout {
   display: grid;
@@ -4036,6 +4054,9 @@ p {
   font-size: 0.68rem;
 }
 .home-editor-message--error {
+  color: #ff9bad;
+}
+.settings-inline-message--error {
   color: #ff9bad;
 }
 .settings-control-card {

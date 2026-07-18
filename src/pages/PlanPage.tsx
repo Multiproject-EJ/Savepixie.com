@@ -51,6 +51,8 @@ export function PlanPage() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(isPreview ? "preview" : "loading");
   const [syncError, setSyncError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [saveAttempt, setSaveAttempt] = useState(0);
   const revision = useRef(0);
   const safeToSpend = useMemo(
     () => Math.max(0, plan.availableCents - plan.committedCents - plan.savingCents),
@@ -93,7 +95,7 @@ export function PlanPage() {
     return () => {
       active = false;
     };
-  }, [isPreview, user?.id]);
+  }, [isPreview, loadAttempt, user?.id]);
 
   useEffect(() => {
     if (isPreview || !user?.id || !dirty) return;
@@ -118,7 +120,18 @@ export function PlanPage() {
     }, 700);
 
     return () => window.clearTimeout(timer);
-  }, [dirty, isPreview, plan, user?.id]);
+  }, [dirty, isPreview, plan, saveAttempt, user?.id]);
+
+  const retrySync = () => {
+    setSyncError(null);
+    if (dirty) {
+      setSyncStatus("unsaved");
+      setSaveAttempt((attempt) => attempt + 1);
+      return;
+    }
+
+    setLoadAttempt((attempt) => attempt + 1);
+  };
 
   const update = (key: "availableCents" | "committedCents" | "savingCents", value: string) => {
     const next = Number.parseFloat(value);
@@ -218,7 +231,12 @@ export function PlanPage() {
             while categories and accounting stay out of the way.
           </p>
           {syncError ? (
-            <p className="plan-sync-error">{syncError} Change any number to retry.</p>
+            <div className="plan-sync-recovery" role="alert">
+              <p className="plan-sync-error">{syncError}</p>
+              <button className="button secondary compact-button" type="button" onClick={retrySync}>
+                Try syncing again
+              </button>
+            </div>
           ) : null}
         </div>
       </section>

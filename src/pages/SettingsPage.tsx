@@ -23,6 +23,7 @@ export function SettingsPage() {
   const isPreview = basePath === "/preview/app";
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [exportStatus, setExportStatus] = useState<"idle" | "success" | "error">("idle");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
@@ -101,12 +102,15 @@ export function SettingsPage() {
     if (!user?.id || isPreview) return;
     setExporting(true);
     setExportMessage(null);
+    setExportStatus("idle");
     try {
       const data = await createAccountExport(user.id);
       downloadAccountExport(data);
+      setExportStatus("success");
       setExportMessage("Your private JSON export is ready.");
     } catch (cause) {
       reportClientError("account_export", "settings");
+      setExportStatus("error");
       setExportMessage(cause instanceof Error ? cause.message : "We couldn't prepare your export.");
     } finally {
       setExporting(false);
@@ -277,7 +281,14 @@ export function SettingsPage() {
           >
             {isPreview ? "Available when signed in" : exporting ? "Preparing…" : "Download export"}
           </button>
-          {exportMessage ? <p className="settings-inline-message">{exportMessage}</p> : null}
+          {exportMessage ? (
+            <p
+              className={`settings-inline-message settings-inline-message--${exportStatus}`}
+              role={exportStatus === "error" ? "alert" : "status"}
+            >
+              {exportMessage}
+            </p>
+          ) : null}
         </article>
 
         <article className="surface-card settings-control-card">
@@ -526,7 +537,12 @@ function SavingsHomeEditor({
           {status === "saving" ? "Saving…" : "Save changes"}
         </button>
         {message ? (
-          <span className={`home-editor-message home-editor-message--${status}`}>{message}</span>
+          <span
+            className={`home-editor-message home-editor-message--${status}`}
+            role={status === "error" ? "alert" : "status"}
+          >
+            {message}
+          </span>
         ) : null}
       </footer>
     </form>
