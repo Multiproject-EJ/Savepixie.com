@@ -2822,7 +2822,7 @@ p {
   gap: 0.5rem;
 }
 .quick-amounts button {
-  min-height: 38px;
+  min-height: 44px;
   border-radius: 12px;
   background: rgba(123, 63, 255, 0.1);
   color: var(--violet-light);
@@ -4922,7 +4922,7 @@ p {
 }
 .pact-cheer-button,
 .pact-cheer-count {
-  min-height: 36px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

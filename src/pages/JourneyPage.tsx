@@ -3,7 +3,11 @@ import { useSavings } from "../app/SavingsProvider";
 import PixieMark from "../components/PixieMark";
 import { savingsMoves } from "../data/savingsMoves";
 import { localDateKey } from "../features/daily-loop/api";
-import { recentMoveDays, saverLevel } from "../features/daily-loop/progression";
+import {
+  effectiveCurrentStreak,
+  recentMoveDays,
+  saverLevel,
+} from "../features/daily-loop/progression";
 import { formatMoney } from "../lib/format";
 
 export function JourneyPage() {
@@ -13,6 +17,7 @@ export function JourneyPage() {
     [goals]
   );
   const level = saverLevel(dailyProgress?.stardust_total ?? 0);
+  const currentStreak = effectiveCurrentStreak(dailyProgress);
   const recentDays = recentMoveDays(dailyCompletions);
   const todayComplete = dailyCompletions.some(
     (completion) => completion.local_date === localDateKey()
@@ -84,8 +89,8 @@ export function JourneyPage() {
           <div>
             <span className="eyebrow">Your gentle rhythm</span>
             <h2>
-              {dailyProgress?.current_streak
-                ? `${dailyProgress.current_streak} useful days in a row`
+              {currentStreak
+                ? `${currentStreak} useful days in a row`
                 : "Your first streak starts with one Move"}
             </h2>
           </div>

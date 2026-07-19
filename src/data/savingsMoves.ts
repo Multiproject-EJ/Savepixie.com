@@ -149,6 +149,8 @@ export const goalIdeas: GoalIdea[] = [
 ];
 
 export function getDailySavingsMove(date = new Date()) {
-  const dayNumber = Math.floor(date.getTime() / 86_400_000);
+  const dayNumber = Math.floor(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000
+  );
   return savingsMoves[Math.abs(dayNumber) % savingsMoves.length];
 }

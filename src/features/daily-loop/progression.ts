@@ -1,4 +1,4 @@
-import type { DailyCompletion, DailyProgress } from "./api";
+import { localDateKey, type DailyCompletion, type DailyProgress } from "./api";
 
 export const STARDUST_PER_LEVEL = 200;
 
@@ -26,6 +26,18 @@ export function saverLevel(stardustTotal = 0): SaverLevel {
 
 export function completedToday(completions: DailyCompletion[], localDate: string) {
   return completions.find((completion) => completion.local_date === localDate) ?? null;
+}
+
+export function effectiveCurrentStreak(progress: DailyProgress | null, today = new Date()): number {
+  if (!progress?.last_completed_on) return 0;
+  const todayKey = localDateKey(today);
+  const yesterday = new Date(today);
+  yesterday.setHours(12, 0, 0, 0);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = localDateKey(yesterday);
+  return progress.last_completed_on === todayKey || progress.last_completed_on === yesterdayKey
+    ? progress.current_streak
+    : 0;
 }
 
 export function recentMoveDays(completions: DailyCompletion[], count = 7, today = new Date()) {

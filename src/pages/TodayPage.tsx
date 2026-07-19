@@ -6,7 +6,7 @@ import DailyMoveDialog from "../components/DailyMoveDialog";
 import PixieMark from "../components/PixieMark";
 import { getDailySavingsMove } from "../data/savingsMoves";
 import { localDateKey, type DailyMoveResult } from "../features/daily-loop/api";
-import { completedToday } from "../features/daily-loop/progression";
+import { completedToday, effectiveCurrentStreak } from "../features/daily-loop/progression";
 import { formatMoney, goalProgress } from "../lib/format";
 
 export function TodayPage() {
@@ -18,6 +18,7 @@ export function TodayPage() {
   const featuredGoal = goals[0] ?? null;
   const savingMove = getDailySavingsMove();
   const todayCompletion = completedToday(dailyCompletions, localDateKey());
+  const currentStreak = effectiveCurrentStreak(dailyProgress);
   const progress = featuredGoal
     ? goalProgress(featuredGoal.saved_cents, featuredGoal.target_cents)
     : 0;
@@ -31,15 +32,11 @@ export function TodayPage() {
           <p>One tiny choice is enough for today.</p>
         </div>
         <div
-          className={dailyProgress?.current_streak ? "streak-pill active" : "streak-pill"}
-          aria-label={(dailyProgress?.current_streak ?? 0) + " day streak"}
+          className={currentStreak ? "streak-pill active" : "streak-pill"}
+          aria-label={currentStreak + " day streak"}
         >
           <span>✦</span>
-          <strong>
-            {dailyProgress?.current_streak
-              ? dailyProgress.current_streak + " day streak"
-              : "Start today"}
-          </strong>
+          <strong>{currentStreak ? currentStreak + " day streak" : "Start today"}</strong>
         </div>
       </header>
 
