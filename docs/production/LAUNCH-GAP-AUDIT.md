@@ -107,10 +107,10 @@ Updated: 2026-07-19
 
 - Stripe sandbox product, 29 NOK price, first seven-day trial, signed webhook, customer portal,
   duplicate-event handling, reversible cancellation scheduling, trial-to-paid conversion, successful
-  monthly renewal, failed-payment access removal, and payment-recovery access restoration are
-  verified.
-- Complete Stripe Tax business location/registration/tax-code configuration and the remaining refund
-  flow.
+  monthly renewal, failed-payment access removal, payment-recovery access restoration, and the full
+  refund-and-cancel sequence are verified.
+- Complete Stripe Tax business location, registration, tax-code, and inclusive/exclusive price
+  configuration.
 - Publish reviewed subscription, cancellation, refund, Terms, and Privacy copy.
 
 ### Operations
