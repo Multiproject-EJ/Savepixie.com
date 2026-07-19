@@ -1,31 +1,53 @@
 import { supabase } from "../../lib/supabase";
 
-const EXPORT_VERSION = 1;
+const EXPORT_VERSION = 2;
 
 export async function createAccountExport(userId: string) {
-  const [profile, homes, pacts, memberships, entries, weeklyPlans, legacyGoals, legacyEvents] =
-    await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("savings_homes").select("*").eq("user_id", userId),
-      supabase.from("savings_pacts").select("*").order("created_at", { ascending: true }),
-      supabase.from("savings_pact_members").select("*").eq("user_id", userId),
-      supabase
-        .from("savings_pact_entries")
-        .select("*")
-        .eq("member_user_id", userId)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("weekly_plans")
-        .select("*")
-        .eq("user_id", userId)
-        .order("week_start", { ascending: true }),
-      supabase.from("goals").select("*").eq("user_id", userId),
-      supabase
-        .from("goal_events")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: true }),
-    ]);
+  const [
+    profile,
+    homes,
+    pacts,
+    memberships,
+    entries,
+    weeklyPlans,
+    dailyProgress,
+    dailyMoveCompletions,
+    ownActivityCheers,
+    legacyGoals,
+    legacyEvents,
+  ] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+    supabase.from("savings_homes").select("*").eq("user_id", userId),
+    supabase.from("savings_pacts").select("*").order("created_at", { ascending: true }),
+    supabase.from("savings_pact_members").select("*").eq("user_id", userId),
+    supabase
+      .from("savings_pact_entries")
+      .select("*")
+      .eq("member_user_id", userId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("weekly_plans")
+      .select("*")
+      .eq("user_id", userId)
+      .order("week_start", { ascending: true }),
+    supabase.from("daily_saver_progress").select("*").eq("user_id", userId).maybeSingle(),
+    supabase
+      .from("daily_move_completions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("local_date", { ascending: true }),
+    supabase
+      .from("savings_pact_activity_cheers")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true }),
+    supabase.from("goals").select("*").eq("user_id", userId),
+    supabase
+      .from("goal_events")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true }),
+  ]);
 
   const results = [
     profile,
@@ -34,6 +56,9 @@ export async function createAccountExport(userId: string) {
     memberships,
     entries,
     weeklyPlans,
+    dailyProgress,
+    dailyMoveCompletions,
+    ownActivityCheers,
     legacyGoals,
     legacyEvents,
   ];
@@ -50,6 +75,9 @@ export async function createAccountExport(userId: string) {
     pactMemberships: memberships.data ?? [],
     ownPactEntries: entries.data ?? [],
     weeklyPlans: weeklyPlans.data ?? [],
+    dailySaverProgress: dailyProgress.data,
+    dailyMoveCompletions: dailyMoveCompletions.data ?? [],
+    ownCircleCheers: ownActivityCheers.data ?? [],
     legacyGoals: legacyGoals.data ?? [],
     legacyGoalEvents: legacyEvents.data ?? [],
   };

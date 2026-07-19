@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { useAuth } from "../app/AuthProvider";
 import { useSavings } from "../app/SavingsProvider";
@@ -18,6 +18,11 @@ export function GoalsPage() {
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinToken, setJoinToken] = useState("");
   const [sharedInviteUrl, setSharedInviteUrl] = useState<string | null>(null);
+  const recommendedIdeaId = useMemo(() => {
+    if (!goals.length) return "calm-buffer";
+    const existingNames = new Set(goals.map((goal) => goal.name.toLocaleLowerCase()));
+    return goalIdeas.find((idea) => !existingNames.has(idea.name.toLocaleLowerCase()))?.id ?? null;
+  }, [goals]);
 
   const openGoalDialog = (idea: GoalIdea | null = null) => {
     setSelectedIdea(idea);
@@ -203,7 +208,7 @@ export function GoalsPage() {
         <div className="dream-library__grid">
           {goalIdeas.map((idea) => (
             <button
-              className="dream-card"
+              className={idea.id === recommendedIdeaId ? "dream-card recommended" : "dream-card"}
               type="button"
               key={idea.id}
               onClick={() => openGoalDialog(idea)}
@@ -212,7 +217,10 @@ export function GoalsPage() {
                 {idea.emoji}
               </span>
               <span>
-                <small>{idea.category}</small>
+                <small>
+                  {idea.id === recommendedIdeaId ? "Pixie pick · " : ""}
+                  {idea.category}
+                </small>
                 <strong>{idea.name}</strong>
                 <em>{formatMoney(idea.targetCents)} starter goal</em>
               </span>
@@ -282,6 +290,14 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const dialogRef = useModalDialog<HTMLElement>(open, onClose, !submitting);
+  const weeklyPreview = useMemo(() => {
+    const targetValue = Number.parseFloat(target);
+    if (!deadline || !Number.isFinite(targetValue) || targetValue <= 0) return null;
+    const deadlineDate = new Date(`${deadline}T12:00:00`);
+    if (!Number.isFinite(deadlineDate.getTime())) return null;
+    const weeks = Math.max(1, Math.ceil((deadlineDate.getTime() - Date.now()) / 86_400_000 / 7));
+    return Math.ceil((targetValue * 100) / weeks);
+  }, [deadline, target]);
 
   useEffect(() => {
     if (!open || !idea) return;
@@ -419,6 +435,15 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
               onChange={(event) => setDeadline(event.target.value)}
             />
           </label>
+          {weeklyPreview !== null ? (
+            <div className="goal-pace-preview" role="note">
+              <span aria-hidden="true">✦</span>
+              <p>
+                About <strong>{formatMoney(weeklyPreview)} each week</strong> would reach this dream
+                date. It is a guide, never a demand.
+              </p>
+            </div>
+          ) : null}
           <button className="button primary" type="submit" disabled={submitting}>
             {submitting ? "Planting…" : "Create goal"}
           </button>

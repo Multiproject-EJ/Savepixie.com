@@ -5,6 +5,9 @@ import type {
   CreateSavingsHomeInput,
   DepositInput,
   Goal,
+  PactActivity,
+  PactActivityCheer,
+  PactEntry,
   PactMemberSummary,
   PactMembership,
   PactPrivacyMode,
@@ -189,6 +192,38 @@ export async function fetchPactMembers(pactId: string): Promise<PactMemberSummar
   }));
 }
 
+export async function fetchPactActivity(pactId: string): Promise<PactActivity[]> {
+  const { data, error } = await supabase.rpc("get_savings_pact_activity", {
+    p_pact_id: pactId,
+    p_limit: 30,
+  });
+  if (error) throw error;
+  return (data ?? []).map((activity) => ({
+    ...activity,
+    activity_kind: activity.activity_kind as PactActivity["activity_kind"],
+    amount_cents: activity.amount_cents === null ? null : numberValue(activity.amount_cents),
+  }));
+}
+
+export async function fetchPactActivityCheers(pactId: string): Promise<PactActivityCheer[]> {
+  const { data, error } = await supabase.rpc("get_savings_pact_activity_cheers", {
+    p_pact_id: pactId,
+  });
+  if (error) throw error;
+  return (data ?? []).map((cheer) => ({
+    ...cheer,
+    cheer_count: numberValue(cheer.cheer_count),
+  }));
+}
+
+export async function togglePactActivityCheer(activityId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("toggle_savings_pact_activity_cheer", {
+    p_activity_id: activityId,
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function fetchOwnPactMembership(
   pactId: string,
   userId: string
@@ -210,6 +245,26 @@ export async function fetchOwnPactMembership(
     status: data.status as PactMembership["status"],
     commitment_cents: data.commitment_cents === null ? null : numberValue(data.commitment_cents),
   };
+}
+
+export async function fetchOwnPactEntries(pactId: string, userId: string): Promise<PactEntry[]> {
+  const { data, error } = await supabase
+    .from("savings_pact_entries")
+    .select(
+      "id, pact_id, member_user_id, entry_type, delta_cents, verification_state, note, created_at"
+    )
+    .eq("pact_id", pactId)
+    .eq("member_user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+  return (data ?? []).map((entry) => ({
+    ...entry,
+    delta_cents: numberValue(entry.delta_cents),
+    entry_type: entry.entry_type as PactEntry["entry_type"],
+    verification_state: entry.verification_state as PactEntry["verification_state"],
+  }));
 }
 
 export async function updatePactMembership(input: {

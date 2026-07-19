@@ -1,15 +1,23 @@
+import { useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { useSavings } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
+import DailyMoveDialog from "../components/DailyMoveDialog";
 import PixieMark from "../components/PixieMark";
 import { getDailySavingsMove } from "../data/savingsMoves";
+import { localDateKey, type DailyMoveResult } from "../features/daily-loop/api";
+import { completedToday } from "../features/daily-loop/progression";
 import { formatMoney, goalProgress } from "../lib/format";
 
 export function TodayPage() {
-  const { goals, savingsHomes, loading, error, displayName } = useSavings();
-  const { openQuickSave, basePath } = useOutletContext<AppShellOutletContext>();
+  const { goals, savingsHomes, dailyProgress, dailyCompletions, loading, error, displayName } =
+    useSavings();
+  const { basePath } = useOutletContext<AppShellOutletContext>();
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [celebration, setCelebration] = useState<DailyMoveResult | null>(null);
   const featuredGoal = goals[0] ?? null;
   const savingMove = getDailySavingsMove();
+  const todayCompletion = completedToday(dailyCompletions, localDateKey());
   const progress = featuredGoal
     ? goalProgress(featuredGoal.saved_cents, featuredGoal.target_cents)
     : 0;
@@ -22,9 +30,16 @@ export function TodayPage() {
           <h1>Hi {displayName},</h1>
           <p>One tiny choice is enough for today.</p>
         </div>
-        <div className="streak-pill" aria-label="New streak">
+        <div
+          className={dailyProgress?.current_streak ? "streak-pill active" : "streak-pill"}
+          aria-label={(dailyProgress?.current_streak ?? 0) + " day streak"}
+        >
           <span>✦</span>
-          <strong>Start today</strong>
+          <strong>
+            {dailyProgress?.current_streak
+              ? dailyProgress.current_streak + " day streak"
+              : "Start today"}
+          </strong>
         </div>
       </header>
 
@@ -32,20 +47,40 @@ export function TodayPage() {
 
       <section className="daily-quest-card">
         <div className="quest-copy">
-          <span className="quest-kicker">Today&apos;s Savings Move · {savingMove.name}</span>
-          <h2>{featuredGoal ? savingMove.headline : "Choose something worth saving for"}</h2>
+          <span className="quest-kicker">
+            {todayCompletion ? "Completed today" : "Today's Savings Move"} · {savingMove.name}
+          </span>
+          <h2>
+            {todayCompletion
+              ? "Your useful choice is glowing"
+              : featuredGoal
+                ? savingMove.headline
+                : "Choose something worth saving for"}
+          </h2>
           <p>
-            {featuredGoal
-              ? savingMove.description
-              : "Your Pixie works best when every small action points toward something meaningful."}
+            {todayCompletion
+              ? "You earned " +
+                todayCompletion.stardust_awarded +
+                " Stardust. Come back tomorrow for another tiny Move."
+              : featuredGoal
+                ? savingMove.description
+                : "Your Pixie works best when every small action points toward something meaningful."}
           </p>
-          {featuredGoal ? (
+          {todayCompletion ? (
+            <Link className="button secondary quest-action" to={basePath + "/journey"}>
+              See my growing Journey <span aria-hidden="true">✦</span>
+            </Link>
+          ) : featuredGoal ? (
             <button
               className="button primary quest-action"
               type="button"
-              onClick={() => openQuickSave(featuredGoal.id)}
+              onClick={() => setMoveOpen(true)}
             >
-              Try it with {formatMoney(savingMove.suggestedCents)} <span aria-hidden="true">✦</span>
+              {savingMove.actionLabel}
+              {savingMove.completionKind === "save"
+                ? " · " + formatMoney(savingMove.suggestedCents)
+                : ""}{" "}
+              <span aria-hidden="true">✦</span>
             </button>
           ) : (
             <Link className="button primary quest-action" to={`${basePath}/goals`}>
@@ -55,9 +90,16 @@ export function TodayPage() {
         </div>
         <div className="quest-pixie-wrap">
           <span className="pixie-glow" />
-          <PixieMark size="large" mood={featuredGoal ? "curious" : "calm"} />
+          <PixieMark
+            size="large"
+            mood={todayCompletion ? "happy" : featuredGoal ? "curious" : "calm"}
+          />
           <span className="pixie-message">
-            {featuredGoal ? savingMove.principle : "What are we growing?"}
+            {todayCompletion
+              ? "That counted. Tiny always counts."
+              : featuredGoal
+                ? savingMove.principle
+                : "What are we growing?"}
           </span>
         </div>
       </section>
@@ -120,6 +162,32 @@ export function TodayPage() {
           </div>
         </section>
       </div>
+
+      <DailyMoveDialog
+        open={moveOpen}
+        move={savingMove}
+        onClose={() => setMoveOpen(false)}
+        onCompleted={(result) => {
+          setCelebration(result);
+          window.setTimeout(() => setCelebration(null), 2600);
+        }}
+      />
+
+      {celebration ? (
+        <div className="daily-move-celebration" role="status" aria-live="polite">
+          <div className="daily-move-celebration__sparkles" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, index) => (
+              <span key={index}>✦</span>
+            ))}
+          </div>
+          <PixieMark size="large" mood="happy" />
+          <span className="eyebrow">Move complete</span>
+          <strong>+{celebration.stardustAwarded} Stardust</strong>
+          <small>
+            {celebration.currentStreak} day streak · {celebration.completedMoves} useful Moves
+          </small>
+        </div>
+      ) : null}
     </div>
   );
 }

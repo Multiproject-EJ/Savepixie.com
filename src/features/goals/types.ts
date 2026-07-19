@@ -88,3 +88,30 @@ export type PactMemberSummary = PactMembership & {
   amount_visible: boolean;
   on_track: boolean | null;
 };
+
+export type PactEntry = {
+  id: string;
+  pact_id: string;
+  member_user_id: string;
+  entry_type: "commitment" | "pending" | "allocation" | "withdrawal" | "reversal";
+  delta_cents: number;
+  verification_state: "reported" | "verified" | "reversed";
+  note: string | null;
+  created_at: string;
+};
+
+export type PactActivity = {
+  activity_id: string;
+  actor_user_id: string;
+  actor_display_name: string;
+  activity_kind: "save" | "verified_save" | "adjustment";
+  amount_cents: number | null;
+  amount_visible: boolean;
+  occurred_at: string;
+};
+
+export type PactActivityCheer = {
+  activity_id: string;
+  cheer_count: number;
+  cheered_by_me: boolean;
+};

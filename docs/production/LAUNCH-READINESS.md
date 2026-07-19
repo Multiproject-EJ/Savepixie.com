@@ -6,9 +6,10 @@ Updated: 2026-07-18
 
 SavePixie is preparing for a closed customer beta. The interface, PWA shell, authentication client,
 solo/shared Savings Pact schema, Savings Homes, pending/verified ledger, secure invitations, synced
-weekly plans, onboarding, and Account Check prototype exist. The expanded client is being prepared for
-deployment. Real payments, real bank verification, and real Account Check recommendations remain
-disabled until their server-side dependencies and customer safeguards pass the gates below.
+weekly plans, onboarding, a persistent daily Savings Move loop, and Account Check prototype exist. The
+expanded client is being prepared for deployment. Real payments, real bank verification, and real
+Account Check recommendations remain disabled until their server-side dependencies and customer
+safeguards pass the gates below.
 
 ## Gate 1 — shared suite production backend
 
@@ -34,6 +35,10 @@ disabled until their server-side dependencies and customer safeguards pass the g
 - [x] Pact invitations expire, require authentication, and cannot expose non-member Pact data.
 - [x] Verified allocations cannot exceed the linked Savings Home's verified balance.
 - [x] Weekly plans are isolated by user and cannot be read or written across accounts.
+- [x] Daily Savings Moves are one-per-local-day, idempotent, isolated by user, and update streaks,
+      Stardust, Pact progress, and the pending ledger atomically.
+- [x] Shared Pact activity reveals participation without leaking hidden amounts; aggregate cheers
+      reveal neither reactor identities nor another member's private reaction records.
 - [x] Leaving a Pact preserves ledger history, removes access, and supports controlled reactivation.
 - [x] Authenticated Pact members cannot promote themselves, change membership identity, or move their
       membership to another Pact; only commitment and privacy columns are client-writable.
@@ -91,7 +96,8 @@ disabled until their server-side dependencies and customer safeguards pass the g
 
 - [ ] Legally review and publish the drafted Terms, Privacy Policy, subscription terms, and
       refund/cancellation copy after adding the operator identity and jurisdiction.
-- [x] Add self-service account deletion, a private data export, and a support contact.
+- [x] Add self-service account deletion, a private data export (including daily-loop and own-cheer
+      records), and a support contact.
 - [x] Trap and restore focus, support Escape, lock background scrolling, and prevent accidental closure
       during saving or destructive modal actions.
 - [ ] Finalize legally required billing retention and automate retention for future server-side
