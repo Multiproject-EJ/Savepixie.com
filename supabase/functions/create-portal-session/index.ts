@@ -40,6 +40,15 @@ Deno.serve(async (request) => {
       return jsonResponse(request, { error: "No billing account exists yet." }, 404);
     }
 
+    const customer = await stripe.customers.retrieve(mapping.stripe_customer_id);
+    if (customer.deleted || customer.metadata.supabase_user_id !== user.id) {
+      return jsonResponse(
+        request,
+        { error: "This billing account needs support before the customer portal can open." },
+        409
+      );
+    }
+
     const siteUrl = new URL(requireEnv("SITE_URL")).origin;
     const portal = await stripe.billingPortal.sessions.create({
       customer: mapping.stripe_customer_id,

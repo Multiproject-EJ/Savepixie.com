@@ -2,18 +2,25 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import App from "./app/App";
-import { AuthProvider } from "./app/AuthProvider";
+import { AuthProvider, useAuth } from "./app/AuthProvider";
 import ProtectedRoute from "./app/ProtectedRoute";
+import SavingsGate from "./app/SavingsGate";
 import { SavingsPreviewProvider, SavingsProvider } from "./app/SavingsProvider";
 import AppShell from "./components/AppShell";
+import AppErrorBoundary from "./components/AppErrorBoundary";
+import NetworkStatus from "./components/NetworkStatus";
+import PwaUpdateNotice, { PWA_UPDATE_EVENT } from "./components/PwaUpdateNotice";
 import AccountCheckPage from "./pages/AccountCheckPage";
 import AuthPage from "./pages/AuthPage";
 import GoalsPage from "./pages/GoalsPage";
 import HomePage from "./pages/HomePage";
 import JourneyPage from "./pages/JourneyPage";
+import LegalPage from "./pages/LegalPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import PactDetailPage from "./pages/PactDetailPage";
 import PlanPage from "./pages/PlanPage";
 import SavingsEntryPage from "./pages/SavingsEntryPage";
+import SettingsPage from "./pages/SettingsPage";
 import TodayPage from "./pages/TodayPage";
 import "./styles/global.css";
 
@@ -30,15 +37,17 @@ const router = createBrowserRouter([
         path: "auth",
         element: <AuthPage />,
       },
+      {
+        path: "legal/:document",
+        element: <LegalPage />,
+      },
     ],
   },
   {
     path: "/app",
     element: (
       <ProtectedRoute>
-        <SavingsProvider>
-          <Outlet />
-        </SavingsProvider>
+        <AuthenticatedSavingsArea />
       </ProtectedRoute>
     ),
     children: [
@@ -49,9 +58,11 @@ const router = createBrowserRouter([
         children: [
           { path: "today", element: <TodayPage /> },
           { path: "goals", element: <GoalsPage /> },
+          { path: "goals/:pactId", element: <PactDetailPage /> },
           { path: "plan", element: <PlanPage /> },
           { path: "plan/account-check", element: <AccountCheckPage /> },
           { path: "journey", element: <JourneyPage /> },
+          { path: "settings", element: <SettingsPage /> },
         ],
       },
     ],
@@ -81,9 +92,11 @@ const router = createBrowserRouter([
             { index: true, element: <Navigate to="today" replace /> },
             { path: "today", element: <TodayPage /> },
             { path: "goals", element: <GoalsPage /> },
+            { path: "goals/:pactId", element: <PactDetailPage /> },
             { path: "plan", element: <PlanPage /> },
             { path: "plan/account-check", element: <AccountCheckPage /> },
             { path: "journey", element: <JourneyPage /> },
+            { path: "settings", element: <SettingsPage /> },
           ],
         },
       ]
@@ -91,18 +104,58 @@ const router = createBrowserRouter([
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
+function AuthenticatedSavingsArea() {
+  const { user } = useAuth();
+
+  return (
+    <SavingsProvider key={user?.id}>
+      <SavingsGate>
+        <Outlet />
+      </SavingsGate>
+    </SavingsProvider>
+  );
+}
+
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/service-worker.js")
+      .then((registration) => {
+        const announceWhenInstalled = (worker: ServiceWorker | null) => {
+          if (!worker) return;
+          const announce = () => {
+            if (worker.state === "installed" && navigator.serviceWorker.controller) {
+              window.dispatchEvent(new Event(PWA_UPDATE_EVENT));
+            }
+          };
+          worker.addEventListener("statechange", announce);
+          announce();
+        };
+
+        announceWhenInstalled(registration.waiting);
+        registration.addEventListener("updatefound", () =>
+          announceWhenInstalled(registration.installing)
+        );
+
+        const checkForUpdate = () => {
+          if (document.visibilityState === "visible") {
+            void registration.update();
+          }
+        };
+        document.addEventListener("visibilitychange", checkForUpdate);
+      })
       .catch((error) => console.error("Service worker registration failed", error));
   });
 }
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <AppErrorBoundary>
+      <AuthProvider>
+        <NetworkStatus />
+        <PwaUpdateNotice />
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      </AuthProvider>
+    </AppErrorBoundary>
   </React.StrictMode>
 );

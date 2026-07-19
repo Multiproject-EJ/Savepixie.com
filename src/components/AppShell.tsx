@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../app/AuthProvider";
 import { useSavings } from "../app/SavingsProvider";
 import { gentleHaptic } from "../lib/feedback";
 import PixieMark from "./PixieMark";
@@ -23,7 +22,6 @@ type AppShellProps = {
 };
 
 export function AppShell({ basePath = "/app" }: AppShellProps) {
-  const { signOut } = useAuth();
   const { displayName } = useSavings();
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,10 +58,7 @@ export function AppShell({ basePath = "/app" }: AppShellProps) {
     gentleHaptic("success");
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
+  const openSettings = () => navigate(`${basePath}/settings`);
 
   const outletContext: AppShellOutletContext = { openQuickSave, basePath };
 
@@ -82,11 +77,11 @@ export function AppShell({ basePath = "/app" }: AppShellProps) {
         </nav>
 
         <div className="desktop-rail__footer">
-          <button className="profile-chip" type="button" onClick={handleSignOut}>
+          <button className="profile-chip" type="button" onClick={openSettings}>
             <span className="profile-avatar">{displayName.slice(0, 1).toUpperCase()}</span>
             <span>
               <strong>{displayName}</strong>
-              <small>Sign out</small>
+              <small>Account &amp; settings</small>
             </span>
           </button>
         </div>
@@ -101,8 +96,8 @@ export function AppShell({ basePath = "/app" }: AppShellProps) {
           <button
             className="profile-avatar"
             type="button"
-            onClick={handleSignOut}
-            aria-label="Sign out"
+            onClick={openSettings}
+            aria-label="Open account and settings"
           >
             {displayName.slice(0, 1).toUpperCase()}
           </button>

@@ -73,6 +73,7 @@ export function AccountCheckPage() {
   });
   const [report, setReport] = useState<StoredReport | null>(loadStoredReport);
   const [scanning, setScanning] = useState(false);
+  const [storageMessage, setStorageMessage] = useState<string | null>(null);
 
   const isFresh = report ? new Date(report.freshUntil).getTime() > Date.now() : false;
   const daysUntilDeletion = useMemo(() => {
@@ -88,10 +89,17 @@ export function AccountCheckPage() {
   const runCheck = (event: FormEvent) => {
     event.preventDefault();
     setScanning(true);
+    setStorageMessage(null);
     window.setTimeout(() => {
       const results = compareSampleAccounts(criteria);
       const nextReport = createStoredReport(criteria, results);
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextReport));
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextReport));
+      } catch {
+        setStorageMessage(
+          "Your report is ready, but this browser could not keep it for your next visit."
+        );
+      }
       setReport(nextReport);
       setScanning(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -99,8 +107,13 @@ export function AccountCheckPage() {
   };
 
   const deleteReport = () => {
-    window.localStorage.removeItem(STORAGE_KEY);
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // The visible report can still be cleared when browser storage is unavailable.
+    }
     setReport(null);
+    setStorageMessage(null);
   };
 
   return (
@@ -137,6 +150,12 @@ export function AccountCheckPage() {
         <strong>Prototype:</strong> this screen uses fictional banks and example rates. No payment
         is taken and no real financial recommendation is produced.
       </p>
+
+      {storageMessage ? (
+        <p className="account-check-storage-message" role="status">
+          {storageMessage}
+        </p>
+      ) : null}
 
       <div className="account-check-layout">
         <form className="surface-card account-check-form" onSubmit={runCheck}>

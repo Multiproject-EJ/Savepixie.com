@@ -16,8 +16,6 @@ async function resolveUserId(
   metadataUserId: string | undefined,
   customerId: string
 ): Promise<string | null> {
-  if (metadataUserId && uuidPattern.test(metadataUserId)) return metadataUserId;
-
   const { data, error } = await admin
     .from("billing_customers")
     .select("user_id")
@@ -25,7 +23,13 @@ async function resolveUserId(
     .maybeSingle();
 
   if (error) throw error;
-  return data?.user_id ?? null;
+  if (!data?.user_id) return null;
+
+  if (metadataUserId && (!uuidPattern.test(metadataUserId) || metadataUserId !== data.user_id)) {
+    throw new Error("Stripe subscription metadata does not match the customer owner mapping.");
+  }
+
+  return data.user_id;
 }
 
 Deno.serve(async (request) => {
@@ -60,6 +64,11 @@ Deno.serve(async (request) => {
       const session = event.data.object as Stripe.Checkout.Session;
       const customerId = stripeObjectId(session.customer);
       const userId = session.client_reference_id ?? session.metadata?.supabase_user_id;
+      const productKey = session.metadata?.product_key;
+
+      if (session.mode !== "subscription" || !productKey || !productKeys.has(productKey)) {
+        throw new Error("Checkout event has no recognized subscription product.");
+      }
 
       if (customerId && userId && uuidPattern.test(userId)) {
         const { error } = await admin.from("billing_customers").upsert(
@@ -90,6 +99,13 @@ Deno.serve(async (request) => {
       const productKey = subscription.metadata.product_key;
       if (!productKey || !productKeys.has(productKey)) {
         throw new Error("Subscription event has no recognized product key.");
+      }
+
+      if (
+        productKey === "savepixie" &&
+        firstItem?.price.id !== requireEnv("STRIPE_SAVEPIXIE_PRO_PRICE_ID")
+      ) {
+        throw new Error("SavePixie subscription event uses an unrecognized price.");
       }
 
       const { error } = await admin.rpc("process_stripe_subscription_event", {

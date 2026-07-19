@@ -1,7 +1,7 @@
 # SavePixie Supabase and RLS Audit
 
 Status: shared production foundation installed and live authorization tests passed
-Verified: 2026-07-17
+Verified: 2026-07-18
 
 ## Production project
 
@@ -35,11 +35,30 @@ The corresponding source files live in `supabase/migrations/`.
   `record_goal_deposit` and a private trigger.
 - Normal clients cannot directly update `goals.saved_cents`, rewrite event history, or grant paid
   access.
+- Pact members receive column-level update permission only for their own `commitment_cents` and
+  `privacy_mode`; protected membership identity, Pact, role, status, and timestamp columns are not
+  writable by authenticated clients.
 - Stripe customer mappings and webhook idempotency records are service-only.
 - SavePixie and WalletHabit entitlements are independent rows keyed by both user and product.
 - The browser uses a modern publishable key; no service-role or Stripe secret enters the PWA.
-- Supabase Security Advisor returns no findings.
-- The only Performance Advisor notices are unused-index informational notices on an empty database.
+- Supabase Security Advisor reports one Auth warning: leaked-password protection is disabled. No
+  database, RLS, function, or exposed-schema vulnerability is reported.
+- Performance Advisor reports only informational notices: unused indexes on the near-empty beta
+  database and Auth's fixed ten-connection allocation. Neither is a blocker for the initial 10–20
+  person beta; revisit the percentage-based Auth allocation before increasing compute size.
+
+## Full acceptance rerun — 2026-07-18
+
+The five committed transactional suites were re-run against `WalletHabit Suite` production:
+
+1. `001_savings_pacts.sql` — passed.
+2. `002_weekly_plans.sql` — passed.
+3. `003_pact_member_controls.sql` — passed, including protected membership-column regression checks.
+4. `004_prepare_account_deletion.sql` — passed.
+5. `005_savepixie_pro_limits.sql` — passed.
+
+Every suite ends with `ROLLBACK`. A separate cleanup query immediately afterward confirmed zero
+`@example.invalid` Auth users, zero known test profiles, and zero known test Pacts.
 
 ## Live rollback test
 
@@ -58,6 +77,7 @@ events, and entitlements remained.
 ## Remaining backend work
 
 - Configure SavePixie auth site URL, redirect URLs, email templates, and production SMTP.
+- Enable leaked-password protection in Supabase Auth and re-run the Security Advisor.
 - Add the public project URL and publishable key to the GitHub deployment variables.
 - Generate and commit database TypeScript types. The first generation request returned an
   `exceed_db_size_quota` restriction even though the new database reports only 10 MB and accepts

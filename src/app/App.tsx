@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import PixieMark from "../components/PixieMark";
 import { useAuth } from "./AuthProvider";
@@ -5,13 +6,19 @@ import { useAuth } from "./AuthProvider";
 export function App() {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutMessage, setSignOutMessage] = useState<string | null>(null);
 
   const handleSignOut = async () => {
+    setSigningOut(true);
+    setSignOutMessage(null);
     try {
       await signOut();
       navigate("/");
-    } catch (error) {
-      console.error("Failed to sign out", error);
+    } catch {
+      setSignOutMessage("We couldn’t sign you out. Check your connection and try again.");
+    } finally {
+      setSigningOut(false);
     }
   };
 
@@ -34,8 +41,8 @@ export function App() {
               <Link className="button secondary compact-button" to="/app">
                 Open app
               </Link>
-              <button className="link-button" onClick={handleSignOut}>
-                Sign out
+              <button className="link-button" onClick={handleSignOut} disabled={signingOut}>
+                {signingOut ? "Signing out…" : "Sign out"}
               </button>
             </>
           ) : (
@@ -48,6 +55,11 @@ export function App() {
               </Link>
             </>
           )}
+          {signOutMessage ? (
+            <span className="auth-summary__error" role="alert">
+              {signOutMessage}
+            </span>
+          ) : null}
         </div>
       </header>
       <main className="marketing-content">
@@ -59,6 +71,11 @@ export function App() {
           <span>SavePixie</span>
         </Link>
         <p>Small choices today. Brighter tomorrows.</p>
+        <nav className="footer-legal-links" aria-label="Legal and support">
+          <Link to="/legal/terms">Terms</Link>
+          <Link to="/legal/privacy">Privacy</Link>
+          <a href="mailto:support@savepixie.com">Support</a>
+        </nav>
       </footer>
     </div>
   );

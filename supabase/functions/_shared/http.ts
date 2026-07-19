@@ -1,7 +1,8 @@
 const localOrigins = new Set(["http://127.0.0.1:5173", "http://localhost:5173"]);
+const productionOrigins = new Set(["https://savepixie.com", "https://www.savepixie.com"]);
 
 function allowedOrigins(): Set<string> {
-  const origins = new Set(localOrigins);
+  const origins = new Set([...localOrigins, ...productionOrigins]);
   const siteUrl = Deno.env.get("SITE_URL");
 
   if (siteUrl) {
@@ -19,7 +20,9 @@ export function isAllowedBrowserOrigin(request: Request): boolean {
 export function corsHeaders(request: Request): HeadersInit {
   const origin = request.headers.get("Origin");
   const allowed = allowedOrigins();
-  const fallback = Deno.env.get("SITE_URL") ? new URL(Deno.env.get("SITE_URL")!).origin : "null";
+  const fallback = Deno.env.get("SITE_URL")
+    ? new URL(Deno.env.get("SITE_URL")!).origin
+    : "https://savepixie.com";
 
   return {
     "Access-Control-Allow-Origin": origin && allowed.has(origin) ? origin : fallback,

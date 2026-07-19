@@ -4,22 +4,28 @@ Create a new file for each completed step using the naming pattern `STEP-<nn>.md
 
 ```markdown
 # STEP <nn>: <title>
+
 ## Goal
 
 ## Changes
-- 
+
+-
 
 ## SQL
-- 
+
+-
 
 ## Testing
-- 
+
+-
 
 ## Screens
-- 
+
+-
 
 ## NEXT
-- 
+
+-
 ```
 
 Attach screenshots or GIFs under the **Screens** section by committing them to `docs/worklog/assets/` (create the folder when needed).

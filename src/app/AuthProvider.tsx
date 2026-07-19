@@ -9,13 +9,17 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { reportClientError } from "../lib/telemetry";
 import { ensureProfile } from "../features/profile/api";
 
 type AuthContextValue = {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  sessionError: string | null;
   recoveryMode: boolean;
+  retrySession: () => Promise<void>;
+  signInWithGoogle: (redirectTo: string) => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signUpWithPassword: (
     email: string,
@@ -33,6 +37,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   const [recoveryMode, setRecoveryMode] = useState(
     () =>
       window.location.hash.includes("type=recovery") ||
@@ -41,26 +46,47 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     let mounted = true;
+    let authEventReceived = false;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-      if (data.session?.user) {
-        void ensureProfile(data.session.user);
-      }
-    });
+    void supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (error) throw error;
+        if (!mounted || authEventReceived) return;
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        setSessionError(null);
+      })
+      .catch(() => {
+        if (!mounted || authEventReceived) return;
+        reportClientError("session_load", "auth");
+        setSession(null);
+        setUser(null);
+        setSessionError(
+          "We couldn’t check your SavePixie session. Check your connection and retry."
+        );
+      })
+      .finally(() => {
+        if (mounted && !authEventReceived) setLoading(false);
+      });
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      authEventReceived = true;
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setLoading(false);
+      setSessionError(null);
       if (event === "PASSWORD_RECOVERY") {
         setRecoveryMode(true);
       }
       if (nextSession?.user) {
-        void ensureProfile(nextSession.user);
+        // Supabase warns against starting another API request inside this callback.
+        window.setTimeout(() => {
+          void ensureProfile(nextSession.user).catch((error) => {
+            reportClientError("profile_prepare", "auth");
+            console.error("SavePixie could not prepare the customer profile", error);
+          });
+        }, 0);
       }
     });
 
@@ -70,12 +96,38 @@ export function AuthProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
+  const retrySession = useCallback(async () => {
+    setLoading(true);
+    setSessionError(null);
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+    } catch {
+      reportClientError("session_load", "auth");
+      setSession(null);
+      setUser(null);
+      setSessionError("We couldn’t check your SavePixie session. Check your connection and retry.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const signInWithPassword = useCallback(async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     if (data.user) {
       await ensureProfile(data.user);
     }
+  }, []);
+
+  const signInWithGoogle = useCallback(async (redirectTo: string) => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
+    if (error) throw error;
   }, []);
 
   const signUpWithPassword = useCallback(
@@ -129,7 +181,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       session,
       user,
       loading,
+      sessionError,
       recoveryMode,
+      retrySession,
+      signInWithGoogle,
       signInWithPassword,
       signUpWithPassword,
       signOut,
@@ -140,7 +195,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       loading,
       recoveryMode,
       resetPassword,
+      retrySession,
       session,
+      sessionError,
+      signInWithGoogle,
       signInWithPassword,
       signOut,
       signUpWithPassword,

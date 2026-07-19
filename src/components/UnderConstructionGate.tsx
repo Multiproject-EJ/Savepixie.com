@@ -27,7 +27,14 @@ function ConstructionIcon() {
           <rect x="4" width="4" height="8" fill="#38bdf8" opacity="0.55" />
         </pattern>
       </defs>
-      <circle cx="64" cy="64" r="60" fill="rgba(15, 23, 42, 0.9)" stroke="#1f2937" strokeWidth="2" />
+      <circle
+        cx="64"
+        cy="64"
+        r="60"
+        fill="rgba(15, 23, 42, 0.9)"
+        stroke="#1f2937"
+        strokeWidth="2"
+      />
       <path
         d="M64 22 18 101h92L64 22zm0 21 28.2 48H35.8L64 43z"
         fill="url(#construction-gradient)"
@@ -80,14 +87,19 @@ export function UnderConstructionGate() {
   }
 
   return (
-    <div className="construction-gate" role="dialog" aria-modal="true" aria-labelledby="construction-title">
+    <div
+      className="construction-gate"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="construction-title"
+    >
       <div className="construction-gate__scrim" aria-hidden="true" />
       <div className="construction-gate__dialog" aria-describedby="construction-description">
         <ConstructionIcon />
         <h2 id="construction-title">We&apos;re still setting things up</h2>
         <p id="construction-description">
-          You&apos;ve caught SavePixie in its workshop phase. We&apos;re crafting a magical saving experience and can&apos;t wait to share
-          it with you.
+          You&apos;ve caught SavePixie in its workshop phase. We&apos;re crafting a magical saving
+          experience and can&apos;t wait to share it with you.
         </p>
         <button type="button" onClick={handleContinue} className="construction-gate__continue">
           Continue anyway

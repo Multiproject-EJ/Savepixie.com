@@ -6,7 +6,7 @@ import { getDailySavingsMove } from "../data/savingsMoves";
 import { formatMoney, goalProgress } from "../lib/format";
 
 export function TodayPage() {
-  const { goals, loading, error, displayName } = useSavings();
+  const { goals, savingsHomes, loading, error, displayName } = useSavings();
   const { openQuickSave, basePath } = useOutletContext<AppShellOutletContext>();
   const featuredGoal = goals[0] ?? null;
   const savingMove = getDailySavingsMove();
@@ -66,7 +66,7 @@ export function TodayPage() {
         <section className="surface-card goal-spotlight">
           <header className="section-heading">
             <div>
-              <span className="eyebrow">Your main goal</span>
+              <span className="eyebrow">Your featured Pact</span>
               <h2>{featuredGoal?.name || "Your first adventure"}</h2>
             </div>
             <Link to={`${basePath}/goals`}>View goals</Link>
@@ -87,7 +87,7 @@ export function TodayPage() {
               <p className="support-copy">
                 {featuredGoal.emoji || "✨"}{" "}
                 {formatMoney(Math.max(0, featuredGoal.target_cents - featuredGoal.saved_cents))}{" "}
-                left to grow.
+                left to grow · {formatMoney(featuredGoal.verified_cents)} bank-verified.
               </p>
             </>
           ) : (
@@ -99,15 +99,23 @@ export function TodayPage() {
           <header className="section-heading">
             <div>
               <span className="eyebrow">This week</span>
-              <h2>Make a gentle plan</h2>
+              <h2>{savingsHomes[0]?.label || "Choose a Savings Home"}</h2>
             </div>
             <Link to={`${basePath}/plan`}>Open plan</Link>
           </header>
           <div className="weekly-signal__value">
             <span aria-hidden="true">◎</span>
             <div>
-              <strong>Know your safe-to-spend</strong>
-              <p>Set three simple weekly numbers—available, committed and saving.</p>
+              <strong>
+                {savingsHomes[0]?.connection_status === "connected"
+                  ? "Connected and verified"
+                  : "Manual Savings Home"}
+              </strong>
+              <p>
+                {savingsHomes[0]
+                  ? "Your bank holds the money. SavePixie keeps reported and verified progress visibly separate."
+                  : "Set up the real account where every Pact contribution will live."}
+              </p>
             </div>
           </div>
         </section>

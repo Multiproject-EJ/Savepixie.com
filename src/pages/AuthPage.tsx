@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../app/AuthProvider";
+import { friendlyAuthError } from "../lib/authErrors";
 
 type AuthView = "sign-in" | "sign-up" | "reset" | "update-password";
 
@@ -12,6 +13,7 @@ function AuthPage() {
   const {
     user,
     recoveryMode,
+    signInWithGoogle,
     signInWithPassword,
     signUpWithPassword,
     resetPassword,
@@ -52,8 +54,9 @@ function AuthPage() {
 
   const redirectTo = useMemo(() => {
     const state = location.state as LocationState | null;
-    return state?.from || "/app";
-  }, [location.state]);
+    const queryDestination = new URLSearchParams(location.search).get("from");
+    return state?.from || (queryDestination?.startsWith("/") ? queryDestination : null) || "/app";
+  }, [location.search, location.state]);
 
   useEffect(() => {
     if (user && !recoveryMode) {
@@ -94,17 +97,42 @@ function AuthPage() {
       await signInWithPassword(email, password);
       navigate(redirectTo, { replace: true });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to sign in. Please try again.");
+      setError(friendlyAuthError(cause, "We couldn’t sign you in. Please try again."));
     } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setSubmitting(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const callback = new URL("/auth", window.location.origin);
+      callback.searchParams.set("from", redirectTo);
+      await signInWithGoogle(callback.toString());
+    } catch (cause) {
+      setError(friendlyAuthError(cause, "We couldn’t open Google sign-in. Please try again."));
       setSubmitting(false);
     }
   };
 
   const handleSignUp = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitting(true);
     setError(null);
     setMessage(null);
+
+    if (password.length < 8) {
+      setError("Use at least eight characters for your password.");
+      return;
+    }
+
+    if (password !== passwordConfirmation) {
+      setError("The two passwords do not match yet.");
+      return;
+    }
+
+    setSubmitting(true);
     try {
       const result = await signUpWithPassword(email, password, {
         displayName: displayName || null,
@@ -116,7 +144,7 @@ function AuthPage() {
           : "Your account is ready. Opening your SavePixie space…"
       );
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to sign up. Please try again.");
+      setError(friendlyAuthError(cause, "We couldn’t create your account. Please try again."));
     } finally {
       setSubmitting(false);
     }
@@ -131,7 +159,7 @@ function AuthPage() {
       await resetPassword(email);
       setMessage("Password reset email sent. Check your inbox.");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to send reset email.");
+      setError(friendlyAuthError(cause, "We couldn’t send the reset email. Please try again."));
     } finally {
       setSubmitting(false);
     }
@@ -156,7 +184,7 @@ function AuthPage() {
     try {
       await updatePassword(password);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to update your password.");
+      setError(friendlyAuthError(cause, "We couldn’t update your password. Please try again."));
     } finally {
       setSubmitting(false);
     }
@@ -197,6 +225,25 @@ function AuthPage() {
 
       {error && <p className="alert error">{error}</p>}
       {message && <p className="alert success">{message}</p>}
+
+      {(view === "sign-in" || view === "sign-up") && (
+        <div className="oauth-block">
+          <button
+            className="button google-button"
+            type="button"
+            onClick={() => void handleGoogleSignIn()}
+            disabled={submitting}
+          >
+            <span className="google-mark" aria-hidden="true">
+              G
+            </span>
+            Continue with Google
+          </button>
+          <div className="auth-divider" aria-hidden="true">
+            <span>or use email</span>
+          </div>
+        </div>
+      )}
 
       {view === "sign-in" && (
         <form className="form" onSubmit={handleSignIn}>
@@ -252,7 +299,18 @@ function AuthPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
-              minLength={6}
+              minLength={8}
+              autoComplete="new-password"
+            />
+          </label>
+          <label className="form-control">
+            <span>Confirm password</span>
+            <input
+              type="password"
+              value={passwordConfirmation}
+              onChange={(event) => setPasswordConfirmation(event.target.value)}
+              required
+              minLength={8}
               autoComplete="new-password"
             />
           </label>

@@ -1,9 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import PixieMark from "../components/PixieMark";
 
 function HomePage() {
+  const [searchParams] = useSearchParams();
+  const accountDeleted = searchParams.get("account") === "deleted";
+
   return (
     <div className="landing-page">
+      {accountDeleted ? (
+        <div className="landing-status-banner" role="status">
+          <span aria-hidden="true">✓</span>
+          <div>
+            <strong>Your SavePixie account has been deleted.</strong>
+            <small>Your real bank account and savings were never changed.</small>
+          </div>
+        </div>
+      ) : null}
       <section className="landing-hero">
         <div className="landing-hero__copy">
           <span className="landing-pill">
@@ -39,7 +51,7 @@ function HomePage() {
             <div>
               <small>Japan trip</small>
               <strong>
-                £420 <em>of £1,200</em>
+                4 200 kr <em>of 12 000 kr</em>
               </strong>
               <div className="progress-track">
                 <span style={{ width: "35%" }} />
@@ -107,7 +119,7 @@ function HomePage() {
         <PixieMark size="medium" mood="happy" />
         <div>
           <span className="eyebrow">Ready when you are</span>
-          <h2>What should your first £5 grow into?</h2>
+          <h2>What should your first 50 kr grow into?</h2>
         </div>
         <Link className="button primary" to="/auth#sign-up">
           Meet your Pixie

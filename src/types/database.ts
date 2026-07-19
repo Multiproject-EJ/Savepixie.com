@@ -176,6 +176,204 @@ export type Database = {
         };
         Relationships: [];
       };
+      savings_homes: {
+        Row: {
+          account_hint: string | null;
+          connection_status: string;
+          created_at: string;
+          id: string;
+          label: string;
+          last_verified_at: string | null;
+          provider_name: string | null;
+          reported_balance_cents: number | null;
+          updated_at: string;
+          user_id: string;
+          verified_balance_cents: number | null;
+        };
+        Insert: {
+          account_hint?: string | null;
+          connection_status?: string;
+          created_at?: string;
+          id?: string;
+          label: string;
+          last_verified_at?: string | null;
+          provider_name?: string | null;
+          reported_balance_cents?: number | null;
+          updated_at?: string;
+          user_id: string;
+          verified_balance_cents?: number | null;
+        };
+        Update: {
+          account_hint?: string | null;
+          connection_status?: string;
+          created_at?: string;
+          id?: string;
+          label?: string;
+          last_verified_at?: string | null;
+          provider_name?: string | null;
+          reported_balance_cents?: number | null;
+          updated_at?: string;
+          user_id?: string;
+          verified_balance_cents?: number | null;
+        };
+        Relationships: [];
+      };
+      savings_pact_entries: {
+        Row: {
+          created_at: string;
+          delta_cents: number;
+          entry_type: string;
+          id: string;
+          member_user_id: string;
+          note: string | null;
+          pact_id: string;
+          savings_home_id: string | null;
+          source_entry_id: string | null;
+          verification_state: string;
+        };
+        Insert: {
+          created_at?: string;
+          delta_cents: number;
+          entry_type: string;
+          id?: string;
+          member_user_id: string;
+          note?: string | null;
+          pact_id: string;
+          savings_home_id?: string | null;
+          source_entry_id?: string | null;
+          verification_state?: string;
+        };
+        Update: {
+          created_at?: string;
+          delta_cents?: number;
+          entry_type?: string;
+          id?: string;
+          member_user_id?: string;
+          note?: string | null;
+          pact_id?: string;
+          savings_home_id?: string | null;
+          source_entry_id?: string | null;
+          verification_state?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "savings_pact_entries_pact_id_member_user_id_fkey";
+            columns: ["pact_id", "member_user_id"];
+            isOneToOne: false;
+            referencedRelation: "savings_pact_members";
+            referencedColumns: ["pact_id", "user_id"];
+          },
+          {
+            foreignKeyName: "savings_pact_entries_savings_home_id_member_user_id_fkey";
+            columns: ["savings_home_id", "member_user_id"];
+            isOneToOne: false;
+            referencedRelation: "savings_homes";
+            referencedColumns: ["id", "user_id"];
+          },
+          {
+            foreignKeyName: "savings_pact_entries_source_entry_id_fkey";
+            columns: ["source_entry_id"];
+            isOneToOne: false;
+            referencedRelation: "savings_pact_entries";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      savings_pact_members: {
+        Row: {
+          commitment_cents: number | null;
+          display_name: string;
+          joined_at: string;
+          left_at: string | null;
+          pact_id: string;
+          privacy_mode: string;
+          role: string;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          commitment_cents?: number | null;
+          display_name: string;
+          joined_at?: string;
+          left_at?: string | null;
+          pact_id: string;
+          privacy_mode?: string;
+          role: string;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          commitment_cents?: number | null;
+          display_name?: string;
+          joined_at?: string;
+          left_at?: string | null;
+          pact_id?: string;
+          privacy_mode?: string;
+          role?: string;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "savings_pact_members_pact_id_fkey";
+            columns: ["pact_id"];
+            isOneToOne: false;
+            referencedRelation: "savings_pacts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      savings_pacts: {
+        Row: {
+          color: string;
+          contribution_rule: string;
+          created_at: string;
+          created_by: string;
+          deadline_date: string | null;
+          emoji: string;
+          id: string;
+          mode: string;
+          name: string;
+          reported_cents: number;
+          status: string;
+          target_cents: number;
+          updated_at: string;
+          verified_cents: number;
+        };
+        Insert: {
+          color?: string;
+          contribution_rule?: string;
+          created_at?: string;
+          created_by: string;
+          deadline_date?: string | null;
+          emoji?: string;
+          id?: string;
+          mode: string;
+          name: string;
+          reported_cents?: number;
+          status?: string;
+          target_cents: number;
+          updated_at?: string;
+          verified_cents?: number;
+        };
+        Update: {
+          color?: string;
+          contribution_rule?: string;
+          created_at?: string;
+          created_by?: string;
+          deadline_date?: string | null;
+          emoji?: string;
+          id?: string;
+          mode?: string;
+          name?: string;
+          reported_cents?: number;
+          status?: string;
+          target_cents?: number;
+          updated_at?: string;
+          verified_cents?: number;
+        };
+        Relationships: [];
+      };
       stripe_webhook_events: {
         Row: {
           event_type: string;
@@ -194,11 +392,130 @@ export type Database = {
         };
         Relationships: [];
       };
+      weekly_plans: {
+        Row: {
+          available_cents: number;
+          committed_cents: number;
+          created_at: string;
+          saving_cents: number;
+          updated_at: string;
+          user_id: string;
+          week_start: string;
+        };
+        Insert: {
+          available_cents?: number;
+          committed_cents?: number;
+          created_at?: string;
+          saving_cents?: number;
+          updated_at?: string;
+          user_id: string;
+          week_start: string;
+        };
+        Update: {
+          available_cents?: number;
+          committed_cents?: number;
+          created_at?: string;
+          saving_cents?: number;
+          updated_at?: string;
+          user_id?: string;
+          week_start?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      create_savings_pact: {
+        Args: {
+          p_color?: string;
+          p_contribution_rule?: string;
+          p_deadline_date?: string;
+          p_emoji?: string;
+          p_mode: string;
+          p_name: string;
+          p_privacy_mode?: string;
+          p_target_cents: number;
+        };
+        Returns: {
+          color: string;
+          contribution_rule: string;
+          created_at: string;
+          created_by: string;
+          deadline_date: string | null;
+          emoji: string;
+          id: string;
+          mode: string;
+          name: string;
+          reported_cents: number;
+          status: string;
+          target_cents: number;
+          updated_at: string;
+          verified_cents: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "savings_pacts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      create_savings_pact_invite: {
+        Args: { p_pact_id: string };
+        Returns: string;
+      };
+      get_savings_pact_members: {
+        Args: { p_pact_id: string };
+        Returns: {
+          amount_visible: boolean;
+          commitment_cents: number;
+          display_name: string;
+          joined_at: string;
+          left_at: string;
+          member_status: string;
+          on_track: boolean;
+          pact_id: string;
+          privacy_mode: string;
+          reported_cents: number;
+          role: string;
+          user_id: string;
+          verified_cents: number;
+        }[];
+      };
+      join_savings_pact: {
+        Args: { p_invite_token: string };
+        Returns: {
+          color: string;
+          contribution_rule: string;
+          created_at: string;
+          created_by: string;
+          deadline_date: string | null;
+          emoji: string;
+          id: string;
+          mode: string;
+          name: string;
+          reported_cents: number;
+          status: string;
+          target_cents: number;
+          updated_at: string;
+          verified_cents: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "savings_pacts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      leave_savings_pact: {
+        Args: { p_pact_id: string };
+        Returns: undefined;
+      };
+      prepare_savepixie_account_deletion: {
+        Args: { p_user_id: string };
+        Returns: number;
+      };
       process_stripe_subscription_event: {
         Args: {
           p_cancel_at: string;
@@ -231,6 +548,36 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "goals";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      record_pending_pact_save: {
+        Args: {
+          p_amount_cents: number;
+          p_note?: string;
+          p_pact_id: string;
+          p_savings_home_id: string;
+        };
+        Returns: {
+          color: string;
+          contribution_rule: string;
+          created_at: string;
+          created_by: string;
+          deadline_date: string | null;
+          emoji: string;
+          id: string;
+          mode: string;
+          name: string;
+          reported_cents: number;
+          status: string;
+          target_cents: number;
+          updated_at: string;
+          verified_cents: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "savings_pacts";
           isOneToOne: true;
           isSetofReturn: false;
         };

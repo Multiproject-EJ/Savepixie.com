@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Confirm your new SavePixie email</title>
+  </head>
+  <body style="margin: 0; background: #0b0718; color: #f3f2ff; font-family: Arial, sans-serif">
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      style="background: #0b0718"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table
+            role="presentation"
+            width="100%"
+            cellspacing="0"
+            cellpadding="0"
+            style="
+              max-width: 560px;
+              background: #191133;
+              border: 1px solid #35275b;
+              border-radius: 24px;
+            "
+          >
+            <tr>
+              <td style="padding: 36px 32px">
+                <p
+                  style="
+                    margin: 0 0 24px;
+                    color: #9af8e8;
+                    font-size: 14px;
+                    font-weight: 700;
+                    letter-spacing: 0.08em;
+                  "
+                >
+                  ✦ SAVEPIXIE
+                </p>
+                <h1 style="margin: 0 0 16px; color: #f3f2ff; font-size: 30px; line-height: 1.2">
+                  Confirm your new email
+                </h1>
+                <p style="margin: 0 0 24px; color: #c8c1df; font-size: 16px; line-height: 1.6">
+                  A request was made to change the email used for a SavePixie account. Confirm the
+                  change using the secure link below.
+                </p>
+                <p style="margin: 0 0 28px">
+                  <a
+                    href="{{ .ConfirmationURL }}"
+                    style="
+                      display: inline-block;
+                      padding: 14px 22px;
+                      background: #38dfc6;
+                      color: #081610;
+                      font-size: 16px;
+                      font-weight: 700;
+                      text-decoration: none;
+                      border-radius: 999px;
+                    "
+                    >Confirm email change</a
+                  >
+                </p>
+                <p style="margin: 0 0 16px; color: #a8a0c4; font-size: 14px; line-height: 1.6">
+                  If you didn’t request this, don’t use the link. Contact SavePixie support so we
+                  can help secure the account.
+                </p>
+                <p style="margin: 0; color: #756d92; font-size: 13px; line-height: 1.6">
+                  Button not working? Copy this secure link into your browser:<br />
+                  <a href="{{ .ConfirmationURL }}" style="color: #b394ff; word-break: break-all"
+                    >{{ .ConfirmationURL }}</a
+                  >
+                </p>
+              </td>
+            </tr>
+          </table>
+          <p style="margin: 18px 0 0; color: #756d92; font-size: 13px">
+            Need help?
+            <a href="mailto:support@savepixie.com" style="color: #b394ff">support@savepixie.com</a>
+            · <a href="https://savepixie.com" style="color: #b394ff">savepixie.com</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

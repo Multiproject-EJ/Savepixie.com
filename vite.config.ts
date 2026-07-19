@@ -22,6 +22,10 @@ export default defineConfig({
       output: {
         entryFileNames: (chunkInfo) =>
           chunkInfo.name === "service-worker" ? "service-worker.js" : "assets/[name]-[hash].js",
+        manualChunks: {
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          "supabase-vendor": ["@supabase/supabase-js"],
+        },
       },
     },
   },

@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { reportClientError } from "../../lib/telemetry";
 import type { Tables } from "../../types/database";
 
 type EntitlementRow = Tables<"entitlements">;
@@ -40,7 +41,25 @@ async function invokeBillingFunction(name: string): Promise<string> {
     body: {},
   });
 
-  if (error) throw error;
+  if (error) {
+    reportClientError(
+      name === "create-checkout-session" ? "billing_checkout" : "billing_portal",
+      "billing"
+    );
+    const response = "context" in error ? (error as { context?: Response }).context : null;
+    let message = "Billing could not complete that request. Please try again.";
+
+    if (response) {
+      try {
+        const body = (await response.clone().json()) as { error?: string };
+        if (body.error) message = body.error;
+      } catch {
+        // Keep the customer-safe fallback when the service returns no JSON body.
+      }
+    }
+
+    throw new Error(message);
+  }
   return hostedStripeUrl(data?.url);
 }
 
