@@ -4,8 +4,9 @@ Updated: 2026-07-19
 
 ## Current proven state
 
-- GitHub `main` contains the production and billing foundation through PR #9. PR #10 contains the
-  verified daily and shared motivation loops and is ready for an explicitly approved merge.
+- GitHub `main` contains the production and billing foundation plus the verified daily and shared
+  motivation loops from merged PR #10 (`657aa1b`). Both GitHub Pages deployment workflows completed
+  successfully for that merge.
 - The production PWA builds successfully with TypeScript checks and a GitHub Pages SPA fallback.
 - Supabase Auth uses `https://savepixie.com` with production, `www`, and local-development redirects.
 - The shared WalletHabit Suite project has no database, RLS, or exposed-schema security-advisor
@@ -105,9 +106,11 @@ Updated: 2026-07-19
 ### Commercial
 
 - Stripe sandbox product, 29 NOK price, first seven-day trial, signed webhook, customer portal,
-  duplicate-event handling, and reversible cancellation scheduling are verified.
-- Complete Stripe Tax business location/registration/tax-code configuration and the remaining
-  test-clock renewal, failed-payment, refund, and restore flows.
+  duplicate-event handling, reversible cancellation scheduling, trial-to-paid conversion, successful
+  monthly renewal, failed-payment access removal, and payment-recovery access restoration are
+  verified.
+- Complete Stripe Tax business location/registration/tax-code configuration and the remaining refund
+  flow.
 - Publish reviewed subscription, cancellation, refund, Terms, and Privacy copy.
 
 ### Operations
