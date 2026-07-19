@@ -25,7 +25,7 @@ export function createUserClient(authorization: string) {
     Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY");
 
   if (!publishableKey) {
-    throw new Error("Missing SUPABASE_PUBLISHABLE_KEY environment variable.");
+    throw new Error("Missing Supabase publishable or anon key environment variable.");
   }
 
   return createClient(requireEnv("SUPABASE_URL"), publishableKey, {

@@ -19,6 +19,7 @@ type AuthContextValue = {
   sessionError: string | null;
   recoveryMode: boolean;
   retrySession: () => Promise<void>;
+  signInWithGoogle: (redirectTo: string) => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signUpWithPassword: (
     email: string,
@@ -121,6 +122,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   }, []);
 
+  const signInWithGoogle = useCallback(async (redirectTo: string) => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
+    if (error) throw error;
+  }, []);
+
   const signUpWithPassword = useCallback(
     async (
       email: string,
@@ -175,6 +184,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       sessionError,
       recoveryMode,
       retrySession,
+      signInWithGoogle,
       signInWithPassword,
       signUpWithPassword,
       signOut,
@@ -188,6 +198,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       retrySession,
       session,
       sessionError,
+      signInWithGoogle,
       signInWithPassword,
       signOut,
       signUpWithPassword,

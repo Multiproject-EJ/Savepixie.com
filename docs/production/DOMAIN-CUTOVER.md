@@ -10,6 +10,9 @@ Checked: 2026-07-17 at 22:05 BST
   `3.33.251.168` and `15.197.225.128`.
 - A real customer request currently follows this chain:
   `savepixie.com` → `markettycoon.app` → `Alphastocks.ai` → `www.alphastocks.ai`.
+- Stripe sandbox Checkout is working, but its success URL is already the intended production route
+  `https://savepixie.com/app/today`; that route will continue to show the old site's Not Found page
+  until this cutover is complete.
 - `https://multiproject-ej.github.io/Savepixie.com/` already redirects to `savepixie.com`, proving the
   GitHub Pages site has the custom apex domain configured. DNS must not be cut over until the launch
   branch is merged and the new Pages deployment is green.

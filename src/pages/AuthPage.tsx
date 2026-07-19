@@ -13,6 +13,7 @@ function AuthPage() {
   const {
     user,
     recoveryMode,
+    signInWithGoogle,
     signInWithPassword,
     signUpWithPassword,
     resetPassword,
@@ -53,8 +54,9 @@ function AuthPage() {
 
   const redirectTo = useMemo(() => {
     const state = location.state as LocationState | null;
-    return state?.from || "/app";
-  }, [location.state]);
+    const queryDestination = new URLSearchParams(location.search).get("from");
+    return state?.from || (queryDestination?.startsWith("/") ? queryDestination : null) || "/app";
+  }, [location.search, location.state]);
 
   useEffect(() => {
     if (user && !recoveryMode) {
@@ -97,6 +99,20 @@ function AuthPage() {
     } catch (cause) {
       setError(friendlyAuthError(cause, "We couldn’t sign you in. Please try again."));
     } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setSubmitting(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const callback = new URL("/auth", window.location.origin);
+      callback.searchParams.set("from", redirectTo);
+      await signInWithGoogle(callback.toString());
+    } catch (cause) {
+      setError(friendlyAuthError(cause, "We couldn’t open Google sign-in. Please try again."));
       setSubmitting(false);
     }
   };
@@ -209,6 +225,25 @@ function AuthPage() {
 
       {error && <p className="alert error">{error}</p>}
       {message && <p className="alert success">{message}</p>}
+
+      {(view === "sign-in" || view === "sign-up") && (
+        <div className="oauth-block">
+          <button
+            className="button google-button"
+            type="button"
+            onClick={() => void handleGoogleSignIn()}
+            disabled={submitting}
+          >
+            <span className="google-mark" aria-hidden="true">
+              G
+            </span>
+            Continue with Google
+          </button>
+          <div className="auth-divider" aria-hidden="true">
+            <span>or use email</span>
+          </div>
+        </div>
+      )}
 
       {view === "sign-in" && (
         <form className="form" onSubmit={handleSignIn}>

@@ -755,6 +755,51 @@ p {
   color: var(--ink);
   background: rgba(123, 63, 255, 0.18);
 }
+.oauth-block {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.google-button {
+  width: 100%;
+  background: #fff;
+  border-color: rgba(255, 255, 255, 0.88);
+  color: #1f1f1f;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+.google-button:hover {
+  background: #f7f7fb;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
+}
+.google-mark {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #4285f4;
+  border: 1px solid rgba(66, 133, 244, 0.28);
+  font:
+    800 0.9rem/1 system-ui,
+    sans-serif;
+}
+.auth-divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--faint);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.auth-divider::before,
+.auth-divider::after {
+  height: 1px;
+  content: "";
+  background: var(--border);
+}
 .form {
   display: grid;
   gap: 1rem;

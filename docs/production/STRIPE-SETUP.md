@@ -1,8 +1,8 @@
 # SavePixie Stripe Setup
 
-Updated: 2026-07-17  
-Status: Test-ready code and Pro limits deployed; no Stripe product, secrets, webhook endpoint, or
-payment activation
+Updated: 2026-07-19
+Status: Test-mode product, secrets, webhook, portal, Checkout, and seven-day trial verified; public
+activation and live-mode lifecycle acceptance remain gated
 
 ## Commercial boundary
 
@@ -55,35 +55,40 @@ Set these only on the shared WalletHabit Suite project used by SavePixie:
 - `STRIPE_WEBHOOK_SIGNING_SECRET`
 - `STRIPE_SAVEPIXIE_PRO_PRICE_ID`
 - `SITE_URL=https://savepixie.com`
-- `SUPABASE_PUBLISHABLE_KEY`
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided to deployed Supabase Edge Functions. The
-service-role value must never be added to GitHub Pages variables or any `VITE_` value.
+deployed runtime also provides `SUPABASE_ANON_KEY`, which the user-authenticated functions use as the
+fallback client key; Supabase reserves the `SUPABASE_` prefix, so no duplicate custom publishable-key
+secret is required. The service-role value must never be added to GitHub Pages variables or any
+`VITE_` value.
 
 ## Stripe Dashboard configuration
 
-1. Create a SavePixie Pro product and a recurring monthly price in NOK for 29 kr.
-2. Configure the Billing Portal for payment-method updates and cancellation.
-3. Add the deployed `stripe-webhook` URL as a webhook endpoint using API version
+1. SavePixie Pro exists in the Stripe sandbox with an active recurring monthly price of 29 NOK.
+2. The test-mode Billing Portal permits payment-method updates and cancellation at period end.
+3. The deployed `stripe-webhook` endpoint uses API version
    `2026-06-24.dahlia`.
-4. Subscribe to:
+4. It subscribes to:
    - `checkout.session.completed`
    - `customer.subscription.created`
    - `customer.subscription.updated`
    - `customer.subscription.deleted`
-5. Copy the endpoint signing secret into the Supabase project secret.
+5. The test secret, signing secret, approved price ID, and production site URL are set in the shared
+   Supabase project.
 
 ## Test-mode acceptance
 
 - [x] A signed-out request cannot create Checkout or Portal sessions: both deployed functions return
       `401` without an authorization header.
 - [x] An unsigned webhook request returns `400` before processing.
-- A signed-in free user receives a Stripe-hosted Checkout URL.
+- [x] A signed-in free user receives a Stripe-hosted Checkout URL.
 - A returning customer who previously had an entitlement receives no second free trial.
-- Checkout displays the 29 kr monthly price and seven-day trial before confirmation.
-- Successful Checkout creates `trialing` access only after the signed webhook is processed.
+- [x] Checkout displays the 29 kr monthly price and seven-day trial before confirmation.
+- [x] Successful Checkout creates `trialing` access only after the signed webhook is processed.
 - Replaying the same webhook event does not apply the update twice.
 - Invalid signatures are rejected without writing database records.
+- [x] A signed cancellation webhook removes access, and a terminal event for an obsolete duplicate
+      subscription cannot overwrite another active subscription's entitlement.
 - Portal cancellation changes access only after the corresponding subscription webhook.
 - Failed, past-due, canceled, incomplete, and expired subscriptions do not retain Pro access.
 - Basic/Pro Pact limits change only future creation and joining; existing Circle data survives.
@@ -91,8 +96,13 @@ service-role value must never be added to GitHub Pages variables or any `VITE_` 
 
 ## Activation sequence
 
-The migrations, ownership-hardened functions, Settings offer, and server-side Pro boundary are
-deployed. Checkout v5 and Portal/Webhook v4 are active but customer activation remains disabled.
-Next, set test-mode secrets, configure the webhook and portal, run the acceptance suite, and review
-the final conversion screen against the owner's reference video. Set `VITE_STRIPE_ENABLED=true` only
-after those checks pass; that single production flag activates the visible Stripe action.
+The migrations, ownership-hardened functions, Settings offer, server-side Pro boundary, test-mode
+secrets, webhook, and portal are deployed. A real sandbox Checkout completed on 2026-07-19 and the
+verified webhook granted Pro trial access through 2026-07-26. Its success return currently reaches
+`https://savepixie.com/app/today`, which will show the old site's Not Found response until the launch
+branch is merged and the domain cutover is complete.
+
+Next, complete the remaining lifecycle tests, review the final conversion screen against the owner's
+reference video, create the corresponding live-mode Stripe configuration, and deploy the PWA. Set
+`VITE_STRIPE_ENABLED=true` only after those checks pass; that single production flag activates the
+visible Stripe action.
