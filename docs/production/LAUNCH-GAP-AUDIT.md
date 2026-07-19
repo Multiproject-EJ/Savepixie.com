@@ -1,6 +1,6 @@
 # SavePixie Launch Gap Audit
 
-Updated: 2026-07-19
+Updated: 2026-07-20
 
 ## Current proven state
 
@@ -9,8 +9,10 @@ Updated: 2026-07-19
   successfully for that merge.
 - The production PWA builds successfully with TypeScript checks and a GitHub Pages SPA fallback.
 - Supabase Auth uses `https://savepixie.com` with production, `www`, and local-development redirects.
-- The shared WalletHabit Suite project has no database, RLS, or exposed-schema security-advisor
-  findings. One Auth warning remains until leaked-password protection is enabled.
+- The 2026-07-20 Supabase Security Advisor pass has no database, RLS, or exposed-schema findings. One
+  Auth warning remains until leaked-password protection is enabled.
+- Every checked SavePixie table has RLS enabled and explicit Data API grants. The April 2026 Supabase
+  table-exposure default change therefore does not require a SavePixie schema change.
 - Legacy personal goals and atomic deposits are still present for backwards compatibility.
 - The live database now also contains the core Savings Pact model:
   - solo and shared Pacts;
