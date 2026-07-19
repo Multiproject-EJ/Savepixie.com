@@ -8,6 +8,15 @@ import {
   useState,
 } from "react";
 import {
+  completeDailyMove as completeDailyMoveRequest,
+  fetchDailyLoop,
+  localDateKey,
+  type CompleteDailyMoveInput,
+  type DailyCompletion,
+  type DailyMoveResult,
+  type DailyProgress,
+} from "../features/daily-loop/api";
+import {
   createGoal,
   createPactInvite,
   createSavingsHome,
@@ -44,6 +53,8 @@ type SavingsContextValue = {
   profile: ProfileRow | null;
   goals: Goal[];
   savingsHomes: SavingsHome[];
+  dailyProgress: DailyProgress | null;
+  dailyCompletions: DailyCompletion[];
   ready: boolean;
   loading: boolean;
   error: string | null;
@@ -57,6 +68,7 @@ type SavingsContextValue = {
     }
   ) => Promise<{ goal: Goal; initialSaveRecorded: boolean }>;
   deposit: (goalId: string, amountCents: number, note?: string) => Promise<Goal>;
+  completeDailyMove: (input: CompleteDailyMoveInput) => Promise<DailyMoveResult>;
   createInvite: (pactId: string) => Promise<string>;
   joinSharedPact: (inviteToken: string) => Promise<Goal>;
   updateHome: (input: SavingsHomeInput & { id: string }) => Promise<SavingsHome>;
@@ -73,6 +85,8 @@ export function SavingsProvider({ children }: PropsWithChildren) {
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [savingsHomes, setSavingsHomes] = useState<SavingsHome[]>([]);
+  const [dailyProgress, setDailyProgress] = useState<DailyProgress | null>(null);
+  const [dailyCompletions, setDailyCompletions] = useState<DailyCompletion[]>([]);
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +96,8 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       setProfile(null);
       setGoals([]);
       setSavingsHomes([]);
+      setDailyProgress(null);
+      setDailyCompletions([]);
       setReady(false);
       setLoading(false);
       return;
@@ -91,14 +107,17 @@ export function SavingsProvider({ children }: PropsWithChildren) {
     setError(null);
 
     try {
-      const [nextProfile, nextGoals, nextHomes] = await Promise.all([
+      const [nextProfile, nextGoals, nextHomes, nextDailyLoop] = await Promise.all([
         fetchProfile(user.id),
         fetchGoals(),
         fetchSavingsHomes(user.id),
+        fetchDailyLoop(user.id),
       ]);
       setProfile(nextProfile);
       setGoals(nextGoals);
       setSavingsHomes(nextHomes);
+      setDailyProgress(nextDailyLoop.progress);
+      setDailyCompletions(nextDailyLoop.completions);
       setReady(true);
     } catch (cause) {
       reportClientError("private_data_load", "app");
@@ -197,6 +216,24 @@ export function SavingsProvider({ children }: PropsWithChildren) {
 
   const createInvite = useCallback((pactId: string) => createPactInvite(pactId), []);
 
+  const completeDailyMove = useCallback(
+    async (input: CompleteDailyMoveInput) => {
+      if (!user?.id) throw new Error("Sign in before completing today's Savings Move.");
+
+      const result = await completeDailyMoveRequest(input);
+      const [nextDailyLoop, nextGoals] = await Promise.all([
+        fetchDailyLoop(user.id),
+        result.completionKind === "save" ? fetchGoals() : Promise.resolve(null),
+      ]);
+
+      setDailyProgress(nextDailyLoop.progress);
+      setDailyCompletions(nextDailyLoop.completions);
+      if (nextGoals) setGoals(nextGoals);
+      return result;
+    },
+    [user?.id]
+  );
+
   const joinSharedPact = useCallback(async (inviteToken: string) => {
     const joined = await joinPact(inviteToken);
     setGoals((current) =>
@@ -218,6 +255,8 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       profile,
       goals,
       savingsHomes,
+      dailyProgress,
+      dailyCompletions,
       ready,
       loading,
       error,
@@ -226,13 +265,17 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       addGoal,
       startFirstGoal,
       deposit,
+      completeDailyMove,
       createInvite,
       joinSharedPact,
       updateHome,
     }),
     [
       addGoal,
+      completeDailyMove,
       createInvite,
+      dailyCompletions,
+      dailyProgress,
       deposit,
       displayName,
       error,
@@ -310,6 +353,20 @@ const previewGoals: Goal[] = [
 
 export function SavingsPreviewProvider({ children }: PropsWithChildren) {
   const [goals, setGoals] = useState(previewGoals);
+  const [dailyProgress, setDailyProgress] = useState<DailyProgress>({
+    user_id: previewProfile.id,
+    current_streak: 3,
+    best_streak: 6,
+    stardust_total: 165,
+    completed_moves: 7,
+    last_completed_on: previewDate(-1),
+    updated_at: new Date().toISOString(),
+  });
+  const [dailyCompletions, setDailyCompletions] = useState<DailyCompletion[]>([
+    previewCompletion("round-up-rally", -1, "save", 3000),
+    previewCompletion("pause-power", -2, "action", 0),
+    previewCompletion("swap-and-save", -3, "save", 5000),
+  ]);
 
   const refresh = useCallback(async () => undefined, []);
 
@@ -377,6 +434,83 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
   );
 
   const createInvite = useCallback(async () => "preview-invite", []);
+  const completeDailyMove = useCallback(
+    async (input: CompleteDailyMoveInput): Promise<DailyMoveResult> => {
+      const date = input.localDate ?? localDateKey();
+      const existing = dailyCompletions.find((completion) => completion.local_date === date);
+      if (existing) {
+        return {
+          completionId: existing.id,
+          moveId: existing.move_id,
+          localDate: existing.local_date,
+          completionKind: existing.completion_kind as "action" | "save",
+          pactId: existing.pact_id,
+          savedCents: existing.saved_cents,
+          stardustAwarded: existing.stardust_awarded,
+          currentStreak: dailyProgress.current_streak,
+          bestStreak: dailyProgress.best_streak,
+          stardustTotal: dailyProgress.stardust_total,
+          completedMoves: dailyProgress.completed_moves,
+          lastCompletedOn: dailyProgress.last_completed_on || date,
+          wasAlreadyComplete: true,
+        };
+      }
+
+      const stardustAwarded = input.completionKind === "save" ? 35 : 25;
+      const nextStreak = dailyProgress.last_completed_on === previewDate(-1) ? 4 : 1;
+      const completion: DailyCompletion = {
+        id: `preview-move-${Date.now()}`,
+        user_id: previewProfile.id,
+        move_id: input.moveId,
+        local_date: date,
+        completion_kind: input.completionKind,
+        pact_id: input.pactId ?? null,
+        saved_cents: input.savedCents ?? 0,
+        stardust_awarded: stardustAwarded,
+        reflection: input.reflection?.trim() || null,
+        created_at: new Date().toISOString(),
+      };
+
+      if (input.completionKind === "save" && input.pactId && input.savedCents) {
+        setGoals((current) =>
+          current.map((goal) =>
+            goal.id === input.pactId
+              ? { ...goal, saved_cents: goal.saved_cents + (input.savedCents ?? 0) }
+              : goal
+          )
+        );
+      }
+
+      const nextProgress: DailyProgress = {
+        ...dailyProgress,
+        current_streak: nextStreak,
+        best_streak: Math.max(dailyProgress.best_streak, nextStreak),
+        stardust_total: dailyProgress.stardust_total + stardustAwarded,
+        completed_moves: dailyProgress.completed_moves + 1,
+        last_completed_on: date,
+        updated_at: new Date().toISOString(),
+      };
+      setDailyCompletions((current) => [completion, ...current]);
+      setDailyProgress(nextProgress);
+
+      return {
+        completionId: completion.id,
+        moveId: completion.move_id,
+        localDate: date,
+        completionKind: input.completionKind,
+        pactId: completion.pact_id,
+        savedCents: completion.saved_cents,
+        stardustAwarded,
+        currentStreak: nextProgress.current_streak,
+        bestStreak: nextProgress.best_streak,
+        stardustTotal: nextProgress.stardust_total,
+        completedMoves: nextProgress.completed_moves,
+        lastCompletedOn: date,
+        wasAlreadyComplete: false,
+      };
+    },
+    [dailyCompletions, dailyProgress]
+  );
   const joinSharedPact = useCallback(async () => previewGoals[0], []);
   const updateHome = useCallback(async (input: SavingsHomeInput & { id: string }) => {
     const now = new Date().toISOString();
@@ -396,6 +530,8 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
       profile: previewProfile,
       goals,
       savingsHomes: [previewHome],
+      dailyProgress,
+      dailyCompletions,
       ready: true,
       loading: false,
       error: null,
@@ -404,14 +540,53 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
       addGoal,
       startFirstGoal,
       deposit,
+      completeDailyMove,
       createInvite,
       joinSharedPact,
       updateHome,
     }),
-    [addGoal, createInvite, deposit, goals, joinSharedPact, refresh, startFirstGoal, updateHome]
+    [
+      addGoal,
+      completeDailyMove,
+      createInvite,
+      dailyCompletions,
+      dailyProgress,
+      deposit,
+      goals,
+      joinSharedPact,
+      refresh,
+      startFirstGoal,
+      updateHome,
+    ]
   );
 
   return <SavingsContext.Provider value={value}>{children}</SavingsContext.Provider>;
+}
+
+function previewDate(offset: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return localDateKey(date);
+}
+
+function previewCompletion(
+  moveId: string,
+  offset: number,
+  kind: "action" | "save",
+  savedCents: number
+): DailyCompletion {
+  return {
+    id: `preview-${moveId}-${offset}`,
+    user_id: previewProfile.id,
+    move_id: moveId,
+    local_date: previewDate(offset),
+    completion_kind: kind,
+    pact_id: kind === "save" ? previewGoals[0].id : null,
+    saved_cents: savedCents,
+    stardust_awarded: kind === "save" ? 35 : 25,
+    reflection: null,
+    created_at: new Date().toISOString(),
+  };
 }
 
 export function useSavings() {

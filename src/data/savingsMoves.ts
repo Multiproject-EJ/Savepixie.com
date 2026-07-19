@@ -6,6 +6,9 @@ export type SavingsMove = {
   description: string;
   suggestedCents: number;
   principle: string;
+  completionKind: "action" | "save";
+  actionLabel: string;
+  reflectionPrompt: string;
 };
 
 export type GoalIdea = {
@@ -26,6 +29,9 @@ export const savingsMoves: SavingsMove[] = [
     description: "Choose one small spend to swap today, then send the difference to your goal.",
     suggestedCents: 5000,
     principle: "Keep the joy; redirect the waste.",
+    completionKind: "save",
+    actionLabel: "Make the swap",
+    reflectionPrompt: "What did you swap or skip?",
   },
   {
     id: "round-up-rally",
@@ -35,6 +41,9 @@ export const savingsMoves: SavingsMove[] = [
     description: "Round a recent purchase up to the next 50 kr and save the difference manually.",
     suggestedCents: 3000,
     principle: "Small invisible amounts become visible progress.",
+    completionKind: "save",
+    actionLabel: "Round and save",
+    reflectionPrompt: "Which purchase did you round up?",
   },
   {
     id: "pause-power",
@@ -44,6 +53,9 @@ export const savingsMoves: SavingsMove[] = [
     description: "Pause a non-essential purchase for a day and bank a tiny part of its price now.",
     suggestedCents: 5000,
     principle: "A pause creates choice without banning treats.",
+    completionKind: "action",
+    actionLabel: "Start my 24-hour pause",
+    reflectionPrompt: "What are you giving yourself time to reconsider?",
   },
   {
     id: "found-money",
@@ -54,6 +66,9 @@ export const savingsMoves: SavingsMove[] = [
       "Save part of a refund, discount, gift, or under-budget moment before it disappears.",
     suggestedCents: 10000,
     principle: "Give surprise money a purpose first.",
+    completionKind: "save",
+    actionLabel: "Give it a purpose",
+    reflectionPrompt: "Where did the unexpected money come from?",
   },
   {
     id: "tiny-tax",
@@ -63,6 +78,9 @@ export const savingsMoves: SavingsMove[] = [
     description: "Enjoy a treat, then move a small matching amount toward something bigger.",
     suggestedCents: 2000,
     principle: "Pleasure today can support pleasure tomorrow.",
+    completionKind: "save",
+    actionLabel: "Match my treat",
+    reflectionPrompt: "What little treat are you matching?",
   },
   {
     id: "no-spend-sprint",
@@ -73,6 +91,9 @@ export const savingsMoves: SavingsMove[] = [
       "Choose one easy category to skip for a few hours and save a small victory amount.",
     suggestedCents: 5000,
     principle: "Short sprints feel lighter than strict bans.",
+    completionKind: "action",
+    actionLabel: "Begin my sprint",
+    reflectionPrompt: "Which easy spending pocket will you protect?",
   },
 ];
 
@@ -128,6 +149,8 @@ export const goalIdeas: GoalIdea[] = [
 ];
 
 export function getDailySavingsMove(date = new Date()) {
-  const dayNumber = Math.floor(date.getTime() / 86_400_000);
+  const dayNumber = Math.floor(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000
+  );
   return savingsMoves[Math.abs(dayNumber) % savingsMoves.length];
 }

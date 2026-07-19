@@ -6,12 +6,24 @@ import type { AppShellOutletContext } from "../components/AppShell";
 import InviteLinkCard from "../components/InviteLinkCard";
 import {
   archivePact,
+  fetchOwnPactEntries,
   fetchOwnPactMembership,
+  fetchPactActivity,
+  fetchPactActivityCheers,
   fetchPactMembers,
   leavePact,
+  togglePactActivityCheer,
   updatePactMembership,
 } from "../features/goals/api";
-import type { PactMemberSummary, PactMembership, PactPrivacyMode } from "../features/goals/types";
+import { nextPactMilestone, pactMilestones, weeklyPactPace } from "../features/goals/progress";
+import type {
+  PactEntry,
+  PactActivity,
+  PactMemberSummary,
+  PactMembership,
+  PactPrivacyMode,
+} from "../features/goals/types";
+import { gentleHaptic } from "../lib/feedback";
 import { formatMoney, formatShortDate, goalProgress } from "../lib/format";
 import { useModalDialog } from "../lib/useModalDialog";
 
@@ -48,6 +60,12 @@ export function PactDetailPage() {
   const currentUserId = user?.id ?? (isPreview ? "preview-user" : null);
   const [members, setMembers] = useState<PactMemberSummary[]>([]);
   const [membership, setMembership] = useState<PactMembership | null>(null);
+  const [entries, setEntries] = useState<PactEntry[]>([]);
+  const [activity, setActivity] = useState<PactActivity[]>([]);
+  const [activityCheers, setActivityCheers] = useState<
+    Record<string, { count: number; cheered: boolean }>
+  >({});
+  const [cheeringId, setCheeringId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -105,6 +123,42 @@ export function PactDetailPage() {
           on_track: true,
         },
       ]);
+      setEntries([
+        {
+          id: "preview-entry-1",
+          pact_id: goal.id,
+          member_user_id: currentUserId,
+          entry_type: "pending",
+          delta_cents: 5000,
+          verification_state: "reported",
+          note: "Skipped a takeaway and saved the difference.",
+          created_at: new Date().toISOString(),
+        },
+      ]);
+      setActivity([
+        {
+          activity_id: "preview-activity-1",
+          actor_user_id: "preview-friend",
+          actor_display_name: "Alex",
+          activity_kind: "save",
+          amount_cents: null,
+          amount_visible: false,
+          occurred_at: new Date().toISOString(),
+        },
+        {
+          activity_id: "preview-activity-2",
+          actor_user_id: currentUserId,
+          actor_display_name: displayName,
+          activity_kind: "save",
+          amount_cents: 5000,
+          amount_visible: true,
+          occurred_at: new Date(Date.now() - 86_400_000).toISOString(),
+        },
+      ]);
+      setActivityCheers({
+        "preview-activity-1": { count: 2, cheered: false },
+        "preview-activity-2": { count: 1, cheered: false },
+      });
       setCommitment("6000");
       setPrivacyMode("on_track_only");
       setLoading(false);
@@ -112,12 +166,25 @@ export function PactDetailPage() {
     }
 
     try {
-      const [nextMembers, ownMembership] = await Promise.all([
+      const [nextMembers, ownMembership, ownEntries, nextActivity, nextCheers] = await Promise.all([
         fetchPactMembers(goal.id),
         fetchOwnPactMembership(goal.id, currentUserId),
+        fetchOwnPactEntries(goal.id, currentUserId),
+        goal.mode === "shared" ? fetchPactActivity(goal.id) : Promise.resolve([]),
+        goal.mode === "shared" ? fetchPactActivityCheers(goal.id) : Promise.resolve([]),
       ]);
       setMembers(nextMembers);
       setMembership(ownMembership);
+      setEntries(ownEntries);
+      setActivity(nextActivity);
+      setActivityCheers(
+        Object.fromEntries(
+          nextCheers.map((cheer) => [
+            cheer.activity_id,
+            { count: cheer.cheer_count, cheered: cheer.cheered_by_me },
+          ])
+        )
+      );
       setCommitment(
         ownMembership.commitment_cents === null ? "" : String(ownMembership.commitment_cents / 100)
       );
@@ -136,6 +203,9 @@ export function PactDetailPage() {
   }, [goal?.id, currentUserId, isPreview]);
 
   const progress = goal ? goalProgress(goal.saved_cents, goal.target_cents) : 0;
+  const milestones = goal ? pactMilestones(goal) : [];
+  const nextMilestone = goal ? nextPactMilestone(goal) : null;
+  const weeklyPace = goal ? weeklyPactPace(goal) : null;
   const isOwner = membership?.role === "owner";
   const selectedPrivacy = useMemo(
     () => privacyOptions.find((option) => option.value === privacyMode),
@@ -227,6 +297,28 @@ export function PactDetailPage() {
     }
   };
 
+  const cheerActivity = async (activityId: string) => {
+    if (cheeringId) return;
+    setCheeringId(activityId);
+    setError(null);
+    try {
+      const previous = activityCheers[activityId] ?? { count: 0, cheered: false };
+      const cheered = isPreview ? !previous.cheered : await togglePactActivityCheer(activityId);
+      setActivityCheers((current) => ({
+        ...current,
+        [activityId]: {
+          cheered,
+          count: Math.max(0, previous.count + (cheered ? 1 : -1)),
+        },
+      }));
+      gentleHaptic();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "We couldn't send that cheer.");
+    } finally {
+      setCheeringId(null);
+    }
+  };
+
   return (
     <div className="app-page pact-detail-page">
       <header className="page-heading pact-detail-heading">
@@ -296,34 +388,179 @@ export function PactDetailPage() {
         ) : null}
       </section>
 
-      {goal.mode === "shared" ? (
-        <section className="surface-card pact-circle-section">
-          <header className="section-heading">
-            <div>
-              <span className="eyebrow">Privacy-respecting progress</span>
-              <h2>Your Circle</h2>
-              <p>Hidden amounts stay hidden. SavePixie shows only what each person chose.</p>
+      <section className="surface-card pact-momentum-section">
+        <header className="section-heading">
+          <div>
+            <span className="eyebrow">A path you can believe</span>
+            <h2>Your next visible win</h2>
+          </div>
+          {weeklyPace !== null ? (
+            <span className="pact-pace-pill">
+              {weeklyPace > 0 ? `${formatMoney(weeklyPace)} / week` : "Target reached"}
+            </span>
+          ) : null}
+        </header>
+        <p className="support-copy">
+          {nextMilestone
+            ? `${formatMoney(Math.max(0, nextMilestone.targetCents - goal.saved_cents))} until the ${nextMilestone.percent}% milestone.`
+            : "Every milestone is complete. This Pact has reached its target."}
+          {weeklyPace !== null && weeklyPace > 0
+            ? ` A flexible pace of about ${formatMoney(weeklyPace)} each week reaches the current dream date.`
+            : " Add a dream date whenever a weekly guide would feel useful."}
+        </p>
+        <div className="pact-milestone-row" aria-label="Pact milestones">
+          {milestones.map((milestone) => (
+            <div className={milestone.reached ? "reached" : ""} key={milestone.percent}>
+              <span>{milestone.reached ? "✓" : milestone.percent}</span>
+              <small>{milestone.percent}%</small>
+              <em>{formatMoney(milestone.targetCents)}</em>
             </div>
-          </header>
-          <div className="pact-member-grid">
-            {members.map((member) => (
-              <article className="pact-member-card" key={member.user_id}>
-                <span className="profile-avatar">
-                  {member.display_name.slice(0, 1).toUpperCase()}
+          ))}
+        </div>
+      </section>
+
+      {goal.mode === "shared" ? (
+        <>
+          <section className="surface-card pact-circle-section">
+            <header className="section-heading">
+              <div>
+                <span className="eyebrow">Privacy-respecting progress</span>
+                <h2>Your Circle</h2>
+                <p>Hidden amounts stay hidden. SavePixie shows only what each person chose.</p>
+              </div>
+            </header>
+            <div className="pact-member-grid">
+              {members.map((member) => (
+                <article className="pact-member-card" key={member.user_id}>
+                  <span className="profile-avatar">
+                    {member.display_name.slice(0, 1).toUpperCase()}
+                  </span>
+                  <div>
+                    <strong>
+                      {member.display_name}
+                      {member.user_id === currentUserId ? " · You" : ""}
+                    </strong>
+                    <small>{member.role === "owner" ? "Organiser" : "Circle member"}</small>
+                  </div>
+                  <MemberProgress member={member} />
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="surface-card pact-activity-section">
+            <header className="section-heading">
+              <div>
+                <span className="eyebrow">A Circle that notices effort</span>
+                <h2>Recent momentum</h2>
+                <p>
+                  Participation is shared; exact amounts still follow each member&apos;s privacy
+                  choice.
+                </p>
+              </div>
+            </header>
+            {activity.length ? (
+              <ol>
+                {activity.map((item) => (
+                  <li key={item.activity_id}>
+                    <span className="profile-avatar">
+                      {item.actor_display_name.slice(0, 1).toUpperCase()}
+                    </span>
+                    <div>
+                      <strong>
+                        {item.actor_user_id === currentUserId ? "You" : item.actor_display_name}{" "}
+                        {activityPhrase(item.activity_kind)}
+                      </strong>
+                      <small>{relativeActivityDate(item.occurred_at)}</small>
+                    </div>
+                    <span className="pact-activity-section__amount">
+                      {item.amount_visible && item.amount_cents !== null
+                        ? formatMoney(item.amount_cents)
+                        : "Amount private"}
+                    </span>
+                    {item.actor_user_id !== currentUserId ? (
+                      <button
+                        className={
+                          activityCheers[item.activity_id]?.cheered
+                            ? "pact-cheer-button cheered"
+                            : "pact-cheer-button"
+                        }
+                        type="button"
+                        aria-pressed={activityCheers[item.activity_id]?.cheered ?? false}
+                        aria-label={`Cheer ${item.actor_display_name}'s saving move`}
+                        disabled={cheeringId === item.activity_id}
+                        onClick={() => void cheerActivity(item.activity_id)}
+                      >
+                        <span aria-hidden="true">✦</span>
+                        Cheer
+                        {(activityCheers[item.activity_id]?.count ?? 0) > 0
+                          ? ` ${activityCheers[item.activity_id].count}`
+                          : ""}
+                      </button>
+                    ) : (
+                      <span className="pact-cheer-count">
+                        {(activityCheers[item.activity_id]?.count ?? 0) > 0
+                          ? `${activityCheers[item.activity_id].count} cheers`
+                          : "Your Move"}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="support-copy">The first Circle save will light up this space.</p>
+            )}
+          </section>
+        </>
+      ) : null}
+
+      <section className="surface-card pact-entry-history">
+        <header className="section-heading">
+          <div>
+            <span className="eyebrow">Your private contribution history</span>
+            <h2>The small saves that built this</h2>
+            <p>Only your own exact entries appear here.</p>
+          </div>
+        </header>
+        {entries.length ? (
+          <ol>
+            {entries.map((entry) => (
+              <li key={entry.id}>
+                <span className={`pact-entry-history__state ${entry.verification_state}`}>
+                  {entry.verification_state === "verified" ? "✓" : "✦"}
                 </span>
                 <div>
-                  <strong>
-                    {member.display_name}
-                    {member.user_id === currentUserId ? " · You" : ""}
-                  </strong>
-                  <small>{member.role === "owner" ? "Organiser" : "Circle member"}</small>
+                  <strong>{entryLabel(entry.entry_type)}</strong>
+                  <small>
+                    {new Intl.DateTimeFormat(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    }).format(new Date(entry.created_at))}
+                    {entry.note ? ` · ${entry.note}` : ""}
+                  </small>
                 </div>
-                <MemberProgress member={member} />
-              </article>
+                <span className={entry.delta_cents < 0 ? "negative" : ""}>
+                  {entry.delta_cents > 0 ? "+" : ""}
+                  {formatMoney(entry.delta_cents)}
+                </span>
+              </li>
             ))}
+          </ol>
+        ) : (
+          <div className="pact-entry-history__empty">
+            <span aria-hidden="true">✦</span>
+            <p>Your first pending save will make this story visible.</p>
+            <button
+              className="button secondary"
+              type="button"
+              onClick={() => openQuickSave(goal.id)}
+            >
+              Add the first save
+            </button>
           </div>
-        </section>
-      ) : null}
+        )}
+      </section>
 
       <section className="pact-preferences-layout">
         <form className="surface-card pact-preferences" onSubmit={savePreferences}>
@@ -482,6 +719,36 @@ function MemberProgress({ member }: { member: PactMemberSummary }) {
       <small>Amount and status hidden</small>
     </span>
   );
+}
+
+function entryLabel(entryType: PactEntry["entry_type"]) {
+  switch (entryType) {
+    case "allocation":
+      return "Bank-verified allocation";
+    case "withdrawal":
+      return "Pact withdrawal";
+    case "reversal":
+      return "Reversed entry";
+    case "commitment":
+      return "Commitment recorded";
+    default:
+      return "Pending save";
+  }
+}
+
+function activityPhrase(kind: PactActivity["activity_kind"]) {
+  if (kind === "verified_save") return "verified a real bank save";
+  if (kind === "adjustment") return "kept the Pact honest with an adjustment";
+  return "made a saving move";
+}
+
+function relativeActivityDate(value: string) {
+  const date = new Date(value);
+  const days = Math.floor((Date.now() - date.getTime()) / 86_400_000);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(date);
 }
 
 export default PactDetailPage;

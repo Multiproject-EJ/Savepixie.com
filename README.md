@@ -1,143 +1,77 @@
 # SavePixie
 
-SavePixie is a mobile-first personal savings coach delivered as a static Progressive Web App (PWA). The client is built with Vite, React, and TypeScript, and all backend capabilities (authentication, database, and row-level security) are provided by Supabase.
+SavePixie is a phone-first savings companion for solo goals and privacy-respecting shared Pacts. It is
+a React/TypeScript Progressive Web App backed by Supabase Auth and PostgreSQL. SavePixie records
+commitments and progress; customer money always remains in a bank account the customer controls.
 
-This repository tracks both the full development plan and the implementation of the SavePixie
-application. The project is bootstrapped with Vite, React, and TypeScript and includes a PWA shell so
-future roadmap steps can build on a working foundation.
+## Product today
 
-## Local Development
+- guided onboarding creates a solo or shared Pact and a real-world Savings Home;
+- daily Savings Moves teach small practical techniques and build a gentle streak, Stardust, and
+  Journey history;
+- the Dream Library offers starter goals, deadline-based weekly pace, milestones, and contribution
+  history;
+- shared Circles expose only privacy-filtered progress and activity, with aggregate one-tap cheers;
+- weekly planning keeps available, committed, and saving amounts understandable;
+- account settings include Savings Home editing, portable JSON export, Stripe billing status, and
+  password-confirmed account deletion;
+- the installable PWA includes direct-route fallback, offline shell, update prompts, and phone/desktop
+  layouts.
+
+The Account Check screen is an explicitly labelled prototype. It must remain in sample mode until a
+real provider, attribution, freshness, retention, and paid-report agreement exist.
+
+## Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
-The development server is available on http://localhost:5173 and automatically reloads as you edit
-files in `src/`.
+The development server opens on `http://localhost:5173`. Use `npm run build` for the complete
+TypeScript and production-bundle check, and `npm run preview` to serve the built PWA locally.
 
-To produce a production build run:
+## Stack and deployment
 
-```bash
-npm run build
-npm run preview
-```
+- Client: Vite, React, and TypeScript.
+- Hosting: GitHub Pages deployed from `main`.
+- Backend: the shared EU `WalletHabit Suite` Supabase project.
+- Billing: Stripe-hosted Checkout and Billing Portal through protected Supabase Edge Functions.
+- Database source: `supabase/migrations/`; rollback-safe acceptance suites live in `supabase/tests/`.
+- Public configuration: `.env.example`. Never put service-role, Stripe secret, SMTP, or other private
+  credentials in the client or a `VITE_` value.
 
-This command checks TypeScript types and outputs the static bundle in `dist/`.
+## Useful routes
 
-## PWA Shell
+- `/` — public landing page
+- `/auth` — sign in, sign up, confirmation, recovery, and password update
+- `/app/today` — daily Savings Move
+- `/app/goals` — solo/shared Pacts and Dream Library
+- `/app/plan` — weekly plan
+- `/app/journey` — streaks, techniques, milestones, and history
+- `/app/settings` — account, data, Savings Home, and billing controls
+- `/preview/app` — non-persistent product preview
+- `/legal/terms` and `/legal/privacy` — closed-beta legal drafts
 
-- `public/manifest.webmanifest` describes the installable app metadata and references generated icons
-  in `public/icons/`.
-- `src/service-worker.ts` caches the application shell so the router and core assets load offline.
-- The service worker is registered from `src/main.tsx` once the page is loaded.
+## Safety model
 
-## Authentication & Profiles (Step 1)
+- RLS is enabled on every customer-data table.
+- Money-moving records are append-only and written through protected database functions.
+- Reported progress and bank-verified progress remain visibly separate.
+- Shared exact amounts follow each member's privacy choice; Savings Homes and private notes are never
+  shared with a Circle.
+- Stripe subscription revenue can never count as customer savings.
+- Account export and deletion include daily-loop and Circle-reaction data.
 
-- Password-based sign-in, sign-up, and password reset flows live at `/auth` and are powered by Supabase
-  Auth.
-- `src/app/AuthProvider.tsx` exposes the current session and helpers for signing in, signing up, signing
-  out, and requesting password resets while ensuring the `profiles` table is upserted after first login.
-- `src/app/ProtectedRoute.tsx` guards private routes like `/dashboard`, redirecting anonymous visitors to
-  the auth page and preserving their original destination.
-- Profile bootstrapping happens through `src/features/profile/api.ts`, which writes the default
-  `display_name`, `username`, and `avatar_url` for the authenticated user.
+## Production handoff
 
-## Savings Goals & Deposits (Step 2)
+Start with:
 
-- `/dashboard` now surfaces a goals workspace where you can create personalized savings goals with emoji
-  accents, colors, target amounts, and optional deadlines.
-- The `src/features/goals/api.ts` helpers load, create, and update Supabase goals alongside their deposit
-  events while keeping optimistic UI updates in sync.
-- Rich dashboard styling (`src/styles/global.css`) introduces progress rings, summary stats, and modals
-  for the "New goal" and "Record deposit" flows.
-- SQL migration `sql/migrations/002_goals.sql` provisions the `goals` and `goal_events` tables secured by
-  row level security policies tied to the authenticated Supabase user.
+- `docs/production/LAUNCH-READINESS.md` for the authoritative release gates;
+- `docs/production/DOMAIN-CUTOVER.md` for DNS and rollback;
+- `docs/production/EMAIL-DELIVERY.md` for SMTP and Auth templates;
+- `docs/production/STRIPE-SETUP.md` for billing acceptance;
+- `docs/production/ACCOUNT-DELETION.md` for the irreversible account flow.
 
-## Guiding Codex Through the Plan
-
-To have Codex implement the product incrementally, reference the roadmap step you want to tackle and ask Codex to begin that
-step. Example prompt:
-
-> "Let's start with Step 1 from the SavePixie roadmap. Please follow the documented tasks and update the worklog when you're
-> done."
-
-Codex can then consult [`docs/specs/roadmap.md`](docs/specs/roadmap.md) for the detailed requirements, deliver the code, and
-record progress in `docs/worklog/`. Repeat this pattern for each subsequent step (Step 2, Step 3, etc.).
-
-## Stack & Hosting
-
-- **Hosting:** GitHub Pages (static deploy from `main`).
-- **Client:** Vite + React + TypeScript, PWA-first.
-- **Backend:** the shared EU `WalletHabit Suite` Supabase project, with common Auth and Postgres
-  services plus strict product-aware Row Level Security (RLS).
-- **Environment:** `.env.example` exposes `VITE_SUPABASE_URL` and the public
-  `VITE_SUPABASE_PUBLISHABLE_KEY`. The deployment workflow reads both values from GitHub repository
-  variables; secret or service-role keys must never enter the static build.
-- **Database migrations:** `supabase/migrations/` is the production migration source. The older
-  `sql/migrations/` files remain as implementation history only.
-- **Server-side billing:** `supabase/functions/` contains inactive Stripe Checkout, Portal, and signed
-  webhook infrastructure. Entitlements are keyed by product so SavePixie and WalletHabit plans cannot
-  unlock one another. Functions must be deployed only after test-mode secrets and the billing
-  acceptance suite are ready.
-
-## Repository Structure
-
-```
-savepixie/
-├── CNAME
-├── README.md
-├── docs/
-│   ├── specs/
-│   │   ├── roadmap.md
-│   │   └── .gitkeep
-│   └── worklog/
-│       └── .gitkeep
-├── sql/
-│   └── migrations/
-│       └── .gitkeep
-└── src/
-    ├── app/
-    │   └── .gitkeep
-    ├── assets/
-    │   └── .gitkeep
-    ├── components/
-    │   └── .gitkeep
-    ├── features/
-    │   └── .gitkeep
-    ├── lib/
-    │   └── .gitkeep
-    ├── pages/
-    │   └── .gitkeep
-    └── styles/
-        └── .gitkeep
-```
-
-As implementation progresses, each directory will be populated with application code, assets, SQL migrations, and documentation.
-
-## Development Roadmap
-
-The full step-by-step roadmap (including goals, tasks, SQL migrations, acceptance criteria, and "what's next" notes) lives in [`docs/specs/roadmap.md`](docs/specs/roadmap.md). Each numbered step is intended to become its own feature branch, pull request, and tagged release.
-
-## Worklog Template
-
-For every completed step, create a worklog entry in `docs/worklog/STEP-<nn>.md` following the template provided at the bottom of the roadmap document. This ensures we capture the goal, changes, SQL, testing notes, screenshots, and next actions for each iteration.
-
-## GitHub Issues & Iteration Rhythm
-
-Create GitHub issues #1–#13 to mirror Steps 0–12. For each step:
-
-1. Branch from `dev` using `feature/<step-number>-<short-name>`.
-2. Implement the tasks and SQL migrations for that step.
-3. Commit changes with conventional commit messages.
-4. Open a pull request that references the issue and includes the required template sections (Goal / Changes / SQL / Testing / Screens / NEXT).
-5. Merge into `dev`, then into `main` when ready to deploy, and tag the release (`v0.x.y`).
-6. Update the roadmap/worklog and open the next issue.
-
-## Security & RLS Principles
-
-- Enable RLS on every Supabase table that stores user data.
-- Use `auth.uid()` checks (or equivalent joins) to restrict CRUD operations to the owning user.
-- Never expose the Supabase service role key in the client or repository.
-
-Stay tuned as we build on **Step 1 — Supabase Auth + Profiles** and beyond.
+The older documents in `docs/specs/` and `sql/migrations/` remain implementation history, not the
+production source of truth.

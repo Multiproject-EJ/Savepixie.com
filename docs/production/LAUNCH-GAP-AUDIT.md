@@ -1,10 +1,11 @@
 # SavePixie Launch Gap Audit
 
-Updated: 2026-07-18
+Updated: 2026-07-19
 
 ## Current proven state
 
-- GitHub `main` contains the production and dormant billing foundation from PR #8.
+- GitHub `main` contains the production and billing foundation through PR #9. PR #10 contains the
+  verified daily and shared motivation loops and is ready for an explicitly approved merge.
 - The production PWA builds successfully with TypeScript checks and a GitHub Pages SPA fallback.
 - Supabase Auth uses `https://savepixie.com` with production, `www`, and local-development redirects.
 - The shared WalletHabit Suite project has no database, RLS, or exposed-schema security-advisor
@@ -28,8 +29,8 @@ Updated: 2026-07-18
 - The protected deletion function is live, rejects anonymous callers, checks Stripe directly before
   deleting a mapped customer, transfers active shared Pacts, repairs their totals, and removes
   Auth-linked SavePixie records through verified cascades.
-- All five rollback-safe Supabase acceptance suites pass, production-origin CORS is verified for the
-  signed-in browser functions, and the 2026-07-18 rerun left zero temporary records.
+- All seven rollback-safe Supabase acceptance suites pass, production-origin CORS is verified for the
+  signed-in browser functions, and the 2026-07-19 reruns left zero temporary records.
 - The database enforces Basic versus Pro at the real write boundary: one two-person shared Pact on
   Basic, additional Pacts and groups of up to ten on Pro, with no destructive downgrade behavior.
 - The feature-flagged Settings offer shows the seven-day trial and 29 kr renewal plainly; Checkout
@@ -44,6 +45,11 @@ Updated: 2026-07-18
   controls, safe leaving/reactivation, owner archiving, invitations, and explicit 1:1/non-custody copy.
 - A rollback-safe three-person acceptance test proves that direct table access cannot bypass Circle
   privacy, outsiders are rejected, owners cannot abandon Pacts, and ledger history survives leaving.
+- The daily loop now persists one useful Move per local day, updates streaks and Stardust atomically,
+  records money-moving Moves in the pending Pact ledger, and keeps action-only education honest.
+- Pact detail now includes deadline-based pace, milestones, private contribution history,
+  privacy-filtered Circle activity, and aggregate one-tap cheers that never reveal reactor identities.
+- Daily and cheer records are present in portable export and proven to cascade during account deletion.
 - The client compiles and builds after moving its goal API onto Savings Pacts and Savings Homes.
 - Chrome visual QA passed at 390 × 844 and 1440 × 900 for onboarding, Pact choice, Savings Home setup,
   Pact cards, join controls, pending Quick Save, and the synced weekly plan.
@@ -98,8 +104,10 @@ Updated: 2026-07-18
 
 ### Commercial
 
-- Create the 29 kr/month Stripe product, seven-day trial, tax settings, webhook, and customer portal in
-  test mode, then run the full lifecycle test suite.
+- Stripe sandbox product, 29 NOK price, first seven-day trial, signed webhook, customer portal,
+  duplicate-event handling, and reversible cancellation scheduling are verified.
+- Complete Stripe Tax business location/registration/tax-code configuration and the remaining
+  test-clock renewal, failed-payment, refund, and restore flows.
 - Publish reviewed subscription, cancellation, refund, Terms, and Privacy copy.
 
 ### Operations

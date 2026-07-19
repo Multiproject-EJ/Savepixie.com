@@ -13,6 +13,7 @@ declare
   owner_role text;
   successor_role text;
   reported_total bigint;
+  owner_entry_id uuid := gen_random_uuid();
 begin
   insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at)
   values
@@ -47,10 +48,25 @@ begin
     (shared_pact_id, third_member_id, 'member', 'Third', 'exact', now() - interval '1 day');
 
   insert into public.savings_pact_entries (
-    pact_id, member_user_id, savings_home_id, entry_type, delta_cents
+    id, pact_id, member_user_id, savings_home_id, entry_type, delta_cents
   ) values
-    (shared_pact_id, owner_id, owner_home_id, 'pending', 3000),
-    (shared_pact_id, successor_id, successor_home_id, 'pending', 2000);
+    (owner_entry_id, shared_pact_id, owner_id, owner_home_id, 'pending', 3000),
+    (gen_random_uuid(), shared_pact_id, successor_id, successor_home_id, 'pending', 2000);
+
+  insert into public.savings_pact_activity_cheers (activity_id, user_id)
+  values (owner_entry_id, successor_id);
+
+  insert into public.daily_saver_progress (
+    user_id, current_streak, best_streak, stardust_total, completed_moves, last_completed_on
+  ) values (owner_id, 2, 2, 60, 2, current_date);
+
+  insert into public.daily_move_completions (
+    user_id, local_date, move_id, completion_kind, pact_id, saved_cents,
+    stardust_awarded, reflection
+  ) values (
+    owner_id, current_date, 'swap-and-save', 'save', shared_pact_id, 3000, 35,
+    'A useful saving choice.'
+  );
 
   select public.prepare_savepixie_account_deletion(owner_id) into transferred;
 
@@ -90,6 +106,20 @@ begin
     where pact_id = shared_pact_id and member_user_id = owner_id
   ) then
     raise exception 'Deleted member entries survived the account deletion.';
+  end if;
+
+  if exists (
+    select 1 from public.savings_pact_activity_cheers where activity_id = owner_entry_id
+  ) then
+    raise exception 'A cheer survived after its deleted activity was removed.';
+  end if;
+
+  if exists (
+    select 1 from public.daily_saver_progress where user_id = owner_id
+  ) or exists (
+    select 1 from public.daily_move_completions where user_id = owner_id
+  ) then
+    raise exception 'Deleted member daily-loop data survived the account deletion.';
   end if;
 
   if not exists (

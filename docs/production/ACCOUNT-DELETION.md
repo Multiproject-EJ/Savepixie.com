@@ -14,7 +14,8 @@ Updated: 2026-07-17
 6. Shared Pacts are prepared: an owned Pact with active members goes to its longest-standing active
    remaining member, and totals are recalculated without the deleting member's entries.
 7. Supabase Auth deletes the user. Verified foreign-key cascades remove the profile, Savings Homes,
-   memberships, personal Pact entries, weekly plans, legacy goals, and suite billing mapping.
+   memberships, personal Pact entries and their cheers, weekly plans, daily Move history and Stardust
+   progress, legacy goals, and suite billing mapping.
 8. The browser clears its local session and confirms that the SavePixie account was deleted.
 
 ## Safety boundaries
@@ -32,7 +33,8 @@ Updated: 2026-07-17
 ## Proven checks
 
 - `supabase/tests/004_prepare_account_deletion.sql` is rollback-safe and proves ownership handover,
-  projection repair, deletion of the departing member's entries, and survival of remaining history.
+  projection repair, deletion of the departing member's entries and daily-loop data, and survival of
+  remaining history.
 - All five Supabase acceptance suites pass after the account-deletion and Pro-limit migrations.
 - The live security advisor reports no findings.
 - The live endpoint rejects an anonymous POST with `401`.

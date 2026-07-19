@@ -29,6 +29,83 @@ export type Database = {
         };
         Relationships: [];
       };
+      daily_move_completions: {
+        Row: {
+          completion_kind: string;
+          created_at: string;
+          id: string;
+          local_date: string;
+          move_id: string;
+          pact_id: string | null;
+          reflection: string | null;
+          saved_cents: number;
+          stardust_awarded: number;
+          user_id: string;
+        };
+        Insert: {
+          completion_kind: string;
+          created_at?: string;
+          id?: string;
+          local_date: string;
+          move_id: string;
+          pact_id?: string | null;
+          reflection?: string | null;
+          saved_cents?: number;
+          stardust_awarded: number;
+          user_id: string;
+        };
+        Update: {
+          completion_kind?: string;
+          created_at?: string;
+          id?: string;
+          local_date?: string;
+          move_id?: string;
+          pact_id?: string | null;
+          reflection?: string | null;
+          saved_cents?: number;
+          stardust_awarded?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "daily_move_completions_pact_id_fkey";
+            columns: ["pact_id"];
+            isOneToOne: false;
+            referencedRelation: "savings_pacts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      daily_saver_progress: {
+        Row: {
+          best_streak: number;
+          completed_moves: number;
+          current_streak: number;
+          last_completed_on: string | null;
+          stardust_total: number;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          best_streak?: number;
+          completed_moves?: number;
+          current_streak?: number;
+          last_completed_on?: string | null;
+          stardust_total?: number;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          best_streak?: number;
+          completed_moves?: number;
+          current_streak?: number;
+          last_completed_on?: string | null;
+          stardust_total?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       entitlements: {
         Row: {
           cancel_at: string | null;
@@ -279,6 +356,32 @@ export type Database = {
           },
         ];
       };
+      savings_pact_activity_cheers: {
+        Row: {
+          activity_id: string;
+          created_at: string;
+          user_id: string;
+        };
+        Insert: {
+          activity_id: string;
+          created_at?: string;
+          user_id: string;
+        };
+        Update: {
+          activity_id?: string;
+          created_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "savings_pact_activity_cheers_activity_id_fkey";
+            columns: ["activity_id"];
+            isOneToOne: false;
+            referencedRelation: "savings_pact_entries";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       savings_pact_members: {
         Row: {
           commitment_cents: number | null;
@@ -427,6 +530,32 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      complete_daily_savings_move: {
+        Args: {
+          p_completion_kind: string;
+          p_local_date: string;
+          p_move_id: string;
+          p_pact_id?: string;
+          p_reflection?: string;
+          p_saved_cents?: number;
+          p_savings_home_id?: string;
+        };
+        Returns: {
+          best_streak: number;
+          completed_moves: number;
+          completion_id: string;
+          completion_kind: string;
+          current_streak: number;
+          last_completed_on: string;
+          local_date: string;
+          move_id: string;
+          pact_id: string | null;
+          saved_cents: number;
+          stardust_awarded: number;
+          stardust_total: number;
+          was_already_complete: boolean;
+        }[];
+      };
       create_savings_pact: {
         Args: {
           p_color?: string;
@@ -464,6 +593,26 @@ export type Database = {
       create_savings_pact_invite: {
         Args: { p_pact_id: string };
         Returns: string;
+      };
+      get_savings_pact_activity: {
+        Args: { p_limit?: number; p_pact_id: string };
+        Returns: {
+          activity_id: string;
+          activity_kind: string;
+          actor_display_name: string;
+          actor_user_id: string;
+          amount_cents: number | null;
+          amount_visible: boolean;
+          occurred_at: string;
+        }[];
+      };
+      get_savings_pact_activity_cheers: {
+        Args: { p_pact_id: string };
+        Returns: {
+          activity_id: string;
+          cheer_count: number;
+          cheered_by_me: boolean;
+        }[];
       };
       get_savings_pact_members: {
         Args: { p_pact_id: string };
@@ -515,6 +664,10 @@ export type Database = {
       prepare_savepixie_account_deletion: {
         Args: { p_user_id: string };
         Returns: number;
+      };
+      toggle_savings_pact_activity_cheer: {
+        Args: { p_activity_id: string };
+        Returns: boolean;
       };
       process_stripe_subscription_event: {
         Args: {
