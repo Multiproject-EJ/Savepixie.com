@@ -95,9 +95,15 @@ secret is required. The service-role value must never be added to GitHub Pages v
       subscription cannot overwrite another active subscription's entitlement.
 - [x] Scheduling cancellation produced a verified `cancel_at` while preserving trial access; undoing
       it cleared `cancel_at` after the corresponding webhook and left the sandbox trial active.
-- Failed, past-due, canceled, incomplete, and expired subscriptions do not retain Pro access.
+- [x] A failed trial-end charge moved the subscription to `past_due`; the signed subscription webhook
+      changed the matching Supabase entitlement to Free with `has_pro_access=false`.
+- [x] Replacing the failed payment method and paying the open invoice returned Stripe to `active`; the
+      signed webhook restored the matching Supabase entitlement to Pro.
 - Basic/Pro Pact limits change only future creation and joining; existing Circle data survives.
-- Stripe test clocks cover trial end, successful renewal, failed renewal, and cancellation.
+- [x] Isolated Stripe test clocks cover trial end, a successful first payment, a following successful
+      monthly renewal, failed payment, payment recovery, and cancellation. All disposable clock
+      customers and Supabase users were deleted after verification.
+- [ ] Verify the refund and post-refund entitlement behavior before enabling public billing.
 
 ## Remaining tax gate
 

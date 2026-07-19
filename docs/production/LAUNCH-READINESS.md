@@ -91,8 +91,9 @@ safeguards pass the gates below.
       secret-bearing `VITE_` patterns; only SQL role names remain and no credential value is present.
 - [x] Verify signed Stripe webhooks, duplicate-event idempotency, server-derived entitlements, and
       reversible cancellation scheduling in sandbox mode.
-- [ ] Complete test-clock trial end, successful renewal, failed-payment, refund, and restore-purchase
-      flows.
+- [x] Complete test-clock trial end, successful renewal, failed-payment, and payment-recovery access
+      restoration flows, including the following successful monthly renewal.
+- [ ] Complete the Stripe refund and post-refund entitlement flow.
 - [x] Add an honest feature-flagged Settings offer with first-trial and returning-customer copy.
 - [ ] Test the full Stripe lifecycle in test mode before switching on live mode.
 
