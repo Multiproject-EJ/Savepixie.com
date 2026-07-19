@@ -80,15 +80,19 @@ safeguards pass the gates below.
 - [x] Deploy dormant Checkout, Portal, and signed-webhook function shells.
 - [x] Define and enforce the first Pro boundary: additional shared Pacts and larger family/group
       Circles, without removing existing data when Pro ends.
-- [ ] Create Stripe product, price, seven-day trial, and tax configuration.
+- [x] Create the Stripe sandbox product, recurring 29 NOK price, and seven-day first-trial flow.
+- [ ] Complete Stripe Tax business location, registration, tax code, and inclusive/exclusive price
+      treatment with the operator/accountant.
 - [x] Create and deploy authenticated server-side Checkout and customer-portal sessions behind the
       production feature flag.
 - [x] Recheck Stripe customer ownership in Checkout/Portal, bind subscription webhooks to the private
       customer mapping, and probe the deployed anonymous/unsigned rejection boundary.
 - [x] Scan the tracked launch tree for Stripe, SMTP, Mailgun, Supabase secret, service-role value, and
       secret-bearing `VITE_` patterns; only SQL role names remain and no credential value is present.
-- [ ] Verify Stripe webhooks, store webhook IDs for idempotency, and derive entitlements server-side.
-- [ ] Complete upgrade, cancellation, failed-payment, refund, and restore-purchase flows.
+- [x] Verify signed Stripe webhooks, duplicate-event idempotency, server-derived entitlements, and
+      reversible cancellation scheduling in sandbox mode.
+- [ ] Complete test-clock trial end, successful renewal, failed-payment, refund, and restore-purchase
+      flows.
 - [x] Add an honest feature-flagged Settings offer with first-trial and returning-customer copy.
 - [ ] Test the full Stripe lifecycle in test mode before switching on live mode.
 

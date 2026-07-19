@@ -1,8 +1,9 @@
 # SavePixie Stripe Setup
 
 Updated: 2026-07-19
-Status: Test-mode product, secrets, webhook, portal, Checkout, and seven-day trial verified; public
-activation and live-mode lifecycle acceptance remain gated
+Status: Test-mode product, secrets, webhook, portal, Checkout, seven-day trial, duplicate delivery,
+and cancellation scheduling verified; tax setup, test-clock coverage, public activation, and live-mode
+lifecycle acceptance remain gated
 
 ## Commercial boundary
 
@@ -66,6 +67,7 @@ secret is required. The service-role value must never be added to GitHub Pages v
 
 1. SavePixie Pro exists in the Stripe sandbox with an active recurring monthly price of 29 NOK.
 2. The test-mode Billing Portal permits payment-method updates and cancellation at period end.
+   It carries the SavePixie headline plus Privacy and Terms links.
 3. The deployed `stripe-webhook` endpoint uses API version
    `2026-06-24.dahlia`.
 4. It subscribes to:
@@ -85,14 +87,26 @@ secret is required. The service-role value must never be added to GitHub Pages v
 - A returning customer who previously had an entitlement receives no second free trial.
 - [x] Checkout displays the 29 kr monthly price and seven-day trial before confirmation.
 - [x] Successful Checkout creates `trialing` access only after the signed webhook is processed.
-- Replaying the same webhook event does not apply the update twice.
+- [x] Replaying the same webhook event does not apply the update twice. Event
+      `evt_1Tv2aoF2MDiiXhcg3uKu7TF1` was resent on 2026-07-19; the entitlement stayed trialing and the
+      event ledger retained exactly one copy.
 - Invalid signatures are rejected without writing database records.
 - [x] A signed cancellation webhook removes access, and a terminal event for an obsolete duplicate
       subscription cannot overwrite another active subscription's entitlement.
-- Portal cancellation changes access only after the corresponding subscription webhook.
+- [x] Scheduling cancellation produced a verified `cancel_at` while preserving trial access; undoing
+      it cleared `cancel_at` after the corresponding webhook and left the sandbox trial active.
 - Failed, past-due, canceled, incomplete, and expired subscriptions do not retain Pro access.
 - Basic/Pro Pact limits change only future creation and joining; existing Circle data survives.
 - Stripe test clocks cover trial end, successful renewal, failed renewal, and cancellation.
+
+## Remaining tax gate
+
+The 2026-07-19 sandbox audit found Stripe Tax status `pending`, no head-office address or default tax
+code, and `tax_behavior=unspecified` on the SavePixie price. Do not enable public billing until the
+operator's legal business location and required registrations are confirmed, the appropriate digital
+service tax code is selected, the displayed 29 kr treatment is decided (inclusive or exclusive), and
+test Checkout shows the intended tax disclosure. This decision requires the operator/accountant; it
+must not be guessed in code.
 
 ## Activation sequence
 
