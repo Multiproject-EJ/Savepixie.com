@@ -93,9 +93,10 @@ safeguards pass the gates below.
       reversible cancellation scheduling in sandbox mode.
 - [x] Complete test-clock trial end, successful renewal, failed-payment, and payment-recovery access
       restoration flows, including the following successful monthly renewal.
-- [ ] Complete the Stripe refund and post-refund entitlement flow.
+- [x] Verify that a refund alone leaves an active subscription active, while the documented
+      refund-and-cancel sequence removes Pro through the signed terminal subscription webhook.
 - [x] Add an honest feature-flagged Settings offer with first-trial and returning-customer copy.
-- [ ] Test the full Stripe lifecycle in test mode before switching on live mode.
+- [x] Test the full technical Stripe lifecycle in sandbox mode before switching on live mode.
 
 ## Gate 5 — customer safeguards
 

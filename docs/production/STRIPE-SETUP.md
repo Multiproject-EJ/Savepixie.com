@@ -103,7 +103,24 @@ secret is required. The service-role value must never be added to GitHub Pages v
 - [x] Isolated Stripe test clocks cover trial end, a successful first payment, a following successful
       monthly renewal, failed payment, payment recovery, and cancellation. All disposable clock
       customers and Supabase users were deleted after verification.
-- [ ] Verify the refund and post-refund entitlement behavior before enabling public billing.
+- [x] A full sandbox refund leaves an otherwise active subscription active. Immediately cancelling
+      that refunded subscription produces the signed terminal subscription event, changes the
+      Supabase entitlement to Free, and preserves the customer's saving data.
+
+## Refund operator procedure
+
+Stripe treats returning a payment and ending a subscription as separate actions. A partial or goodwill
+refund must not silently end access. When a full refund is intended to end SavePixie Pro, the operator
+must:
+
+1. refund the relevant Stripe payment;
+2. cancel the matching subscription immediately;
+3. confirm Stripe shows the subscription as `canceled`; and
+4. confirm SavePixie shows `plan=free`, `has_pro_access=false`, and `subscription_status=canceled`.
+
+Never edit the entitlement table manually. The signed subscription webhook remains the only authority
+for granting or removing Pro access. The complete refund-and-cancel sequence was verified in the
+sandbox on 2026-07-20, and its disposable clock customer and Supabase user were deleted afterward.
 
 ## Remaining tax gate
 
@@ -119,10 +136,10 @@ must not be guessed in code.
 The migrations, ownership-hardened functions, Settings offer, server-side Pro boundary, test-mode
 secrets, webhook, and portal are deployed. A real sandbox Checkout completed on 2026-07-19 and the
 verified webhook granted Pro trial access through 2026-07-26. Its success return currently reaches
-`https://savepixie.com/app/today`, which will show the old site's Not Found response until the launch
-branch is merged and the domain cutover is complete.
+`https://savepixie.com/app/today`, which will show the old site's Not Found response until the domain
+cutover is complete.
 
-Next, complete the remaining lifecycle tests, review the final conversion screen against the owner's
-reference video, create the corresponding live-mode Stripe configuration, and deploy the PWA. Set
-`VITE_STRIPE_ENABLED=true` only after those checks pass; that single production flag activates the
-visible Stripe action.
+Next, complete the Stripe Tax and legal-operator decisions, review the final conversion screen against
+the owner's reference video, create the corresponding live-mode Stripe configuration, and complete
+the domain cutover. Set `VITE_STRIPE_ENABLED=true` only after those checks pass; that single production
+flag activates the visible Stripe action.
