@@ -8,6 +8,9 @@ SavePixie is in **demo mode**. The app displays the intended Pro offer, but a ne
 Checkout or enter a card. `.env.production` and the GitHub Actions fallback both keep
 `VITE_STRIPE_ENABLED=false`.
 
+The entire product also carries a fixed **DEMO MODE** watermark. Only the exact build value
+`VITE_APP_MODE=live` removes it; an unset or mistyped value remains safely in demo mode.
+
 The switch is fail-closed: only the exact string `true` enables new Checkout sessions in the client.
 Existing subscribers can still open the Stripe Billing Portal when new sales are switched off, so a
 temporary sales pause never removes their ability to manage or cancel.
@@ -33,18 +36,21 @@ Private Stripe keys stay only in Supabase. Never place them in GitHub variables 
 
 After the one-time preparation passes:
 
-1. Set the GitHub Actions repository variable `VITE_STRIPE_ENABLED` to `true`.
-2. Re-run the SavePixie deployment or merge the release commit.
-3. Confirm Settings offers **Start 7-day free trial**, Checkout shows 29 NOK monthly after seven free
-   days, and the return route reaches `/app/today`.
+1. Set the GitHub Actions repository variable `VITE_APP_MODE` to `live` to remove the global demo
+   watermark.
+2. Set the GitHub Actions repository variable `VITE_STRIPE_ENABLED` to `true` to open new Checkout.
+3. Re-run the SavePixie deployment or merge the release commit.
+4. Confirm the watermark is gone, Settings offers **Start 7-day free trial**, Checkout shows 29 NOK
+   monthly after seven free days, and the return route reaches `/app/today`.
 
-That repository variable is the only customer-facing sales switch. No application rebuild or code
-change is required beyond the automatic deployment.
+Those two repository variables deliberately separate the product-launch marker from payment sales.
+No application code change is required beyond the automatic deployment.
 
 ## Emergency sales pause
 
 Set `VITE_STRIPE_ENABLED=false` and redeploy. New Checkout stays closed, while signed-in customers
-with an existing subscription retain access to **Manage billing**. Do not delete Stripe products,
+with an existing subscription retain access to **Manage billing**. Set `VITE_APP_MODE=demo` too only
+when the whole product should again show the global demo watermark. Do not delete Stripe products,
 prices, webhooks, customers, or Supabase entitlement rows during a pause.
 
 The detailed technical evidence and refund procedure remain in `STRIPE-SETUP.md`.

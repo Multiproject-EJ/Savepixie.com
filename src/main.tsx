@@ -8,6 +8,7 @@ import SavingsGate from "./app/SavingsGate";
 import { SavingsPreviewProvider, SavingsProvider } from "./app/SavingsProvider";
 import AppShell from "./components/AppShell";
 import AppErrorBoundary from "./components/AppErrorBoundary";
+import DemoModeWatermark from "./components/DemoModeWatermark";
 import NetworkStatus from "./components/NetworkStatus";
 import PwaUpdateNotice, { PWA_UPDATE_EVENT } from "./components/PwaUpdateNotice";
 import AccountCheckPage from "./pages/AccountCheckPage";
@@ -22,6 +23,7 @@ import PlanPage from "./pages/PlanPage";
 import SavingsEntryPage from "./pages/SavingsEntryPage";
 import SettingsPage from "./pages/SettingsPage";
 import TodayPage from "./pages/TodayPage";
+import "./styles/demo-watermark.css";
 import "./styles/global.css";
 
 const router = createBrowserRouter([
@@ -150,6 +152,7 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
+    <DemoModeWatermark />
     <AppErrorBoundary>
       <AuthProvider>
         <NetworkStatus />

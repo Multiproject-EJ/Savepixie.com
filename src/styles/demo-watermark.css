@@ -1,0 +1,52 @@
+/* Only the exact VITE_APP_MODE=live build removes this whole-product launch watermark. */
+.demo-mode-watermark {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.demo-mode-watermark__text {
+  color: rgb(216 194 255 / 14%);
+  font-family: var(--font-display, inherit);
+  font-size: clamp(4.25rem, 18vw, 15rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 0.88;
+  text-align: center;
+  white-space: nowrap;
+  transform: rotate(-24deg);
+}
+
+.demo-mode-watermark__badge {
+  position: absolute;
+  top: max(0.65rem, env(safe-area-inset-top));
+  left: 50%;
+  padding: 0.42rem 0.8rem;
+  border: 1px solid rgb(205 180 255 / 46%);
+  border-radius: 999px;
+  background: rgb(28 18 55 / 92%);
+  box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 28%);
+  color: #e3d2ff;
+  font-size: clamp(0.68rem, 2.3vw, 0.78rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+@media (prefers-contrast: more) {
+  .demo-mode-watermark__text {
+    color: rgb(226 210 255 / 24%);
+  }
+
+  .demo-mode-watermark__badge {
+    border-color: #e3d2ff;
+    background: #140d29;
+  }
+}
