@@ -71,6 +71,7 @@ Start with:
 - `docs/production/DOMAIN-CUTOVER.md` for DNS and rollback;
 - `docs/production/EMAIL-DELIVERY.md` for SMTP and Auth templates;
 - `docs/production/STRIPE-SETUP.md` for billing acceptance;
+- `docs/production/PAYMENTS-GO-LIVE.md` for the short demo-to-live payment switch;
 - `docs/production/ACCOUNT-DELETION.md` for the irreversible account flow.
 
 The older documents in `docs/specs/` and `sql/migrations/` remain implementation history, not the

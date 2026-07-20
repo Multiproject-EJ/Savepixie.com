@@ -1,9 +1,8 @@
 # SavePixie Stripe Setup
 
-Updated: 2026-07-19
-Status: Test-mode product, secrets, webhook, portal, Checkout, seven-day trial, duplicate delivery,
-and cancellation scheduling verified; tax setup, test-clock coverage, public activation, and live-mode
-lifecycle acceptance remain gated
+Updated: 2026-07-20
+Status: Complete sandbox lifecycle verified; demo mode remains fail-closed while tax, legal, and
+live-mode account preparation remain gated
 
 ## Commercial boundary
 
@@ -19,9 +18,9 @@ The paid boundary is now real and enforced by PostgreSQL:
 - Ending Pro never deletes, hides, or removes an existing Pact or member; it prevents only new
   Pro-sized creation or joining.
 
-The Settings offer states the seven-day trial, 29 kr monthly renewal, and cancellation timing before
-leaving SavePixie. Its action remains disabled by `VITE_STRIPE_ENABLED=false` until Stripe test-mode
-acceptance passes.
+The Settings offer shows the planned price as demo pricing and prevents a new Checkout while
+`VITE_STRIPE_ENABLED=false`. Existing subscribers can still open the Billing Portal during a sales
+pause. The short launch and rollback procedure is in `PAYMENTS-GO-LIVE.md`.
 
 ## Deployed components
 
@@ -141,5 +140,5 @@ cutover is complete.
 
 Next, complete the Stripe Tax and legal-operator decisions, review the final conversion screen against
 the owner's reference video, create the corresponding live-mode Stripe configuration, and complete
-the domain cutover. Set `VITE_STRIPE_ENABLED=true` only after those checks pass; that single production
-flag activates the visible Stripe action.
+the domain cutover. Then follow `PAYMENTS-GO-LIVE.md`; its single repository variable activates new
+customer Checkout and can pause new sales without locking existing subscribers out of the Portal.

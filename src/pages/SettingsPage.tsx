@@ -47,6 +47,7 @@ export function SettingsPage() {
     entitlement &&
     !["inactive", "canceled", "incomplete_expired"].includes(entitlement.subscription_status)
   );
+  const isBillingDemo = !billingEnabled && !hasManageableSubscription;
   const billingTiming = entitlement?.cancel_at
     ? `Cancels ${formatBillingDate(entitlement.cancel_at)}`
     : entitlement?.subscription_status === "trialing" && entitlement.trial_ends_at
@@ -81,7 +82,13 @@ export function SettingsPage() {
   }, [isPreview, user?.id]);
 
   const openBilling = async (destination: "checkout" | "portal") => {
-    if (isPreview || !billingEnabled) return;
+    if (
+      isPreview ||
+      (destination === "checkout" && !billingEnabled) ||
+      (destination === "portal" && !hasManageableSubscription)
+    ) {
+      return;
+    }
     setBillingState("opening");
     setBillingMessage(null);
     try {
@@ -196,7 +203,7 @@ export function SettingsPage() {
           ✦
         </div>
         <div className="pro-plan-card__copy">
-          <span className="eyebrow">SavePixie Pro</span>
+          <span className="eyebrow">SavePixie Pro{isBillingDemo ? " · Demo" : ""}</span>
           <h2>
             {hasPro ? "Your bigger Circles are unlocked" : "More Circles, still one calm app"}
           </h2>
@@ -219,7 +226,13 @@ export function SettingsPage() {
         <div className="pro-plan-card__offer">
           <strong>29 kr</strong>
           <span>per month</span>
-          {!entitlement ? <small>7 days free first</small> : <small>Renews monthly</small>}
+          {isBillingDemo ? (
+            <small>Demo pricing</small>
+          ) : !entitlement ? (
+            <small>7 days free first</small>
+          ) : (
+            <small>Renews monthly</small>
+          )}
           <button
             className="button primary"
             type="button"
@@ -228,15 +241,15 @@ export function SettingsPage() {
             }
             disabled={
               isPreview ||
-              !billingEnabled ||
+              (isBillingDemo && !hasManageableSubscription) ||
               billingState === "loading" ||
               billingState === "opening"
             }
           >
             {isPreview
               ? "Preview only"
-              : !billingEnabled
-                ? "Billing opens after testing"
+              : isBillingDemo
+                ? "Payments not live yet"
                 : billingState === "opening"
                   ? "Opening Stripe…"
                   : hasPro || hasManageableSubscription
@@ -246,11 +259,13 @@ export function SettingsPage() {
                       : "Start 7-day free trial"}
           </button>
           <small className="pro-plan-card__terms">
-            {!entitlement
-              ? "Then 29 kr/month until cancelled. Cancel before the trial ends to avoid a charge."
-              : hasPro || hasManageableSubscription
-                ? "29 kr/month until cancelled. Manage or cancel securely in Stripe."
-                : "Restart at 29 kr/month with no new free trial. Cancel securely in Stripe."}
+            {isBillingDemo
+              ? "Demo pricing only. No card or payment can be entered yet."
+              : !entitlement
+                ? "Then 29 kr/month until cancelled. Cancel before the trial ends to avoid a charge."
+                : hasPro || hasManageableSubscription
+                  ? "29 kr/month until cancelled. Manage or cancel securely in Stripe."
+                  : "Restart at 29 kr/month with no new free trial. Cancel securely in Stripe."}
           </small>
         </div>
       </section>
