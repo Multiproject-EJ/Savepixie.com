@@ -21,7 +21,8 @@ Complete these once before the first real customer:
 
 1. Finish the Stripe account identity, tax registration, product tax code, and inclusive/exclusive
    treatment of the displayed 49 kr price.
-2. Create the live SavePixie Pro product and exact 49 NOK monthly price.
+2. Create the live SavePixie Pro product and 49 NOK base monthly Price, then add the reviewed
+   local-currency options to that same Price.
 3. Create a live webhook for the deployed `stripe-webhook` function with the four documented events.
 4. Configure the live Billing Portal with payment-method updates, cancellation, and the reviewed
    SavePixie Terms and Privacy links.
@@ -40,8 +41,9 @@ After the one-time preparation passes:
    watermark.
 2. Set the GitHub Actions repository variable `VITE_STRIPE_ENABLED` to `true` to open new Checkout.
 3. Re-run the SavePixie deployment or merge the release commit.
-4. Confirm the watermark is gone, Settings offers **Start 7-day free trial**, Checkout shows 49 NOK
-   monthly after seven free days, and the return route reaches `/app/today`.
+4. Confirm the watermark is gone, Settings offers **Start 7-day free trial**, Checkout shows the
+   expected local currency and monthly amount after seven free days, and the return route reaches
+   `/app/today`.
 
 Those two repository variables deliberately separate the product-launch marker from payment sales.
 No application code change is required beyond the automatic deployment.

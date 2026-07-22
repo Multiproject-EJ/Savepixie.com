@@ -6,7 +6,9 @@ live-mode account preparation remain gated
 
 ## Commercial boundary
 
-SavePixie Pro is planned as a 49 NOK monthly subscription with a plainly disclosed seven-day trial.
+SavePixie Pro is planned as a low-cost monthly subscription with a plainly disclosed seven-day
+trial. The integration price uses 49 NOK as its base amount, while Checkout should present supported
+customers with an intentional local-currency option from the same Stripe Price.
 Stripe revenue belongs to SavePixie. Customer savings are never collected, pooled, held, or moved by
 Stripe or SavePixie.
 
@@ -22,11 +24,25 @@ The Settings offer shows the planned price as demo pricing and prevents a new Ch
 `VITE_STRIPE_ENABLED=false`. Existing subscribers can still open the Billing Portal during a sales
 pause. The short launch and rollback procedure is in `PAYMENTS-GO-LIVE.md`.
 
+### International price presentation
+
+Use one Stripe multi-currency Price rather than creating separate products or hard-coding a country
+in SavePixie. Add reviewed monthly `currency_options` for the first launch currencies (USD, EUR, GBP,
+CAD, AUD and the Nordic currencies) to the same Price ID. The Checkout Session deliberately does not
+set `currency`, allowing Stripe Checkout to choose a supported local option. If no reviewed option
+matches, Checkout falls back to the Price's base currency.
+
+Adaptive Pricing can later widen coverage, but it includes currency conversion in the customer price.
+Review its current fees and presentation before enabling it account-wide. The savings currency chosen
+inside SavePixie is independent of the billing currency: it never changes the Stripe subscription or
+converts a customer's saved amounts.
+
 ## Deployed components
 
 - `create-checkout-session` verifies the signed-in Supabase user and creates a Stripe-hosted
-  subscription Checkout Session. It rejects any configured price that is not an active recurring
-  49 NOK monthly price and grants the seven-day trial only when no prior SavePixie entitlement exists.
+  subscription Checkout Session. It rejects any configured price whose base is not the approved
+  active recurring 49 NOK monthly price; reviewed currency options may coexist on that Price. It
+  grants the seven-day trial only when no prior SavePixie entitlement exists.
 - `create-portal-session` verifies the user and creates a short-lived Stripe Billing Portal Session.
 - Checkout re-retrieves any mapped Stripe customer before reuse; a deleted customer is replaced and a
   customer whose immutable SavePixie user metadata does not match is rejected. Portal performs the
@@ -65,7 +81,8 @@ secret is required. The service-role value must never be added to GitHub Pages v
 ## Stripe Dashboard configuration
 
 1. The legacy SavePixie Pro sandbox price is 29 NOK. Replace its configured price ID with an active
-   recurring 49 NOK monthly price before testing or enabling the new offer.
+   recurring 49 NOK base monthly price and reviewed local-currency options before testing or enabling
+   the new offer.
 2. The test-mode Billing Portal permits payment-method updates and cancellation at period end.
    It carries the SavePixie headline plus Privacy and Terms links.
 3. The deployed `stripe-webhook` endpoint uses API version

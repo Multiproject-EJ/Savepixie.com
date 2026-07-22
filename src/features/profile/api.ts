@@ -1,8 +1,14 @@
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
+import { isSavingsCurrency, type SavingsCurrency } from "../../lib/currency";
 import type { Tables, TablesUpdate } from "../../types/database";
 
 export type ProfileRow = Tables<"profiles">;
+
+export type PlanningPreferences = {
+  currencyCode: SavingsCurrency;
+  monthlySavingsCapacityCents: number;
+};
 
 type ProfileUpsert = Pick<TablesUpdate<"profiles">, "display_name" | "username" | "avatar_url">;
 
@@ -66,7 +72,9 @@ export async function ensureProfile(user: User, overrides?: ProfileUpsert) {
 export async function fetchProfile(userId: string): Promise<ProfileRow | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, display_name, username, avatar_url, created_at")
+    .select(
+      "id, display_name, username, avatar_url, currency_code, monthly_savings_capacity_cents, created_at"
+    )
     .eq("id", userId)
     .maybeSingle();
 
@@ -91,11 +99,46 @@ export async function updateProfile(
     .from("profiles")
     .update(payload)
     .eq("id", userId)
-    .select("id, display_name, username, avatar_url, created_at")
+    .select(
+      "id, display_name, username, avatar_url, currency_code, monthly_savings_capacity_cents, created_at"
+    )
     .single();
 
   if (error || !data) {
     throw error ?? new Error("Failed to update profile");
+  }
+
+  return data;
+}
+
+export async function updatePlanningPreferences(
+  userId: string,
+  input: PlanningPreferences
+): Promise<ProfileRow> {
+  if (!isSavingsCurrency(input.currencyCode)) {
+    throw new Error("Choose a supported currency.");
+  }
+  if (
+    !Number.isSafeInteger(input.monthlySavingsCapacityCents) ||
+    input.monthlySavingsCapacityCents < 0
+  ) {
+    throw new Error("Choose a valid monthly savings amount.");
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      currency_code: input.currencyCode,
+      monthly_savings_capacity_cents: input.monthlySavingsCapacityCents,
+    })
+    .eq("id", userId)
+    .select(
+      "id, display_name, username, avatar_url, currency_code, monthly_savings_capacity_cents, created_at"
+    )
+    .single();
+
+  if (error || !data) {
+    throw error ?? new Error("Failed to save planning preferences.");
   }
 
   return data;

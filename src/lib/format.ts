@@ -1,5 +1,7 @@
-export function formatMoney(cents: number, currency = "NOK"): string {
-  return new Intl.NumberFormat("nb-NO", {
+import { getPreferredCurrency } from "./currency";
+
+export function formatMoney(cents: number, currency: string = getPreferredCurrency()): string {
+  return new Intl.NumberFormat(undefined, {
     style: "currency",
     currency,
     minimumFractionDigits: 0,
@@ -13,7 +15,7 @@ export function formatShortDate(value: string | null): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "No deadline";
 
-  return new Intl.DateTimeFormat("nb-NO", {
+  return new Intl.DateTimeFormat(undefined, {
     day: "numeric",
     month: "short",
     year: "numeric",

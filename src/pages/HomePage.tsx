@@ -1,7 +1,10 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import InstallPwaButton from "../components/InstallPwaButton";
 import PixieMark from "../components/PixieMark";
 import { joinWaitlist, type WaitlistDream } from "../features/waitlist/api";
+import { getPreferredCurrency, starterAmountFromNok } from "../lib/currency";
+import { formatMoney } from "../lib/format";
 
 const dreamChoices: Array<{ key: WaitlistDream; emoji: string; label: string }> = [
   { key: "travel", emoji: "✈️", label: "A big trip" },
@@ -19,6 +22,10 @@ function HomePage() {
   const [honeypot, setHoneypot] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const landingCurrency = useMemo(() => getPreferredCurrency(), []);
+  const sampleSaved = starterAmountFromNok(4200, landingCurrency) * 100;
+  const sampleTarget = starterAmountFromNok(12000, landingCurrency) * 100;
+  const sampleMove = starterAmountFromNok(50, landingCurrency) * 100;
   const attribution = useMemo(
     () => ({
       source: searchParams.get("utm_source") ?? "savepixie-landing",
@@ -159,11 +166,15 @@ function HomePage() {
             )}
           </form>
           <span className="landing-reassurance">Free waitlist · No card · No bank connection</span>
+          <div className="landing-beta-install">
+            <InstallPwaButton compact />
+            <small>Already testing? Keep SavePixie on your Home Screen.</small>
+          </div>
         </div>
         <div
           className="landing-hero__visual"
           role="img"
-          aria-label="A SavePixie phone preview showing a Japan savings goal growing by 50 kroner"
+          aria-label={`A SavePixie phone preview showing a Japan savings goal growing by ${formatMoney(sampleMove, landingCurrency)}`}
         >
           <span className="landing-orbit landing-orbit--one" />
           <span className="landing-orbit landing-orbit--two" />
@@ -181,8 +192,8 @@ function HomePage() {
               <span className="landing-phone__goal-emoji">✈️</span>
               <div>
                 <small>Japan trip</small>
-                <strong>4 200 kr</strong>
-                <span>of 12 000 kr</span>
+                <strong>{formatMoney(sampleSaved, landingCurrency)}</strong>
+                <span>of {formatMoney(sampleTarget, landingCurrency)}</span>
               </div>
               <div className="progress-track">
                 <span style={{ width: "35%" }} />
@@ -193,11 +204,13 @@ function HomePage() {
               <strong>Pause one impulse buy</strong>
               <small>Move the same amount toward Japan instead.</small>
               <button type="button" tabIndex={-1}>
-                Save 50 kr
+                Save {formatMoney(sampleMove, landingCurrency)}
               </button>
             </div>
           </div>
-          <span className="landing-float landing-float--saved">+ 50 kr saved</span>
+          <span className="landing-float landing-float--saved">
+            + {formatMoney(sampleMove, landingCurrency)} saved
+          </span>
           <span className="landing-float landing-float--closer">35% closer</span>
         </div>
       </section>
@@ -272,10 +285,11 @@ function HomePage() {
         </div>
         <div className="landing-cta__copy">
           <span className="eyebrow">Small price. Real progress.</span>
-          <h2>What should your next 50 kr grow into?</h2>
+          <h2>What should your next small win grow into?</h2>
           <p>
-            Join the free early list. The expected early plan is around <strong>49 kr/month</strong>
-            , with a genuinely useful free starting experience.
+            Join the free early list. The expected early plan is roughly the equivalent of
+            <strong> US$5/month</strong>, shown in your local currency, with a genuinely useful free
+            starting experience.
           </p>
         </div>
         <a className="button primary" href="#join-waitlist">

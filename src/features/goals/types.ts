@@ -1,8 +1,11 @@
+import type { SavingsCurrency } from "../../lib/currency";
+
 export type Goal = {
   id: string;
   user_id: string;
   mode: "solo" | "shared";
   name: string;
+  currency_code: SavingsCurrency;
   target_cents: number;
   saved_cents: number;
   verified_cents: number;

@@ -411,6 +411,38 @@ p {
   font-size: 0.75rem;
   font-weight: 600;
 }
+.landing-beta-install {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+.landing-beta-install > small {
+  max-width: 220px;
+  color: var(--faint);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+.pwa-install {
+  display: grid;
+  gap: 0.55rem;
+}
+.pwa-install p {
+  max-width: 420px;
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(184, 153, 255, 0.2);
+  border-radius: 13px;
+  background: rgba(123, 63, 255, 0.08);
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.pwa-install--compact .button {
+  min-height: 38px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.72rem;
+}
 .landing-hero__visual {
   min-height: 520px;
   display: grid;
@@ -3995,6 +4027,85 @@ p {
   background: rgba(56, 223, 198, 0.1);
   color: var(--mint-light);
 }
+.onboarding-money-row {
+  grid-template-columns: minmax(160px, 0.78fr) minmax(0, 1.22fr);
+  margin-top: 1rem;
+}
+.onboarding-reality-row {
+  margin-top: 1.15rem;
+}
+.onboarding-currency-control select {
+  min-height: 54px;
+  border-color: var(--border-bright);
+  background: rgba(7, 4, 17, 0.64);
+  font-weight: 800;
+}
+.feasibility-card {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+  margin-top: 1.15rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(8, 4, 21, 0.5);
+}
+.feasibility-card > span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(123, 63, 255, 0.14);
+  color: var(--violet-light);
+  font-weight: 950;
+}
+.feasibility-card strong,
+.feasibility-card p {
+  display: block;
+}
+.feasibility-card p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.feasibility-card--comfortable,
+.feasibility-card--workable {
+  border-color: rgba(56, 223, 198, 0.32);
+  background: linear-gradient(135deg, rgba(56, 223, 198, 0.1), rgba(123, 63, 255, 0.07));
+}
+.feasibility-card--comfortable > span,
+.feasibility-card--workable > span {
+  background: rgba(56, 223, 198, 0.14);
+  color: var(--mint-light);
+}
+.feasibility-card--adjust {
+  border-color: rgba(255, 200, 87, 0.38);
+  background: rgba(255, 200, 87, 0.07);
+}
+.feasibility-card--adjust > span {
+  background: rgba(255, 200, 87, 0.14);
+  color: #ffd980;
+}
+.feasibility-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+.feasibility-card__actions button {
+  min-height: 38px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(255, 200, 87, 0.28);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
 .onboarding-step--first-save {
   width: min(800px, calc(100% - 48px));
   padding-top: 3rem;
@@ -4686,6 +4797,10 @@ p {
   }
   .idea-card {
     min-height: 84px;
+  }
+  .onboarding-money-row,
+  .onboarding-reality-row {
+    grid-template-columns: 1fr;
   }
   .first-save-grid {
     grid-template-columns: repeat(3, 1fr);

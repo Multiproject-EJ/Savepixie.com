@@ -87,9 +87,9 @@ const router = createBrowserRouter([
             {
               path: "/preview/onboarding",
               element: (
-                <SavingsProvider>
+                <SavingsPreviewProvider initialGoals={[]}>
                   <OnboardingPage />
-                </SavingsProvider>
+                </SavingsPreviewProvider>
               ),
             },
             {

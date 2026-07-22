@@ -233,22 +233,28 @@ export type Database = {
         Row: {
           avatar_url: string | null;
           created_at: string;
+          currency_code: string;
           display_name: string | null;
           id: string;
+          monthly_savings_capacity_cents: number | null;
           username: string | null;
         };
         Insert: {
           avatar_url?: string | null;
           created_at?: string;
+          currency_code?: string;
           display_name?: string | null;
           id: string;
+          monthly_savings_capacity_cents?: number | null;
           username?: string | null;
         };
         Update: {
           avatar_url?: string | null;
           created_at?: string;
+          currency_code?: string;
           display_name?: string | null;
           id?: string;
+          monthly_savings_capacity_cents?: number | null;
           username?: string | null;
         };
         Relationships: [];
@@ -471,6 +477,7 @@ export type Database = {
           contribution_rule: string;
           created_at: string;
           created_by: string;
+          currency_code: string;
           deadline_date: string | null;
           emoji: string;
           id: string;
@@ -487,6 +494,7 @@ export type Database = {
           contribution_rule?: string;
           created_at?: string;
           created_by: string;
+          currency_code?: string;
           deadline_date?: string | null;
           emoji?: string;
           id?: string;
@@ -503,6 +511,7 @@ export type Database = {
           contribution_rule?: string;
           created_at?: string;
           created_by?: string;
+          currency_code?: string;
           deadline_date?: string | null;
           emoji?: string;
           id?: string;
@@ -611,6 +620,7 @@ export type Database = {
           contribution_rule: string;
           created_at: string;
           created_by: string;
+          currency_code: string;
           deadline_date: string | null;
           emoji: string;
           id: string;
@@ -678,6 +688,7 @@ export type Database = {
           contribution_rule: string;
           created_at: string;
           created_by: string;
+          currency_code: string;
           deadline_date: string | null;
           emoji: string;
           id: string;
@@ -756,6 +767,7 @@ export type Database = {
           contribution_rule: string;
           created_at: string;
           created_by: string;
+          currency_code: string;
           deadline_date: string | null;
           emoji: string;
           id: string;

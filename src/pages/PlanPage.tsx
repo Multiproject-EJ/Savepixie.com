@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { useAuth } from "../app/AuthProvider";
+import { useSavings } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
 import {
   currentWeekStart,
@@ -9,6 +10,7 @@ import {
   type WeeklyPlan,
 } from "../features/plans/api";
 import { formatMoney } from "../lib/format";
+import { currencySymbol, type SavingsCurrency } from "../lib/currency";
 
 const STORAGE_KEY = "savepixie.weekly-plan.v1";
 
@@ -46,6 +48,7 @@ function loadLegacyPlan(): WeeklyPlan | null {
 export function PlanPage() {
   const { basePath } = useOutletContext<AppShellOutletContext>();
   const { user } = useAuth();
+  const { currencyCode } = useSavings();
   const isPreview = basePath === "/preview/app";
   const [plan, setPlan] = useState<WeeklyPlan>(defaultPlan);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(isPreview ? "preview" : "loading");
@@ -169,7 +172,7 @@ export function PlanPage() {
 
       <section className="safe-to-spend-card">
         <span className="eyebrow">Safe to spend</span>
-        <strong>{formatMoney(safeToSpend)}</strong>
+        <strong>{formatMoney(safeToSpend, currencyCode)}</strong>
         <p>after commitments and your goal contribution</p>
         <div className="plan-balance-bar" aria-hidden="true">
           <span
@@ -200,6 +203,7 @@ export function PlanPage() {
             label="Available"
             helper="Money you can use this week"
             value={plan.availableCents}
+            currencyCode={currencyCode}
             onChange={(value) => update("availableCents", value)}
             tone="violet"
           />
@@ -207,6 +211,7 @@ export function PlanPage() {
             label="Committed"
             helper="Bills, travel and essentials"
             value={plan.committedCents}
+            currencyCode={currencyCode}
             onChange={(value) => update("committedCents", value)}
             tone="gold"
           />
@@ -214,6 +219,7 @@ export function PlanPage() {
             label="Saving"
             helper="Your planned goal contribution"
             value={plan.savingCents}
+            currencyCode={currencyCode}
             onChange={(value) => update("savingCents", value)}
             tone="mint"
           />
@@ -265,12 +271,14 @@ function PlanField({
   label,
   helper,
   value,
+  currencyCode,
   onChange,
   tone,
 }: {
   label: string;
   helper: string;
   value: number;
+  currencyCode: SavingsCurrency;
   onChange: (value: string) => void;
   tone: string;
 }) {
@@ -282,7 +290,7 @@ function PlanField({
         <small>{helper}</small>
       </span>
       <span className="plan-field__input">
-        <span>kr</span>
+        <span>{currencySymbol(currencyCode)}</span>
         <input
           type="number"
           min="0"

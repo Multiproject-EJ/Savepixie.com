@@ -12,13 +12,14 @@ import {
   type Entitlement,
 } from "../features/billing/api";
 import type { SavingsHome } from "../features/goals/types";
+import { currencySymbol, type SavingsCurrency } from "../lib/currency";
 import { reportClientError } from "../lib/telemetry";
 import { useModalDialog } from "../lib/useModalDialog";
 
 export function SettingsPage() {
   const { basePath } = useOutletContext<AppShellOutletContext>();
   const { user, signOut } = useAuth();
-  const { displayName, profile, savingsHomes, updateHome } = useSavings();
+  const { displayName, profile, savingsHomes, updateHome, currencyCode } = useSavings();
   const navigate = useNavigate();
   const isPreview = basePath === "/preview/app";
   const [exporting, setExporting] = useState(false);
@@ -224,7 +225,7 @@ export function SettingsPage() {
           ) : null}
         </div>
         <div className="pro-plan-card__offer">
-          <strong>49 kr</strong>
+          <strong>≈ US$5</strong>
           <span>per month</span>
           {isBillingDemo ? (
             <small>Demo pricing</small>
@@ -262,10 +263,10 @@ export function SettingsPage() {
             {isBillingDemo
               ? "Demo pricing only. No card or payment can be entered yet."
               : !entitlement
-                ? "Then 49 kr/month until cancelled. Cancel before the trial ends to avoid a charge."
+                ? "Then your local Stripe price each month until cancelled. Cancel before the trial ends to avoid a charge."
                 : hasPro || hasManageableSubscription
-                  ? "49 kr/month until cancelled. Manage or cancel securely in Stripe."
-                  : "Restart at 49 kr/month with no new free trial. Cancel securely in Stripe."}
+                  ? "Your local monthly price continues until cancelled. Manage or cancel securely in Stripe."
+                  : "Restart at the local monthly price with no new free trial. Cancel securely in Stripe."}
           </small>
         </div>
       </section>
@@ -280,7 +281,12 @@ export function SettingsPage() {
         </header>
         <div className="settings-home-grid">
           {savingsHomes.map((home) => (
-            <SavingsHomeEditor key={home.id} home={home} onSave={updateHome} />
+            <SavingsHomeEditor
+              key={home.id}
+              home={home}
+              currencyCode={currencyCode}
+              onSave={updateHome}
+            />
           ))}
         </div>
       </section>
@@ -468,9 +474,11 @@ function formatBillingDate(value: string): string {
 
 function SavingsHomeEditor({
   home,
+  currencyCode,
   onSave,
 }: {
   home: SavingsHome;
+  currencyCode: SavingsCurrency;
   onSave: (input: SavingsHomeInput & { id: string }) => Promise<SavingsHome>;
 }) {
   const [label, setLabel] = useState(home.label);
@@ -559,7 +567,7 @@ function SavingsHomeEditor({
               onChange={(event) => setReportedBalance(event.target.value)}
               placeholder="0"
             />
-            <small>kr</small>
+            <small>{currencySymbol(currencyCode)}</small>
           </span>
         </label>
       </div>
