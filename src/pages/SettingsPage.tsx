@@ -45,7 +45,7 @@ export function SettingsPage() {
   const hasPro = entitlement?.has_pro_access === true;
   const hasManageableSubscription = Boolean(
     entitlement &&
-    !["inactive", "canceled", "incomplete_expired"].includes(entitlement.subscription_status)
+      !["inactive", "canceled", "incomplete_expired"].includes(entitlement.subscription_status)
   );
   const isBillingDemo = !billingEnabled && !hasManageableSubscription;
   const billingTiming = entitlement?.cancel_at
