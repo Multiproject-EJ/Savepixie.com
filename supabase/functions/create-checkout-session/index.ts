@@ -103,12 +103,12 @@ Deno.serve(async (request) => {
       !price.active ||
       price.type !== "recurring" ||
       price.currency !== "nok" ||
-      price.unit_amount !== 2900 ||
+      price.unit_amount !== 4900 ||
       price.recurring?.interval !== "month" ||
       price.recurring.interval_count !== 1
     ) {
       throw new Error(
-        "The configured SavePixie Pro price is not the approved 29 NOK monthly plan."
+        "The configured SavePixie Pro price is not the approved 49 NOK monthly plan."
       );
     }
 

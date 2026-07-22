@@ -224,7 +224,7 @@ export function SettingsPage() {
           ) : null}
         </div>
         <div className="pro-plan-card__offer">
-          <strong>29 kr</strong>
+          <strong>49 kr</strong>
           <span>per month</span>
           {isBillingDemo ? (
             <small>Demo pricing</small>
@@ -262,10 +262,10 @@ export function SettingsPage() {
             {isBillingDemo
               ? "Demo pricing only. No card or payment can be entered yet."
               : !entitlement
-                ? "Then 29 kr/month until cancelled. Cancel before the trial ends to avoid a charge."
+                ? "Then 49 kr/month until cancelled. Cancel before the trial ends to avoid a charge."
                 : hasPro || hasManageableSubscription
-                  ? "29 kr/month until cancelled. Manage or cancel securely in Stripe."
-                  : "Restart at 29 kr/month with no new free trial. Cancel securely in Stripe."}
+                  ? "49 kr/month until cancelled. Manage or cancel securely in Stripe."
+                  : "Restart at 49 kr/month with no new free trial. Cancel securely in Stripe."}
           </small>
         </div>
       </section>

@@ -20,8 +20,8 @@ temporary sales pause never removes their ability to manage or cancel.
 Complete these once before the first real customer:
 
 1. Finish the Stripe account identity, tax registration, product tax code, and inclusive/exclusive
-   treatment of the displayed 29 kr price.
-2. Create the live SavePixie Pro product and exact 29 NOK monthly price.
+   treatment of the displayed 49 kr price.
+2. Create the live SavePixie Pro product and exact 49 NOK monthly price.
 3. Create a live webhook for the deployed `stripe-webhook` function with the four documented events.
 4. Configure the live Billing Portal with payment-method updates, cancellation, and the reviewed
    SavePixie Terms and Privacy links.
@@ -40,7 +40,7 @@ After the one-time preparation passes:
    watermark.
 2. Set the GitHub Actions repository variable `VITE_STRIPE_ENABLED` to `true` to open new Checkout.
 3. Re-run the SavePixie deployment or merge the release commit.
-4. Confirm the watermark is gone, Settings offers **Start 7-day free trial**, Checkout shows 29 NOK
+4. Confirm the watermark is gone, Settings offers **Start 7-day free trial**, Checkout shows 49 NOK
    monthly after seven free days, and the return route reaches `/app/today`.
 
 Those two repository variables deliberately separate the product-launch marker from payment sales.

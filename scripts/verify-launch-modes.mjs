@@ -8,7 +8,7 @@ const demoBillingMarkers = [
   "Payments not live yet",
   "Demo pricing only. No card or payment can be entered yet.",
 ];
-const liveBillingMarkers = ["Start 7-day free trial", "Then 29 kr/month until cancelled."];
+const liveBillingMarkers = ["Start 7-day free trial", "Then 49 kr/month until cancelled."];
 const temporaryBuilds = [];
 
 function readJavaScript(directory) {

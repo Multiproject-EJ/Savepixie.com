@@ -253,6 +253,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      savepixie_waitlist: {
+        Row: {
+          consent_at: string;
+          created_at: string;
+          dream_category: string | null;
+          email: string;
+          id: string;
+          landing_variant: string;
+          source: string;
+          status: string;
+          utm_campaign: string | null;
+          utm_medium: string | null;
+        };
+        Insert: {
+          consent_at?: string;
+          created_at?: string;
+          dream_category?: string | null;
+          email: string;
+          id?: string;
+          landing_variant?: string;
+          source?: string;
+          status?: string;
+          utm_campaign?: string | null;
+          utm_medium?: string | null;
+        };
+        Update: {
+          consent_at?: string;
+          created_at?: string;
+          dream_category?: string | null;
+          email?: string;
+          id?: string;
+          landing_variant?: string;
+          source?: string;
+          status?: string;
+          utm_campaign?: string | null;
+          utm_medium?: string | null;
+        };
+        Relationships: [];
+      };
       savings_homes: {
         Row: {
           account_hint: string | null;

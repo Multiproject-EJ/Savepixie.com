@@ -1,6 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  Navigate,
+  Outlet,
+  RouterProvider,
+  useLocation,
+} from "react-router-dom";
 import App from "./app/App";
 import { AuthProvider, useAuth } from "./app/AuthProvider";
 import ProtectedRoute from "./app/ProtectedRoute";
@@ -28,83 +34,101 @@ import "./styles/global.css";
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <App />,
+    element: <ExperienceRoot />,
     children: [
       {
-        index: true,
-        element: <HomePage />,
-      },
-      {
-        path: "auth",
-        element: <AuthPage />,
-      },
-      {
-        path: "legal/:document",
-        element: <LegalPage />,
-      },
-    ],
-  },
-  {
-    path: "/app",
-    element: (
-      <ProtectedRoute>
-        <AuthenticatedSavingsArea />
-      </ProtectedRoute>
-    ),
-    children: [
-      { index: true, element: <SavingsEntryPage /> },
-      { path: "onboarding", element: <OnboardingPage /> },
-      {
-        element: <AppShell />,
+        path: "/",
+        element: <App />,
         children: [
-          { path: "today", element: <TodayPage /> },
-          { path: "goals", element: <GoalsPage /> },
-          { path: "goals/:pactId", element: <PactDetailPage /> },
-          { path: "plan", element: <PlanPage /> },
-          { path: "plan/account-check", element: <AccountCheckPage /> },
-          { path: "journey", element: <JourneyPage /> },
-          { path: "settings", element: <SettingsPage /> },
+          {
+            index: true,
+            element: <HomePage />,
+          },
+          {
+            path: "auth",
+            element: <AuthPage />,
+          },
+          {
+            path: "legal/:document",
+            element: <LegalPage />,
+          },
         ],
       },
+      {
+        path: "/app",
+        element: (
+          <ProtectedRoute>
+            <AuthenticatedSavingsArea />
+          </ProtectedRoute>
+        ),
+        children: [
+          { index: true, element: <SavingsEntryPage /> },
+          { path: "onboarding", element: <OnboardingPage /> },
+          {
+            element: <AppShell />,
+            children: [
+              { path: "today", element: <TodayPage /> },
+              { path: "goals", element: <GoalsPage /> },
+              { path: "goals/:pactId", element: <PactDetailPage /> },
+              { path: "plan", element: <PlanPage /> },
+              { path: "plan/account-check", element: <AccountCheckPage /> },
+              { path: "journey", element: <JourneyPage /> },
+              { path: "settings", element: <SettingsPage /> },
+            ],
+          },
+        ],
+      },
+      {
+        path: "/dashboard",
+        element: <Navigate to="/app" replace />,
+      },
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: "/preview/onboarding",
+              element: (
+                <SavingsProvider>
+                  <OnboardingPage />
+                </SavingsProvider>
+              ),
+            },
+            {
+              path: "/preview/app",
+              element: (
+                <SavingsPreviewProvider>
+                  <AppShell basePath="/preview/app" />
+                </SavingsPreviewProvider>
+              ),
+              children: [
+                { index: true, element: <Navigate to="today" replace /> },
+                { path: "today", element: <TodayPage /> },
+                { path: "goals", element: <GoalsPage /> },
+                { path: "goals/:pactId", element: <PactDetailPage /> },
+                { path: "plan", element: <PlanPage /> },
+                { path: "plan/account-check", element: <AccountCheckPage /> },
+                { path: "journey", element: <JourneyPage /> },
+                { path: "settings", element: <SettingsPage /> },
+              ],
+            },
+          ]
+        : []),
+      { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
-  {
-    path: "/dashboard",
-    element: <Navigate to="/app" replace />,
-  },
-  ...(import.meta.env.DEV
-    ? [
-        {
-          path: "/preview/onboarding",
-          element: (
-            <SavingsProvider>
-              <OnboardingPage />
-            </SavingsProvider>
-          ),
-        },
-        {
-          path: "/preview/app",
-          element: (
-            <SavingsPreviewProvider>
-              <AppShell basePath="/preview/app" />
-            </SavingsPreviewProvider>
-          ),
-          children: [
-            { index: true, element: <Navigate to="today" replace /> },
-            { path: "today", element: <TodayPage /> },
-            { path: "goals", element: <GoalsPage /> },
-            { path: "goals/:pactId", element: <PactDetailPage /> },
-            { path: "plan", element: <PlanPage /> },
-            { path: "plan/account-check", element: <AccountCheckPage /> },
-            { path: "journey", element: <JourneyPage /> },
-            { path: "settings", element: <SettingsPage /> },
-          ],
-        },
-      ]
-    : []),
-  { path: "*", element: <Navigate to="/" replace /> },
 ]);
+
+function ExperienceRoot() {
+  const location = useLocation();
+  const isPublicMarketingPage =
+    location.pathname === "/" || location.pathname.startsWith("/legal/");
+
+  return (
+    <>
+      {isPublicMarketingPage ? null : <DemoModeWatermark />}
+      <Outlet />
+    </>
+  );
+}
 
 function AuthenticatedSavingsArea() {
   const { user } = useAuth();
@@ -152,7 +176,6 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <DemoModeWatermark />
     <AppErrorBoundary>
       <AuthProvider>
         <NetworkStatus />

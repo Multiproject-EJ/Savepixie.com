@@ -80,7 +80,8 @@ safeguards pass the gates below.
 - [x] Deploy dormant Checkout, Portal, and signed-webhook function shells.
 - [x] Define and enforce the first Pro boundary: additional shared Pacts and larger family/group
       Circles, without removing existing data when Pro ends.
-- [x] Create the Stripe sandbox product, recurring 29 NOK price, and seven-day first-trial flow.
+- [x] Create the original Stripe sandbox product, recurring 29 NOK price, and seven-day first-trial flow.
+- [ ] Replace it with the approved recurring 49 NOK price and reverify Checkout before launch.
 - [ ] Complete Stripe Tax business location, registration, tax code, and inclusive/exclusive price
       treatment with the operator/accountant.
 - [x] Create and deploy authenticated server-side Checkout and customer-portal sessions behind the

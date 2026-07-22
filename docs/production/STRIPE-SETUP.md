@@ -6,7 +6,7 @@ live-mode account preparation remain gated
 
 ## Commercial boundary
 
-SavePixie Pro is planned as a 29 NOK monthly subscription with a plainly disclosed seven-day trial.
+SavePixie Pro is planned as a 49 NOK monthly subscription with a plainly disclosed seven-day trial.
 Stripe revenue belongs to SavePixie. Customer savings are never collected, pooled, held, or moved by
 Stripe or SavePixie.
 
@@ -26,7 +26,7 @@ pause. The short launch and rollback procedure is in `PAYMENTS-GO-LIVE.md`.
 
 - `create-checkout-session` verifies the signed-in Supabase user and creates a Stripe-hosted
   subscription Checkout Session. It rejects any configured price that is not an active recurring
-  29 NOK monthly price and grants the seven-day trial only when no prior SavePixie entitlement exists.
+  49 NOK monthly price and grants the seven-day trial only when no prior SavePixie entitlement exists.
 - `create-portal-session` verifies the user and creates a short-lived Stripe Billing Portal Session.
 - Checkout re-retrieves any mapped Stripe customer before reuse; a deleted customer is replaced and a
   customer whose immutable SavePixie user metadata does not match is rejected. Portal performs the
@@ -64,7 +64,8 @@ secret is required. The service-role value must never be added to GitHub Pages v
 
 ## Stripe Dashboard configuration
 
-1. SavePixie Pro exists in the Stripe sandbox with an active recurring monthly price of 29 NOK.
+1. The legacy SavePixie Pro sandbox price is 29 NOK. Replace its configured price ID with an active
+   recurring 49 NOK monthly price before testing or enabling the new offer.
 2. The test-mode Billing Portal permits payment-method updates and cancellation at period end.
    It carries the SavePixie headline plus Privacy and Terms links.
 3. The deployed `stripe-webhook` endpoint uses API version
@@ -84,7 +85,7 @@ secret is required. The service-role value must never be added to GitHub Pages v
 - [x] An unsigned webhook request returns `400` before processing.
 - [x] A signed-in free user receives a Stripe-hosted Checkout URL.
 - A returning customer who previously had an entitlement receives no second free trial.
-- [x] Checkout displays the 29 kr monthly price and seven-day trial before confirmation.
+- [ ] Replace the sandbox subscription price with the new 49 kr monthly target and reverify the seven-day trial before confirmation.
 - [x] Successful Checkout creates `trialing` access only after the signed webhook is processed.
 - [x] Replaying the same webhook event does not apply the update twice. Event
       `evt_1Tv2aoF2MDiiXhcg3uKu7TF1` was resent on 2026-07-19; the entitlement stayed trialing and the
@@ -126,7 +127,7 @@ sandbox on 2026-07-20, and its disposable clock customer and Supabase user were 
 The 2026-07-19 sandbox audit found Stripe Tax status `pending`, no head-office address or default tax
 code, and `tax_behavior=unspecified` on the SavePixie price. Do not enable public billing until the
 operator's legal business location and required registrations are confirmed, the appropriate digital
-service tax code is selected, the displayed 29 kr treatment is decided (inclusive or exclusive), and
+service tax code is selected, the displayed 49 kr treatment is decided (inclusive or exclusive), and
 test Checkout shows the intended tax disclosure. This decision requires the operator/accountant; it
 must not be guessed in code.
 
