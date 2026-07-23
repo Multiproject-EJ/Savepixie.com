@@ -297,11 +297,11 @@ p {
   color: var(--muted);
 }
 
-/* Provisional Petal Hood mark. Final production mascot art can replace this component. */
+/* Production SavePixie art. Every identity shares this sizing and motion system. */
 .pixie-mark {
   --pixie-size: 82px;
   width: var(--pixie-size);
-  height: calc(var(--pixie-size) * 1.08);
+  height: var(--pixie-size);
   position: relative;
   display: inline-block;
   flex: 0 0 auto;
@@ -316,123 +316,26 @@ p {
 .pixie-mark--large {
   --pixie-size: 180px;
 }
-.pixie-wing {
-  position: absolute;
-  z-index: 0;
-  top: 43%;
-  width: 42%;
-  height: 35%;
-  border: 1px solid color-mix(in srgb, var(--pixie-wing) 82%, transparent);
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--pixie-wing) 85%, transparent),
-    color-mix(in srgb, var(--pixie-wing-soft) 30%, transparent)
-  );
-  box-shadow:
-    inset 0 0 14px rgba(255, 255, 255, 0.22),
-    0 0 18px var(--theme-glow);
-}
-.pixie-wing--left {
-  left: 1%;
-  border-radius: 90% 18% 78% 24%;
-  transform: rotate(-23deg);
-}
-.pixie-wing--right {
-  right: 1%;
-  border-radius: 18% 90% 24% 78%;
-  transform: rotate(23deg);
-}
-.pixie-hood {
-  position: absolute;
-  z-index: 2;
-  left: 18%;
-  top: 4%;
-  width: 64%;
-  height: 76%;
-  border-radius: 54% 54% 48% 48% / 66% 66% 42% 42%;
-  background: linear-gradient(145deg, var(--pixie-outer), var(--pixie-outer-deep) 66%);
-  box-shadow:
-    inset 8px 8px 18px rgba(255, 255, 255, 0.07),
-    inset -8px -10px 20px rgba(0, 0, 0, 0.26);
-}
-.pixie-hood::before {
-  content: "";
-  position: absolute;
-  left: 22%;
-  top: -15%;
-  width: 56%;
-  height: 50%;
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--pixie-outer) 84%, white 7%),
-    var(--pixie-outer-deep)
-  );
-  transform: rotate(45deg);
-  border-radius: 16% 58% 20% 58%;
-  z-index: -1;
-}
-.pixie-face {
-  position: absolute;
-  left: 13%;
-  right: 13%;
-  top: 23%;
-  height: 55%;
-  border-radius: 48%;
-  background: radial-gradient(
-    circle at 50% 35%,
-    color-mix(in srgb, var(--pixie-face) 78%, white 8%),
-    var(--pixie-face) 78%
-  );
-  box-shadow: inset 0 0 16px color-mix(in srgb, var(--violet) 20%, transparent);
-}
-.pixie-eye {
-  position: absolute;
-  top: 42%;
-  width: 22%;
-  height: 24%;
-  border: solid var(--violet-light);
-  border-width: 0 0 3px 3px;
-  border-radius: 0 0 0 100%;
-  transform: rotate(-45deg);
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--violet-light) 72%, transparent));
-}
-.pixie-eye--left {
-  left: 19%;
-}
-.pixie-eye--right {
-  right: 19%;
-  transform: scaleX(-1) rotate(-45deg);
-}
-.pixie-star {
-  position: absolute;
-  top: 10%;
-  left: 43%;
-  color: var(--mint);
-  font-size: calc(var(--pixie-size) * 0.12);
-}
-.pixie-seed {
-  position: absolute;
-  z-index: 3;
-  left: 40%;
-  bottom: 2%;
-  width: 20%;
-  height: 20%;
-  display: grid;
-  place-items: center;
-  border-radius: 48% 48% 62% 62%;
-  background: radial-gradient(circle at 50% 40%, var(--pixie-seed-light), var(--pixie-seed));
-  color: white;
-  font-size: calc(var(--pixie-size) * 0.08);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--pixie-seed) 62%, transparent);
+.pixie-art {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    transform 220ms ease,
+    filter 220ms ease;
 }
 .pixie-mark--curious {
   transform: rotate(-2deg);
 }
-.pixie-mark--happy .pixie-wing--left {
-  transform: rotate(-34deg) translateY(-4%);
+.pixie-mark--curious .pixie-art {
+  transform: translateY(-1%) rotate(-1deg);
 }
-.pixie-mark--happy .pixie-wing--right {
-  transform: rotate(34deg) translateY(-4%);
+.pixie-mark--happy .pixie-art {
+  transform: translateY(-2%) scale(1.04);
+  filter: saturate(1.06) brightness(1.04);
 }
 
 .pixie-theme-grid {
