@@ -5,6 +5,14 @@ export type PixieTheme = (typeof pixieThemeKeys)[number];
 export type PixieThemeOption = {
   key: PixieTheme;
   name: string;
+  world: string;
+  suiteBridge:
+    | "WalletHabit Classic"
+    | "WalletHabit Growth"
+    | "WalletHabit Linen"
+    | "WalletHabit Midnight"
+    | null;
+  motionProfile: "fluid" | "radiant" | "organic" | "cosmic" | "gentle" | "bloom";
   personality: string;
   color: string;
   assetPath: string;
@@ -16,6 +24,9 @@ export const pixieThemes: PixieThemeOption[] = [
   {
     key: "tide",
     name: "Tide",
+    world: "Classic Current",
+    suiteBridge: "WalletHabit Classic",
+    motionProfile: "fluid",
     personality: "Calm, hopeful and consistent",
     color: "#35d9cd",
     assetPath: "/mascots/tide.png",
@@ -23,6 +34,9 @@ export const pixieThemes: PixieThemeOption[] = [
   {
     key: "ember",
     name: "Ember",
+    world: "Sunset City",
+    suiteBridge: null,
+    motionProfile: "radiant",
     personality: "Bright, bold and ambitious",
     color: "#ff9d66",
     assetPath: "/mascots/ember.png",
@@ -30,6 +44,9 @@ export const pixieThemes: PixieThemeOption[] = [
   {
     key: "grove",
     name: "Grove",
+    world: "Growth Grove",
+    suiteBridge: "WalletHabit Growth",
+    motionProfile: "organic",
     personality: "Grounded, patient and growing",
     color: "#91d26f",
     assetPath: "/mascots/grove.png",
@@ -37,6 +54,9 @@ export const pixieThemes: PixieThemeOption[] = [
   {
     key: "nova",
     name: "Nova",
+    world: "Midnight City",
+    suiteBridge: "WalletHabit Midnight",
+    motionProfile: "cosmic",
     personality: "Curious, adventurous and dreamy",
     color: "#75a7ff",
     assetPath: "/mascots/nova.png",
@@ -44,6 +64,9 @@ export const pixieThemes: PixieThemeOption[] = [
   {
     key: "moon",
     name: "Moon",
+    world: "Linen Moon",
+    suiteBridge: "WalletHabit Linen",
+    motionProfile: "gentle",
     personality: "Thoughtful, gentle and careful",
     color: "#d8c9ff",
     assetPath: "/mascots/moon.png",
@@ -51,6 +74,9 @@ export const pixieThemes: PixieThemeOption[] = [
   {
     key: "aurora",
     name: "Aurora",
+    world: "Neon Bloom",
+    suiteBridge: null,
+    motionProfile: "bloom",
     personality: "Playful, optimistic and surprising",
     color: "#6ee7b7",
     assetPath: "/mascots/aurora.png",
@@ -72,7 +98,9 @@ export function getRememberedPixieTheme(): PixieTheme {
 
 export function applyPixieTheme(theme: PixieTheme): void {
   if (typeof document === "undefined") return;
+  const option = getPixieThemeOption(theme);
   document.documentElement.dataset.pixieTheme = theme;
+  document.documentElement.dataset.pixieMotion = option.motionProfile;
 }
 
 export function rememberPixieTheme(theme: PixieTheme): void {

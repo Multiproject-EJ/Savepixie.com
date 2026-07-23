@@ -171,6 +171,12 @@ The entitlement logic should treat WalletHabit Pro as a superset:
 - No public profiles, strangers, leaderboards, or open chat.
 - No generic AI financial adviser conversation as the primary interface.
 
+## Theme worlds and animation
+
+The selected Pixie determines a complete theme world rather than just an accent colour. Tide, Grove, Moon, and Nova bridge to the four core WalletHabit visual families. Ember and Aurora provide more expressive SavePixie-native worlds that can become earned or paid customisation.
+
+The main feedback loop is visual: a recorded deposit becomes a glowing seed, the Pixie carries it into the Pact, and the magical place grows. Celebration is strong but restrained, always tied to real progress, and has a reduced-motion equivalent. See `THEMES-AND-MOTION.md` for the full mapping and implementation rules.
+
 ## Screenshot map
 
 - `00-product-direction-board.png` — complete six-screen product language.
@@ -183,6 +189,9 @@ The entitlement logic should treat WalletHabit Pro as a superset:
 - `07-pixie-reflection.png` — long-term insights without bank data.
 - `08-family-match-dashboard.png` — adult-managed profile and match confirmation.
 - `09-marketing-landing-page.png` — future active-product landing page.
+- `10-walletHabit-theme-bridge.png` — four SavePixie worlds linked to WalletHabit themes.
+- `11-bonus-pixie-theme-worlds.png` — Ember and Aurora expressive world directions.
+- `12-save-celebration-motion-storyboard.png` — six-beat deposit celebration.
 
 ## Recommended implementation sequence
 

@@ -33,6 +33,8 @@
   --pixie-wing-soft: #38dfc6;
   --pixie-seed: #38dfc6;
   --pixie-seed-light: #9af8e8;
+  --pixie-hover-y: -7px;
+  --onboarding-float-y: -8px;
   --shadow: 0 24px 70px rgba(2, 0, 12, 0.42);
   --radius-sm: 14px;
   --radius-md: 22px;
@@ -54,6 +56,8 @@
   --pixie-wing-soft: #9ccfff;
   --pixie-seed: #f2b94f;
   --pixie-seed-light: #fff0a3;
+  --pixie-hover-y: -8px;
+  --onboarding-float-y: -9px;
 }
 
 :root[data-pixie-theme="ember"],
@@ -71,6 +75,8 @@
   --pixie-wing-soft: #ffd878;
   --pixie-seed: #f6bd52;
   --pixie-seed-light: #fff1a7;
+  --pixie-hover-y: -10px;
+  --onboarding-float-y: -11px;
 }
 
 :root[data-pixie-theme="grove"],
@@ -88,6 +94,8 @@
   --pixie-wing-soft: #e6d77a;
   --pixie-seed: #e6be4f;
   --pixie-seed-light: #fff0a0;
+  --pixie-hover-y: -5px;
+  --onboarding-float-y: -6px;
 }
 
 :root[data-pixie-theme="nova"],
@@ -105,6 +113,8 @@
   --pixie-wing-soft: #ff9ab0;
   --pixie-seed: #f2b94f;
   --pixie-seed-light: #fff0a3;
+  --pixie-hover-y: -7px;
+  --onboarding-float-y: -8px;
 }
 
 :root[data-pixie-theme="moon"],
@@ -122,6 +132,8 @@
   --pixie-wing-soft: #9ee8d8;
   --pixie-seed: #e8c363;
   --pixie-seed-light: #fff1aa;
+  --pixie-hover-y: -4px;
+  --onboarding-float-y: -5px;
 }
 
 :root[data-pixie-theme="aurora"],
@@ -139,6 +151,8 @@
   --pixie-wing-soft: #f19ad1;
   --pixie-seed: #efc255;
   --pixie-seed-light: #fff2a7;
+  --pixie-hover-y: -10px;
+  --onboarding-float-y: -10px;
 }
 
 * {
@@ -402,9 +416,19 @@ p {
 .pixie-theme-card__preview .pixie-mark {
   transform: scale(0.9);
 }
+.pixie-theme-card__copy em,
 .pixie-theme-card__copy strong,
 .pixie-theme-card__copy small {
   display: block;
+}
+.pixie-theme-card__copy em {
+  margin-bottom: 0.2rem;
+  color: var(--theme-preview);
+  font-size: 0.57rem;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 .pixie-theme-card__copy strong {
   font-size: 1rem;
@@ -4499,7 +4523,7 @@ p {
     translate: 0 0;
   }
   50% {
-    translate: 0 -8px;
+    translate: 0 var(--onboarding-float-y);
   }
 }
 @keyframes spark-pulse {
@@ -4569,7 +4593,7 @@ p {
     translate: 0 0;
   }
   50% {
-    translate: 0 -7px;
+    translate: 0 var(--pixie-hover-y);
   }
 }
 
