@@ -10,7 +10,8 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { reportClientError } from "../lib/telemetry";
-import { ensureProfile } from "../features/profile/api";
+import { ensureProfile, fetchProfile } from "../features/profile/api";
+import { isPixieTheme, rememberPixieTheme } from "../features/profile/pixieThemes";
 
 type AuthContextValue = {
   session: Session | null;
@@ -32,6 +33,14 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+async function prepareProfileAndTheme(user: User): Promise<void> {
+  await ensureProfile(user);
+  const profile = await fetchProfile(user.id);
+  if (isPixieTheme(profile?.pixie_theme)) {
+    rememberPixieTheme(profile.pixie_theme);
+  }
+}
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
@@ -56,6 +65,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setSession(data.session);
         setUser(data.session?.user ?? null);
         setSessionError(null);
+        if (data.session?.user) {
+          void prepareProfileAndTheme(data.session.user).catch((profileError) => {
+            reportClientError("profile_prepare", "auth");
+            console.error("SavePixie could not prepare the customer profile", profileError);
+          });
+        }
       })
       .catch(() => {
         if (!mounted || authEventReceived) return;
@@ -82,7 +97,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (nextSession?.user) {
         // Supabase warns against starting another API request inside this callback.
         window.setTimeout(() => {
-          void ensureProfile(nextSession.user).catch((error) => {
+          void prepareProfileAndTheme(nextSession.user).catch((error) => {
             reportClientError("profile_prepare", "auth");
             console.error("SavePixie could not prepare the customer profile", error);
           });

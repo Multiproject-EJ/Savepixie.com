@@ -29,8 +29,11 @@ import PlanPage from "./pages/PlanPage";
 import SavingsEntryPage from "./pages/SavingsEntryPage";
 import SettingsPage from "./pages/SettingsPage";
 import TodayPage from "./pages/TodayPage";
+import { applyPixieTheme, getRememberedPixieTheme } from "./features/profile/pixieThemes";
 import "./styles/demo-watermark.css";
 import "./styles/global.css";
+
+applyPixieTheme(getRememberedPixieTheme());
 
 const router = createBrowserRouter([
   {

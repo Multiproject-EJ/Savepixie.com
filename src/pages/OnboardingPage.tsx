@@ -2,7 +2,9 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSavings } from "../app/SavingsProvider";
 import PixieMark from "../components/PixieMark";
+import PixieThemePicker from "../components/PixieThemePicker";
 import { assessGoalFeasibility, type GoalFeasibility } from "../features/goals/feasibility";
+import { rememberPixieTheme, type PixieTheme } from "../features/profile/pixieThemes";
 import {
   currencySymbol,
   detectBrowserCurrency,
@@ -72,11 +74,21 @@ function dateMonthsFromNow(months: number): string {
 }
 
 export function OnboardingPage() {
-  const { goals, loading, displayName, startFirstGoal, savePlanningPreferences } = useSavings();
+  const {
+    goals,
+    loading,
+    displayName,
+    pixieTheme,
+    startFirstGoal,
+    savePlanningPreferences,
+    savePixiePreference,
+  } = useSavings();
   const navigate = useNavigate();
   const location = useLocation();
   const todayPath = location.pathname.startsWith("/preview/") ? "/preview/app/today" : "/app/today";
   const [step, setStep] = useState(0);
+  const [selectedPixieTheme, setSelectedPixieTheme] = useState<PixieTheme>(pixieTheme);
+  const [savingPixie, setSavingPixie] = useState(false);
   const [mode, setMode] = useState<"solo" | "shared">("solo");
   const [ideaId, setIdeaId] = useState(goalIdeas[0].id);
   const [goalName, setGoalName] = useState(goalIdeas[0].name);
@@ -147,7 +159,27 @@ export function OnboardingPage() {
 
   const moveToGoalDetails = () => {
     setError(null);
-    setStep(2);
+    setStep(3);
+  };
+
+  const choosePixie = (theme: PixieTheme) => {
+    setSelectedPixieTheme(theme);
+    rememberPixieTheme(theme);
+    setError(null);
+  };
+
+  const confirmPixie = async () => {
+    if (savingPixie) return;
+    setSavingPixie(true);
+    setError(null);
+    try {
+      await savePixiePreference(selectedPixieTheme);
+      setStep(2);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "We couldn't save your Pixie just yet.");
+    } finally {
+      setSavingPixie(false);
+    }
   };
 
   const handleGoalDetails = (event: FormEvent<HTMLFormElement>) => {
@@ -175,7 +207,7 @@ export function OnboardingPage() {
     }
 
     setError(null);
-    setStep(3);
+    setStep(4);
   };
 
   const finishOnboarding = async () => {
@@ -208,7 +240,7 @@ export function OnboardingPage() {
       });
       setCreatedGoalName(result.goal.name);
       setInitialSaveRecorded(result.initialSaveRecorded);
-      setStep(4);
+      setStep(5);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We couldn't plant that goal just yet.");
     } finally {
@@ -232,9 +264,9 @@ export function OnboardingPage() {
           <PixieMark size="small" mood="happy" />
           <strong>SavePixie</strong>
         </div>
-        {step > 0 && step < 4 ? (
-          <div className="onboarding-progress" aria-label={`Step ${step} of 3`}>
-            {[1, 2, 3].map((progressStep) => (
+        {step > 0 && step < 5 ? (
+          <div className="onboarding-progress" aria-label={`Step ${step} of 4`}>
+            {[1, 2, 3, 4].map((progressStep) => (
               <span className={progressStep <= step ? "active" : ""} key={progressStep} />
             ))}
           </div>
@@ -244,7 +276,7 @@ export function OnboardingPage() {
       </header>
 
       <section className={`onboarding-card onboarding-card--step-${step}`}>
-        {step > 0 && step < 4 ? (
+        {step > 0 && step < 5 ? (
           <button
             className="onboarding-back"
             type="button"
@@ -263,6 +295,31 @@ export function OnboardingPage() {
         ) : null}
 
         {step === 1 ? (
+          <section className="onboarding-step onboarding-step--pixie-choice">
+            <StepIntro
+              kicker="Choose your companion"
+              title="Which Pixie will protect your first goal?"
+              body="Your Pixie changes the colours and magical personality of your whole SavePixie space. You can change it later."
+            />
+            {error ? <p className="alert error">{error}</p> : null}
+            <PixieThemePicker
+              value={selectedPixieTheme}
+              onChange={choosePixie}
+              disabled={savingPixie}
+            />
+            <button
+              className="button primary onboarding-next"
+              type="button"
+              onClick={() => void confirmPixie()}
+              disabled={savingPixie}
+            >
+              {savingPixie ? "Welcoming your Pixie…" : "This is my Pixie"}
+              {!savingPixie ? <span aria-hidden="true">✦</span> : null}
+            </button>
+          </section>
+        ) : null}
+
+        {step === 2 ? (
           <section className="onboarding-step">
             <StepIntro
               kicker="Choose your Pact"
@@ -335,7 +392,7 @@ export function OnboardingPage() {
           </section>
         ) : null}
 
-        {step === 2 ? (
+        {step === 3 ? (
           <section className="onboarding-step">
             <StepIntro
               kicker="Make it yours"
@@ -448,7 +505,7 @@ export function OnboardingPage() {
           </section>
         ) : null}
 
-        {step === 3 ? (
+        {step === 4 ? (
           <section className="onboarding-step onboarding-step--first-save">
             <div className="onboarding-pixie-moment">
               <span className="pixie-glow" />
@@ -537,7 +594,7 @@ export function OnboardingPage() {
           </section>
         ) : null}
 
-        {step === 4 ? (
+        {step === 5 ? (
           <CelebrationStep
             goalName={createdGoalName || goalName}
             firstSave={firstSave}
@@ -572,8 +629,8 @@ function WelcomeStep({ displayName, onContinue }: { displayName: string; onConti
         </p>
         <div className="onboarding-promise-row">
           <span>1 Pact</span>
-          <span>3 easy choices</span>
-          <span>about 60 seconds</span>
+          <span>4 easy choices</span>
+          <span>about 90 seconds</span>
         </div>
         <button className="button primary onboarding-next" type="button" onClick={onContinue}>
           Let&apos;s grow something <span aria-hidden="true">✦</span>

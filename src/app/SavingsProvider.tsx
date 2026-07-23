@@ -29,10 +29,17 @@ import {
 import type { Goal, SavingsHome } from "../features/goals/types";
 import {
   fetchProfile,
+  updatePixiePreference as updatePixiePreferenceRequest,
   updatePlanningPreferences as updatePlanningPreferencesRequest,
   type PlanningPreferences,
   type ProfileRow,
 } from "../features/profile/api";
+import {
+  defaultPixieTheme,
+  isPixieTheme,
+  rememberPixieTheme,
+  type PixieTheme,
+} from "../features/profile/pixieThemes";
 import {
   getPreferredCurrency,
   isSavingsCurrency,
@@ -72,6 +79,7 @@ type SavingsContextValue = {
   displayName: string;
   currencyCode: SavingsCurrency;
   monthlySavingsCapacityCents: number | null;
+  pixieTheme: PixieTheme;
   refresh: () => Promise<void>;
   addGoal: (input: NewGoalInput) => Promise<Goal>;
   startFirstGoal: (
@@ -86,6 +94,7 @@ type SavingsContextValue = {
   joinSharedPact: (inviteToken: string) => Promise<Goal>;
   updateHome: (input: SavingsHomeInput & { id: string }) => Promise<SavingsHome>;
   savePlanningPreferences: (input: PlanningPreferences) => Promise<ProfileRow>;
+  savePixiePreference: (theme: PixieTheme) => Promise<ProfileRow>;
 };
 
 const SavingsContext = createContext<SavingsContextValue | undefined>(undefined);
@@ -130,6 +139,9 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       setProfile(nextProfile);
       if (isSavingsCurrency(nextProfile?.currency_code)) {
         rememberPreferredCurrency(nextProfile.currency_code);
+      }
+      if (isPixieTheme(nextProfile?.pixie_theme)) {
+        rememberPixieTheme(nextProfile.pixie_theme);
       }
       setGoals(nextGoals);
       setSavingsHomes(nextHomes);
@@ -276,11 +288,23 @@ export function SavingsProvider({ children }: PropsWithChildren) {
     [user?.id]
   );
 
+  const savePixiePreference = useCallback(
+    async (theme: PixieTheme) => {
+      if (!user?.id) throw new Error("Sign in before choosing your Pixie.");
+      const updated = await updatePixiePreferenceRequest(user.id, { pixieTheme: theme });
+      setProfile(updated);
+      rememberPixieTheme(theme);
+      return updated;
+    },
+    [user?.id]
+  );
+
   const displayName = profile?.display_name?.trim() || user?.email?.split("@")[0] || "Saver";
   const currencyCode = isSavingsCurrency(profile?.currency_code)
     ? profile.currency_code
     : getPreferredCurrency();
   const monthlySavingsCapacityCents = profile?.monthly_savings_capacity_cents ?? null;
+  const pixieTheme = isPixieTheme(profile?.pixie_theme) ? profile.pixie_theme : defaultPixieTheme;
 
   const value = useMemo<SavingsContextValue>(
     () => ({
@@ -295,6 +319,7 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       displayName,
       currencyCode,
       monthlySavingsCapacityCents,
+      pixieTheme,
       refresh,
       addGoal,
       startFirstGoal,
@@ -304,6 +329,7 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       joinSharedPact,
       updateHome,
       savePlanningPreferences,
+      savePixiePreference,
     }),
     [
       addGoal,
@@ -319,11 +345,13 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       joinSharedPact,
       loading,
       profile,
+      pixieTheme,
       ready,
       refresh,
       savingsHomes,
       startFirstGoal,
       savePlanningPreferences,
+      savePixiePreference,
       updateHome,
     ]
   );
@@ -338,6 +366,7 @@ const previewProfile: ProfileRow = {
   avatar_url: null,
   currency_code: "NOK",
   monthly_savings_capacity_cents: 300000,
+  pixie_theme: defaultPixieTheme,
   created_at: "2026-07-15T12:00:00.000Z",
 };
 
@@ -598,6 +627,16 @@ export function SavingsPreviewProvider({
     },
     [profile]
   );
+  const savePixiePreference = useCallback(
+    async (theme: PixieTheme) => {
+      rememberPixieTheme(theme);
+      const updated = { ...profile, pixie_theme: theme };
+      setProfile(updated);
+      return updated;
+    },
+    [profile]
+  );
+  const pixieTheme = isPixieTheme(profile.pixie_theme) ? profile.pixie_theme : defaultPixieTheme;
 
   const value = useMemo<SavingsContextValue>(
     () => ({
@@ -612,6 +651,7 @@ export function SavingsPreviewProvider({
       displayName: profile.display_name || "Saver",
       currencyCode: previewCurrencyCode,
       monthlySavingsCapacityCents: profile.monthly_savings_capacity_cents,
+      pixieTheme,
       refresh,
       addGoal,
       startFirstGoal,
@@ -621,6 +661,7 @@ export function SavingsPreviewProvider({
       joinSharedPact,
       updateHome,
       savePlanningPreferences,
+      savePixiePreference,
     }),
     [
       addGoal,
@@ -632,9 +673,11 @@ export function SavingsPreviewProvider({
       goals,
       joinSharedPact,
       profile,
+      pixieTheme,
       previewCurrencyCode,
       refresh,
       savePlanningPreferences,
+      savePixiePreference,
       startFirstGoal,
       updateHome,
     ]

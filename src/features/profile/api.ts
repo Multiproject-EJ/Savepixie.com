@@ -2,12 +2,17 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
 import { isSavingsCurrency, type SavingsCurrency } from "../../lib/currency";
 import type { Tables, TablesUpdate } from "../../types/database";
+import { isPixieTheme, type PixieTheme } from "./pixieThemes";
 
 export type ProfileRow = Tables<"profiles">;
 
 export type PlanningPreferences = {
   currencyCode: SavingsCurrency;
   monthlySavingsCapacityCents: number;
+};
+
+export type PixiePreference = {
+  pixieTheme: PixieTheme;
 };
 
 type ProfileUpsert = Pick<TablesUpdate<"profiles">, "display_name" | "username" | "avatar_url">;
@@ -73,7 +78,7 @@ export async function fetchProfile(userId: string): Promise<ProfileRow | null> {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, username, avatar_url, currency_code, monthly_savings_capacity_cents, created_at"
+      "id, display_name, username, avatar_url, currency_code, monthly_savings_capacity_cents, pixie_theme, created_at"
     )
     .eq("id", userId)
     .maybeSingle();
@@ -100,7 +105,7 @@ export async function updateProfile(
     .update(payload)
     .eq("id", userId)
     .select(
-      "id, display_name, username, avatar_url, currency_code, monthly_savings_capacity_cents, created_at"
+      "id, display_name, username, avatar_url, currency_code, monthly_savings_capacity_cents, pixie_theme, created_at"
     )
     .single();
 
@@ -133,12 +138,36 @@ export async function updatePlanningPreferences(
     })
     .eq("id", userId)
     .select(
-      "id, display_name, username, avatar_url, currency_code, monthly_savings_capacity_cents, created_at"
+      "id, display_name, username, avatar_url, currency_code, monthly_savings_capacity_cents, pixie_theme, created_at"
     )
     .single();
 
   if (error || !data) {
     throw error ?? new Error("Failed to save planning preferences.");
+  }
+
+  return data;
+}
+
+export async function updatePixiePreference(
+  userId: string,
+  input: PixiePreference
+): Promise<ProfileRow> {
+  if (!isPixieTheme(input.pixieTheme)) {
+    throw new Error("Choose one of the available SavePixies.");
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ pixie_theme: input.pixieTheme })
+    .eq("id", userId)
+    .select(
+      "id, display_name, username, avatar_url, currency_code, monthly_savings_capacity_cents, pixie_theme, created_at"
+    )
+    .single();
+
+  if (error || !data) {
+    throw error ?? new Error("Failed to save your Pixie.");
   }
 
   return data;

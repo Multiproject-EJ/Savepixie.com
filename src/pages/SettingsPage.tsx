@@ -3,6 +3,7 @@ import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useAuth } from "../app/AuthProvider";
 import { useSavings, type SavingsHomeInput } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
+import PixieThemePicker from "../components/PixieThemePicker";
 import { createAccountExport, downloadAccountExport } from "../features/account/export";
 import { deleteAccount } from "../features/account/api";
 import {
@@ -12,6 +13,7 @@ import {
   type Entitlement,
 } from "../features/billing/api";
 import type { SavingsHome } from "../features/goals/types";
+import { rememberPixieTheme, type PixieTheme } from "../features/profile/pixieThemes";
 import { currencySymbol, type SavingsCurrency } from "../lib/currency";
 import { reportClientError } from "../lib/telemetry";
 import { useModalDialog } from "../lib/useModalDialog";
@@ -19,7 +21,15 @@ import { useModalDialog } from "../lib/useModalDialog";
 export function SettingsPage() {
   const { basePath } = useOutletContext<AppShellOutletContext>();
   const { user, signOut } = useAuth();
-  const { displayName, profile, savingsHomes, updateHome, currencyCode } = useSavings();
+  const {
+    displayName,
+    profile,
+    savingsHomes,
+    updateHome,
+    currencyCode,
+    pixieTheme,
+    savePixiePreference,
+  } = useSavings();
   const navigate = useNavigate();
   const isPreview = basePath === "/preview/app";
   const [exporting, setExporting] = useState(false);
@@ -37,6 +47,10 @@ export function SettingsPage() {
     isPreview ? "ready" : "loading"
   );
   const [billingMessage, setBillingMessage] = useState<string | null>(null);
+  const [pixieSaveState, setPixieSaveState] = useState<"idle" | "saving" | "saved" | "error">(
+    "idle"
+  );
+  const [pixieMessage, setPixieMessage] = useState<string | null>(null);
   const deleteDialogRef = useModalDialog<HTMLFormElement>(
     deleteDialogOpen,
     () => setDeleteDialogOpen(false),
@@ -46,7 +60,7 @@ export function SettingsPage() {
   const hasPro = entitlement?.has_pro_access === true;
   const hasManageableSubscription = Boolean(
     entitlement &&
-      !["inactive", "canceled", "incomplete_expired"].includes(entitlement.subscription_status)
+    !["inactive", "canceled", "incomplete_expired"].includes(entitlement.subscription_status)
   );
   const isBillingDemo = !billingEnabled && !hasManageableSubscription;
   const billingTiming = entitlement?.cancel_at
@@ -165,6 +179,24 @@ export function SettingsPage() {
     }
   };
 
+  const changePixie = async (theme: PixieTheme) => {
+    if (theme === pixieTheme || pixieSaveState === "saving") return;
+
+    const previousTheme = pixieTheme;
+    rememberPixieTheme(theme);
+    setPixieSaveState("saving");
+    setPixieMessage("Saving your Pixie…");
+    try {
+      await savePixiePreference(theme);
+      setPixieSaveState("saved");
+      setPixieMessage("Your Pixie now travels with you on every device.");
+    } catch (cause) {
+      rememberPixieTheme(previousTheme);
+      setPixieSaveState("error");
+      setPixieMessage(cause instanceof Error ? cause.message : "We couldn't save your Pixie.");
+    }
+  };
+
   return (
     <div className="app-page settings-page">
       <header className="page-heading settings-heading">
@@ -197,6 +229,32 @@ export function SettingsPage() {
                 ? "Pro · Active"
                 : "Basic · Free"}
         </span>
+      </section>
+
+      <section className="settings-section settings-pixie-section">
+        <header className="section-heading">
+          <div>
+            <span className="eyebrow">Your magical companion</span>
+            <h2>Choose your SavePixie</h2>
+            <p>
+              Your Pixie changes the mood and colours across both the app and the SavePixie website.
+            </p>
+          </div>
+          {pixieMessage ? (
+            <span
+              className={`settings-inline-message settings-inline-message--${pixieSaveState}`}
+              role={pixieSaveState === "error" ? "alert" : "status"}
+            >
+              {pixieMessage}
+            </span>
+          ) : null}
+        </header>
+        <PixieThemePicker
+          value={pixieTheme}
+          onChange={(theme) => void changePixie(theme)}
+          disabled={pixieSaveState === "saving"}
+          compact
+        />
       </section>
 
       <section className={`surface-card pro-plan-card ${hasPro ? "pro-plan-card--active" : ""}`}>
