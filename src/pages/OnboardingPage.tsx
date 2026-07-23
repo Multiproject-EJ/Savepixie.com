@@ -1,7 +1,17 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSavings } from "../app/SavingsProvider";
 import PixieMark from "../components/PixieMark";
+import PixieThemePicker from "../components/PixieThemePicker";
+import { assessGoalFeasibility, type GoalFeasibility } from "../features/goals/feasibility";
+import { rememberPixieTheme, type PixieTheme } from "../features/profile/pixieThemes";
+import {
+  currencySymbol,
+  detectBrowserCurrency,
+  savingsCurrencies,
+  starterAmountFromNok,
+  type SavingsCurrency,
+} from "../lib/currency";
 import { formatMoney } from "../lib/format";
 
 type GoalIdea = {
@@ -54,17 +64,45 @@ const goalIdeas: GoalIdea[] = [
 ];
 
 const targetSuggestions = [2500, 5000, 10000, 20000];
-const firstSaveOptions = [0, 5000, 10000, 20000, 50000];
+const firstSaveOptionsNok = [0, 50, 100, 200, 500];
+
+function dateMonthsFromNow(months: number): string {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  date.setMonth(date.getMonth() + months);
+  return date.toISOString().slice(0, 10);
+}
 
 export function OnboardingPage() {
-  const { goals, loading, displayName, startFirstGoal } = useSavings();
+  const {
+    goals,
+    loading,
+    displayName,
+    pixieTheme,
+    startFirstGoal,
+    savePlanningPreferences,
+    savePixiePreference,
+  } = useSavings();
   const navigate = useNavigate();
+  const location = useLocation();
+  const todayPath = location.pathname.startsWith("/preview/") ? "/preview/app/today" : "/app/today";
   const [step, setStep] = useState(0);
+  const [selectedPixieTheme, setSelectedPixieTheme] = useState<PixieTheme>(pixieTheme);
+  const [savingPixie, setSavingPixie] = useState(false);
   const [mode, setMode] = useState<"solo" | "shared">("solo");
   const [ideaId, setIdeaId] = useState(goalIdeas[0].id);
   const [goalName, setGoalName] = useState(goalIdeas[0].name);
-  const [target, setTarget] = useState(String(goalIdeas[0].target));
-  const [firstSave, setFirstSave] = useState(300);
+  const [currencyCode, setCurrencyCode] = useState<SavingsCurrency>(() => detectBrowserCurrency());
+  const [target, setTarget] = useState(() =>
+    String(starterAmountFromNok(goalIdeas[0].target, detectBrowserCurrency()))
+  );
+  const [deadlineDate, setDeadlineDate] = useState(() => dateMonthsFromNow(12));
+  const [monthlyCapacity, setMonthlyCapacity] = useState(() =>
+    String(starterAmountFromNok(3000, detectBrowserCurrency()))
+  );
+  const [firstSave, setFirstSave] = useState(
+    () => starterAmountFromNok(100, detectBrowserCurrency()) * 100
+  );
   const [savingsHomeLabel, setSavingsHomeLabel] = useState("My dedicated savings account");
   const [providerName, setProviderName] = useState("");
   const [accountHint, setAccountHint] = useState("");
@@ -77,22 +115,71 @@ export function OnboardingPage() {
     () => goalIdeas.find((idea) => idea.id === ideaId) ?? goalIdeas[0],
     [ideaId]
   );
+  const localizedTargetSuggestions = useMemo(
+    () => targetSuggestions.map((amount) => starterAmountFromNok(amount, currencyCode)),
+    [currencyCode]
+  );
+  const firstSaveOptions = useMemo(
+    () =>
+      firstSaveOptionsNok.map((amount) =>
+        amount === 0 ? 0 : starterAmountFromNok(amount, currencyCode) * 100
+      ),
+    [currencyCode]
+  );
+  const targetCents = Math.round((Number.parseFloat(target) || 0) * 100);
+  const monthlyCapacityCents = Math.round((Number.parseFloat(monthlyCapacity) || 0) * 100);
+  const feasibility = useMemo(
+    () =>
+      assessGoalFeasibility({
+        targetCents,
+        deadlineDate,
+        monthlyCapacityCents,
+      }),
+    [deadlineDate, monthlyCapacityCents, targetCents]
+  );
 
   useEffect(() => {
     if (!loading && goals.length > 0 && !createdGoalName) {
-      navigate("/app/today", { replace: true });
+      navigate(todayPath, { replace: true });
     }
-  }, [createdGoalName, goals.length, loading, navigate]);
+  }, [createdGoalName, goals.length, loading, navigate, todayPath]);
 
   const chooseIdea = (idea: GoalIdea) => {
     setIdeaId(idea.id);
     setGoalName(idea.name);
-    setTarget(String(idea.target));
+    setTarget(String(starterAmountFromNok(idea.target, currencyCode)));
+  };
+
+  const chooseCurrency = (nextCurrency: SavingsCurrency) => {
+    setCurrencyCode(nextCurrency);
+    setTarget(String(starterAmountFromNok(selectedIdea.target, nextCurrency)));
+    setMonthlyCapacity(String(starterAmountFromNok(3000, nextCurrency)));
+    setFirstSave(starterAmountFromNok(100, nextCurrency) * 100);
   };
 
   const moveToGoalDetails = () => {
     setError(null);
-    setStep(2);
+    setStep(3);
+  };
+
+  const choosePixie = (theme: PixieTheme) => {
+    setSelectedPixieTheme(theme);
+    rememberPixieTheme(theme);
+    setError(null);
+  };
+
+  const confirmPixie = async () => {
+    if (savingPixie) return;
+    setSavingPixie(true);
+    setError(null);
+    try {
+      await savePixiePreference(selectedPixieTheme);
+      setStep(2);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "We couldn't save your Pixie just yet.");
+    } finally {
+      setSavingPixie(false);
+    }
   };
 
   const handleGoalDetails = (event: FormEvent<HTMLFormElement>) => {
@@ -109,8 +196,18 @@ export function OnboardingPage() {
       return;
     }
 
+    if (!deadlineDate || feasibility.status === "invalid") {
+      setError("Choose a future dream date and a comfortable monthly saving amount.");
+      return;
+    }
+
+    if (feasibility.status === "over_budget") {
+      setError("Let’s adjust the target or date so this first Pact can genuinely succeed.");
+      return;
+    }
+
     setError(null);
-    setStep(3);
+    setStep(4);
   };
 
   const finishOnboarding = async () => {
@@ -121,13 +218,17 @@ export function OnboardingPage() {
     setError(null);
 
     try {
+      await savePlanningPreferences({
+        currencyCode,
+        monthlySavingsCapacityCents: monthlyCapacityCents,
+      });
       const result = await startFirstGoal({
         mode,
         name: goalName.trim(),
         targetCents: Math.round(targetValue * 100),
         emoji: selectedIdea.emoji,
         color: selectedIdea.color,
-        deadlineDate: null,
+        deadlineDate,
         contributionRule: mode === "shared" ? "equal" : "flexible",
         privacyMode: mode === "shared" ? "on_track_only" : "private",
         initialDepositCents: firstSave,
@@ -139,7 +240,7 @@ export function OnboardingPage() {
       });
       setCreatedGoalName(result.goal.name);
       setInitialSaveRecorded(result.initialSaveRecorded);
-      setStep(4);
+      setStep(5);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We couldn't plant that goal just yet.");
     } finally {
@@ -163,9 +264,9 @@ export function OnboardingPage() {
           <PixieMark size="small" mood="happy" />
           <strong>SavePixie</strong>
         </div>
-        {step > 0 && step < 4 ? (
-          <div className="onboarding-progress" aria-label={`Step ${step} of 3`}>
-            {[1, 2, 3].map((progressStep) => (
+        {step > 0 && step < 5 ? (
+          <div className="onboarding-progress" aria-label={`Step ${step} of 4`}>
+            {[1, 2, 3, 4].map((progressStep) => (
               <span className={progressStep <= step ? "active" : ""} key={progressStep} />
             ))}
           </div>
@@ -175,7 +276,7 @@ export function OnboardingPage() {
       </header>
 
       <section className={`onboarding-card onboarding-card--step-${step}`}>
-        {step > 0 && step < 4 ? (
+        {step > 0 && step < 5 ? (
           <button
             className="onboarding-back"
             type="button"
@@ -194,6 +295,31 @@ export function OnboardingPage() {
         ) : null}
 
         {step === 1 ? (
+          <section className="onboarding-step onboarding-step--pixie-choice">
+            <StepIntro
+              kicker="Choose your companion"
+              title="Which Pixie will protect your first goal?"
+              body="Your Pixie changes the colours and magical personality of your whole SavePixie space. You can change it later."
+            />
+            {error ? <p className="alert error">{error}</p> : null}
+            <PixieThemePicker
+              value={selectedPixieTheme}
+              onChange={choosePixie}
+              disabled={savingPixie}
+            />
+            <button
+              className="button primary onboarding-next"
+              type="button"
+              onClick={() => void confirmPixie()}
+              disabled={savingPixie}
+            >
+              {savingPixie ? "Welcoming your Pixie…" : "This is my Pixie"}
+              {!savingPixie ? <span aria-hidden="true">✦</span> : null}
+            </button>
+          </section>
+        ) : null}
+
+        {step === 2 ? (
           <section className="onboarding-step">
             <StepIntro
               kicker="Choose your Pact"
@@ -266,12 +392,12 @@ export function OnboardingPage() {
           </section>
         ) : null}
 
-        {step === 2 ? (
+        {step === 3 ? (
           <section className="onboarding-step">
             <StepIntro
               kicker="Make it yours"
-              title="Give your Pact a little personality."
-              body="A clear, meaningful promise is easier to come back to."
+              title="Make the dream fit real life."
+              body="We’ll test the target against a comfortable monthly amount—without asking for your salary or bank data."
             />
             <form className="onboarding-form" onSubmit={handleGoalDetails}>
               {error ? <p className="alert error">{error}</p> : null}
@@ -287,40 +413,99 @@ export function OnboardingPage() {
                   />
                 </div>
               </label>
-              <label className="form-control">
-                <span>Dream target</span>
-                <span className="amount-input onboarding-amount-input">
-                  <strong>kr</strong>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    inputMode="decimal"
-                    value={target}
-                    onChange={(event) => setTarget(event.target.value)}
-                  />
-                </span>
-              </label>
+              <div className="form-row onboarding-money-row">
+                <label className="form-control onboarding-currency-control">
+                  <span>Your currency</span>
+                  <select
+                    value={currencyCode}
+                    onChange={(event) => chooseCurrency(event.target.value as SavingsCurrency)}
+                  >
+                    {savingsCurrencies.map((currency) => (
+                      <option key={currency.code} value={currency.code}>
+                        {currency.code} · {currency.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="form-control">
+                  <span>Dream target</span>
+                  <span className="amount-input onboarding-amount-input">
+                    <strong>{currencySymbol(currencyCode)}</strong>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      inputMode="decimal"
+                      value={target}
+                      onChange={(event) => setTarget(event.target.value)}
+                    />
+                  </span>
+                </label>
+              </div>
               <div className="target-suggestions" aria-label="Suggested targets">
-                {targetSuggestions.map((amount) => (
+                {localizedTargetSuggestions.map((amount) => (
                   <button
                     className={Number(target) === amount ? "selected" : ""}
                     type="button"
                     key={amount}
                     onClick={() => setTarget(String(amount))}
                   >
-                    {amount.toLocaleString("nb-NO")} kr
+                    {formatMoney(amount * 100, currencyCode)}
                   </button>
                 ))}
               </div>
-              <button className="button primary onboarding-next" type="submit">
-                Build my Pact <span aria-hidden="true">→</span>
+              <div className="form-row onboarding-reality-row">
+                <label className="form-control">
+                  <span>Dream date</span>
+                  <input
+                    type="date"
+                    min={new Date().toISOString().slice(0, 10)}
+                    value={deadlineDate}
+                    onChange={(event) => setDeadlineDate(event.target.value)}
+                    required
+                  />
+                </label>
+                <label className="form-control">
+                  <span>Comfortable each month</span>
+                  <span className="amount-input onboarding-amount-input">
+                    <strong>{currencySymbol(currencyCode)}</strong>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      inputMode="decimal"
+                      value={monthlyCapacity}
+                      onChange={(event) => setMonthlyCapacity(event.target.value)}
+                      required
+                    />
+                  </span>
+                </label>
+              </div>
+              <FeasibilityCard
+                currencyCode={currencyCode}
+                feasibility={feasibility}
+                onUseReachableTarget={() =>
+                  setTarget(String(Math.max(1, Math.floor(feasibility.reachableTargetCents / 100))))
+                }
+                onUseSuggestedDate={() => {
+                  if (feasibility.suggestedDeadline) {
+                    setDeadlineDate(feasibility.suggestedDeadline);
+                  }
+                }}
+              />
+              <button
+                className="button primary onboarding-next"
+                type="submit"
+                disabled={feasibility.status === "over_budget" || feasibility.status === "invalid"}
+              >
+                {feasibility.status === "over_budget" ? "Adjust my plan first" : "This can work"}{" "}
+                <span aria-hidden="true">→</span>
               </button>
             </form>
           </section>
         ) : null}
 
-        {step === 3 ? (
+        {step === 4 ? (
           <section className="onboarding-step onboarding-step--first-save">
             <div className="onboarding-pixie-moment">
               <span className="pixie-glow" />
@@ -390,7 +575,7 @@ export function OnboardingPage() {
                   onClick={() => setFirstSave(amount)}
                   aria-pressed={firstSave === amount}
                 >
-                  <strong>{amount === 0 ? "Later" : formatMoney(amount)}</strong>
+                  <strong>{amount === 0 ? "Later" : formatMoney(amount, currencyCode)}</strong>
                   <small>
                     {amount === 0 ? "Pact only" : amount <= 10000 ? "Tiny start" : "Bright start"}
                   </small>
@@ -409,12 +594,13 @@ export function OnboardingPage() {
           </section>
         ) : null}
 
-        {step === 4 ? (
+        {step === 5 ? (
           <CelebrationStep
             goalName={createdGoalName || goalName}
             firstSave={firstSave}
+            currencyCode={currencyCode}
             initialSaveRecorded={initialSaveRecorded}
-            onContinue={() => navigate("/app/today", { replace: true })}
+            onContinue={() => navigate(todayPath, { replace: true })}
           />
         ) : null}
       </section>
@@ -443,14 +629,81 @@ function WelcomeStep({ displayName, onContinue }: { displayName: string; onConti
         </p>
         <div className="onboarding-promise-row">
           <span>1 Pact</span>
-          <span>3 easy choices</span>
-          <span>about 60 seconds</span>
+          <span>4 easy choices</span>
+          <span>about 90 seconds</span>
         </div>
         <button className="button primary onboarding-next" type="button" onClick={onContinue}>
           Let&apos;s grow something <span aria-hidden="true">✦</span>
         </button>
       </div>
     </section>
+  );
+}
+
+function FeasibilityCard({
+  currencyCode,
+  feasibility,
+  onUseReachableTarget,
+  onUseSuggestedDate,
+}: {
+  currencyCode: SavingsCurrency;
+  feasibility: GoalFeasibility;
+  onUseReachableTarget: () => void;
+  onUseSuggestedDate: () => void;
+}) {
+  if (feasibility.status === "invalid") {
+    return (
+      <div className="feasibility-card feasibility-card--neutral" role="status">
+        <span aria-hidden="true">◇</span>
+        <div>
+          <strong>Add a future date and a comfortable monthly amount.</strong>
+          <p>Then Pixie can test the plan before you commit to it.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (feasibility.status === "over_budget") {
+    return (
+      <div className="feasibility-card feasibility-card--adjust" role="alert">
+        <span aria-hidden="true">↗</span>
+        <div>
+          <strong>This dream needs a gentler route.</strong>
+          <p>
+            It needs about {formatMoney(feasibility.requiredMonthlyCents, currencyCode)} each month,
+            above your comfortable {formatMoney(feasibility.monthlyCapacityCents, currencyCode)}.
+          </p>
+          <div className="feasibility-card__actions">
+            {feasibility.suggestedDeadline ? (
+              <button type="button" onClick={onUseSuggestedDate}>
+                Give me more time
+              </button>
+            ) : null}
+            <button type="button" onClick={onUseReachableTarget}>
+              Lower the first target
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`feasibility-card feasibility-card--${feasibility.status}`} role="status">
+      <span aria-hidden="true">✓</span>
+      <div>
+        <strong>
+          {feasibility.status === "comfortable"
+            ? "This plan has breathing room."
+            : "This can work."}
+        </strong>
+        <p>
+          About {formatMoney(feasibility.requiredMonthlyCents, currencyCode)} per month reaches the
+          dream in roughly {feasibility.monthsRemaining} month
+          {feasibility.monthsRemaining === 1 ? "" : "s"}.
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -467,11 +720,13 @@ function StepIntro({ kicker, title, body }: { kicker: string; title: string; bod
 function CelebrationStep({
   goalName,
   firstSave,
+  currencyCode,
   initialSaveRecorded,
   onContinue,
 }: {
   goalName: string;
   firstSave: number;
+  currencyCode: SavingsCurrency;
   initialSaveRecorded: boolean;
   onContinue: () => void;
 }) {
@@ -490,7 +745,7 @@ function CelebrationStep({
       <h1>{goalName} is officially growing.</h1>
       <p>
         {firstSave > 0 && initialSaveRecorded
-          ? `${formatMoney(firstSave)} is already lighting up your progress.`
+          ? `${formatMoney(firstSave, currencyCode)} is already lighting up your progress.`
           : firstSave > 0
             ? "Your goal is ready. The first save can be added again from Today."
             : "Your goal is ready whenever your first tiny save feels right."}

@@ -16,6 +16,8 @@ export function JourneyPage() {
     () => goals.reduce((total, goal) => total + goal.saved_cents, 0),
     [goals]
   );
+  const currencies = useMemo(() => [...new Set(goals.map((goal) => goal.currency_code))], [goals]);
+  const singleCurrency = currencies.length === 1 ? currencies[0] : null;
   const level = saverLevel(dailyProgress?.stardust_total ?? 0);
   const currentStreak = effectiveCurrentStreak(dailyProgress);
   const recentDays = recentMoveDays(dailyCompletions);
@@ -72,7 +74,9 @@ export function JourneyPage() {
           <h2>{totalSaved > 0 ? "Your goal seed is glowing" : "Every journey starts tiny"}</h2>
           <p>
             {totalSaved > 0
-              ? `${formatMoney(totalSaved)} of real progress is already part of your story.`
+              ? singleCurrency
+                ? `${formatMoney(totalSaved, singleCurrency)} of real progress is already part of your story.`
+                : `Real progress is growing across ${goals.length} Pacts in more than one currency.`
               : "Create a goal and make one save to light the first step."}
           </p>
           <div className="stardust-progress">
@@ -215,7 +219,10 @@ export function JourneyPage() {
                         day: "numeric",
                       }).format(new Date(`${completion.local_date}T12:00:00`))}
                       {completion.saved_cents > 0
-                        ? ` · ${formatMoney(completion.saved_cents)} saved`
+                        ? ` · ${formatMoney(
+                            completion.saved_cents,
+                            goals.find((goal) => goal.id === completion.pact_id)?.currency_code
+                          )} saved`
                         : " · useful action"}
                     </small>
                     {completion.reflection ? <p>{completion.reflection}</p> : null}

@@ -27,6 +27,7 @@ jobs:
       - name: Build production PWA
         run: npm run build
         env:
+          VITE_APP_MODE: ${{ vars.VITE_APP_MODE || 'demo' }}
           VITE_STRIPE_ENABLED: ${{ vars.VITE_STRIPE_ENABLED || 'false' }}
       - uses: actions/upload-pages-artifact@v3
         with:

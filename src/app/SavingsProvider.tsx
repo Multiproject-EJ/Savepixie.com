@@ -27,7 +27,25 @@ import {
   updateSavingsHome,
 } from "../features/goals/api";
 import type { Goal, SavingsHome } from "../features/goals/types";
-import { fetchProfile, type ProfileRow } from "../features/profile/api";
+import {
+  fetchProfile,
+  updatePixiePreference as updatePixiePreferenceRequest,
+  updatePlanningPreferences as updatePlanningPreferencesRequest,
+  type PlanningPreferences,
+  type ProfileRow,
+} from "../features/profile/api";
+import {
+  defaultPixieTheme,
+  isPixieTheme,
+  rememberPixieTheme,
+  type PixieTheme,
+} from "../features/profile/pixieThemes";
+import {
+  getPreferredCurrency,
+  isSavingsCurrency,
+  rememberPreferredCurrency,
+  type SavingsCurrency,
+} from "../lib/currency";
 import { reportClientError } from "../lib/telemetry";
 import { useAuth } from "./AuthProvider";
 
@@ -59,6 +77,9 @@ type SavingsContextValue = {
   loading: boolean;
   error: string | null;
   displayName: string;
+  currencyCode: SavingsCurrency;
+  monthlySavingsCapacityCents: number | null;
+  pixieTheme: PixieTheme;
   refresh: () => Promise<void>;
   addGoal: (input: NewGoalInput) => Promise<Goal>;
   startFirstGoal: (
@@ -72,6 +93,8 @@ type SavingsContextValue = {
   createInvite: (pactId: string) => Promise<string>;
   joinSharedPact: (inviteToken: string) => Promise<Goal>;
   updateHome: (input: SavingsHomeInput & { id: string }) => Promise<SavingsHome>;
+  savePlanningPreferences: (input: PlanningPreferences) => Promise<ProfileRow>;
+  savePixiePreference: (theme: PixieTheme) => Promise<ProfileRow>;
 };
 
 const SavingsContext = createContext<SavingsContextValue | undefined>(undefined);
@@ -114,6 +137,12 @@ export function SavingsProvider({ children }: PropsWithChildren) {
         fetchDailyLoop(user.id),
       ]);
       setProfile(nextProfile);
+      if (isSavingsCurrency(nextProfile?.currency_code)) {
+        rememberPreferredCurrency(nextProfile.currency_code);
+      }
+      if (isPixieTheme(nextProfile?.pixie_theme)) {
+        rememberPixieTheme(nextProfile.pixie_theme);
+      }
       setGoals(nextGoals);
       setSavingsHomes(nextHomes);
       setDailyProgress(nextDailyLoop.progress);
@@ -248,7 +277,34 @@ export function SavingsProvider({ children }: PropsWithChildren) {
     return updated;
   }, []);
 
+  const savePlanningPreferences = useCallback(
+    async (input: PlanningPreferences) => {
+      if (!user?.id) throw new Error("Sign in before saving your planning preferences.");
+      const updated = await updatePlanningPreferencesRequest(user.id, input);
+      setProfile(updated);
+      rememberPreferredCurrency(input.currencyCode);
+      return updated;
+    },
+    [user?.id]
+  );
+
+  const savePixiePreference = useCallback(
+    async (theme: PixieTheme) => {
+      if (!user?.id) throw new Error("Sign in before choosing your Pixie.");
+      const updated = await updatePixiePreferenceRequest(user.id, { pixieTheme: theme });
+      setProfile(updated);
+      rememberPixieTheme(theme);
+      return updated;
+    },
+    [user?.id]
+  );
+
   const displayName = profile?.display_name?.trim() || user?.email?.split("@")[0] || "Saver";
+  const currencyCode = isSavingsCurrency(profile?.currency_code)
+    ? profile.currency_code
+    : getPreferredCurrency();
+  const monthlySavingsCapacityCents = profile?.monthly_savings_capacity_cents ?? null;
+  const pixieTheme = isPixieTheme(profile?.pixie_theme) ? profile.pixie_theme : defaultPixieTheme;
 
   const value = useMemo<SavingsContextValue>(
     () => ({
@@ -261,6 +317,9 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       loading,
       error,
       displayName,
+      currencyCode,
+      monthlySavingsCapacityCents,
+      pixieTheme,
       refresh,
       addGoal,
       startFirstGoal,
@@ -269,6 +328,8 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       createInvite,
       joinSharedPact,
       updateHome,
+      savePlanningPreferences,
+      savePixiePreference,
     }),
     [
       addGoal,
@@ -278,15 +339,19 @@ export function SavingsProvider({ children }: PropsWithChildren) {
       dailyProgress,
       deposit,
       displayName,
+      currencyCode,
       error,
       goals,
       joinSharedPact,
       loading,
       profile,
+      pixieTheme,
       ready,
       refresh,
       savingsHomes,
       startFirstGoal,
+      savePlanningPreferences,
+      savePixiePreference,
       updateHome,
     ]
   );
@@ -299,6 +364,9 @@ const previewProfile: ProfileRow = {
   username: "maya",
   display_name: "Maya",
   avatar_url: null,
+  currency_code: "NOK",
+  monthly_savings_capacity_cents: 300000,
+  pixie_theme: defaultPixieTheme,
   created_at: "2026-07-15T12:00:00.000Z",
 };
 
@@ -322,6 +390,7 @@ const previewGoals: Goal[] = [
     user_id: "preview-user",
     mode: "shared",
     name: "Japan trip",
+    currency_code: "NOK",
     target_cents: 1200000,
     saved_cents: 420000,
     verified_cents: 0,
@@ -338,6 +407,7 @@ const previewGoals: Goal[] = [
     user_id: "preview-user",
     mode: "solo",
     name: "Peace-of-mind fund",
+    currency_code: "NOK",
     target_cents: 500000,
     saved_cents: 135000,
     verified_cents: 0,
@@ -351,8 +421,20 @@ const previewGoals: Goal[] = [
   },
 ];
 
-export function SavingsPreviewProvider({ children }: PropsWithChildren) {
-  const [goals, setGoals] = useState(previewGoals);
+type SavingsPreviewProviderProps = PropsWithChildren<{
+  initialGoals?: Goal[];
+}>;
+
+export function SavingsPreviewProvider({
+  children,
+  initialGoals = previewGoals,
+}: SavingsPreviewProviderProps) {
+  const initialCurrency = getPreferredCurrency();
+  const [profile, setProfile] = useState<ProfileRow>(() => ({
+    ...previewProfile,
+    currency_code: initialCurrency,
+  }));
+  const [goals, setGoals] = useState<Goal[]>(() => initialGoals);
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>({
     user_id: previewProfile.id,
     current_streak: 3,
@@ -367,30 +449,37 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
     previewCompletion("pause-power", -2, "action", 0),
     previewCompletion("swap-and-save", -3, "save", 5000),
   ]);
+  const previewCurrencyCode = isSavingsCurrency(profile.currency_code)
+    ? profile.currency_code
+    : initialCurrency;
 
   const refresh = useCallback(async () => undefined, []);
 
-  const addGoal = useCallback(async (input: NewGoalInput) => {
-    const now = new Date().toISOString();
-    const goal: Goal = {
-      id: `preview-${Date.now()}`,
-      user_id: previewProfile.id,
-      mode: input.mode ?? "solo",
-      name: input.name,
-      target_cents: input.targetCents,
-      saved_cents: 0,
-      verified_cents: 0,
-      emoji: input.emoji || "✨",
-      color: input.color || "#7b3fff",
-      deadline_date: input.deadlineDate || null,
-      contribution_rule: input.contributionRule ?? "flexible",
-      status: "active",
-      created_at: now,
-      updated_at: now,
-    };
-    setGoals((current) => [...current, goal]);
-    return goal;
-  }, []);
+  const addGoal = useCallback(
+    async (input: NewGoalInput) => {
+      const now = new Date().toISOString();
+      const goal: Goal = {
+        id: `preview-${Date.now()}`,
+        user_id: profile.id,
+        mode: input.mode ?? "solo",
+        name: input.name,
+        currency_code: previewCurrencyCode,
+        target_cents: input.targetCents,
+        saved_cents: 0,
+        verified_cents: 0,
+        emoji: input.emoji || "✨",
+        color: input.color || "#7b3fff",
+        deadline_date: input.deadlineDate || null,
+        contribution_rule: input.contributionRule ?? "flexible",
+        status: "active",
+        created_at: now,
+        updated_at: now,
+      };
+      setGoals((current) => [...current, goal]);
+      return goal;
+    },
+    [previewCurrencyCode, profile.id]
+  );
 
   const startFirstGoal = useCallback(
     async (
@@ -402,9 +491,10 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
       const now = new Date().toISOString();
       const goal: Goal = {
         id: `preview-${Date.now()}`,
-        user_id: previewProfile.id,
+        user_id: profile.id,
         mode: input.mode ?? "solo",
         name: input.name,
+        currency_code: previewCurrencyCode,
         target_cents: input.targetCents,
         saved_cents: input.initialDepositCents,
         verified_cents: 0,
@@ -419,7 +509,7 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
       setGoals((current) => [...current, goal]);
       return { goal, initialSaveRecorded: true };
     },
-    []
+    [previewCurrencyCode, profile.id]
   );
 
   const deposit = useCallback(
@@ -524,10 +614,33 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
       updated_at: now,
     };
   }, []);
+  const savePlanningPreferences = useCallback(
+    async (input: PlanningPreferences) => {
+      rememberPreferredCurrency(input.currencyCode);
+      const updated = {
+        ...profile,
+        currency_code: input.currencyCode,
+        monthly_savings_capacity_cents: input.monthlySavingsCapacityCents,
+      };
+      setProfile(updated);
+      return updated;
+    },
+    [profile]
+  );
+  const savePixiePreference = useCallback(
+    async (theme: PixieTheme) => {
+      rememberPixieTheme(theme);
+      const updated = { ...profile, pixie_theme: theme };
+      setProfile(updated);
+      return updated;
+    },
+    [profile]
+  );
+  const pixieTheme = isPixieTheme(profile.pixie_theme) ? profile.pixie_theme : defaultPixieTheme;
 
   const value = useMemo<SavingsContextValue>(
     () => ({
-      profile: previewProfile,
+      profile,
       goals,
       savingsHomes: [previewHome],
       dailyProgress,
@@ -535,7 +648,10 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
       ready: true,
       loading: false,
       error: null,
-      displayName: previewProfile.display_name || "Saver",
+      displayName: profile.display_name || "Saver",
+      currencyCode: previewCurrencyCode,
+      monthlySavingsCapacityCents: profile.monthly_savings_capacity_cents,
+      pixieTheme,
       refresh,
       addGoal,
       startFirstGoal,
@@ -544,6 +660,8 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
       createInvite,
       joinSharedPact,
       updateHome,
+      savePlanningPreferences,
+      savePixiePreference,
     }),
     [
       addGoal,
@@ -554,7 +672,12 @@ export function SavingsPreviewProvider({ children }: PropsWithChildren) {
       deposit,
       goals,
       joinSharedPact,
+      profile,
+      pixieTheme,
+      previewCurrencyCode,
       refresh,
+      savePlanningPreferences,
+      savePixiePreference,
       startFirstGoal,
       updateHome,
     ]

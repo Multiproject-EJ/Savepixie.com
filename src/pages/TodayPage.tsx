@@ -7,6 +7,7 @@ import PixieMark from "../components/PixieMark";
 import { getDailySavingsMove } from "../data/savingsMoves";
 import { localDateKey, type DailyMoveResult } from "../features/daily-loop/api";
 import { completedToday, effectiveCurrentStreak } from "../features/daily-loop/progression";
+import { starterCentsFromNok } from "../lib/currency";
 import { formatMoney, goalProgress } from "../lib/format";
 
 export function TodayPage() {
@@ -75,7 +76,11 @@ export function TodayPage() {
             >
               {savingMove.actionLabel}
               {savingMove.completionKind === "save"
-                ? " · " + formatMoney(savingMove.suggestedCents)
+                ? " · " +
+                  formatMoney(
+                    starterCentsFromNok(savingMove.suggestedCents, featuredGoal.currency_code),
+                    featuredGoal.currency_code
+                  )
                 : ""}{" "}
               <span aria-hidden="true">✦</span>
             </button>
@@ -116,8 +121,8 @@ export function TodayPage() {
           ) : featuredGoal ? (
             <>
               <div className="goal-spotlight__numbers">
-                <strong>{formatMoney(featuredGoal.saved_cents)}</strong>
-                <span>of {formatMoney(featuredGoal.target_cents)}</span>
+                <strong>{formatMoney(featuredGoal.saved_cents, featuredGoal.currency_code)}</strong>
+                <span>of {formatMoney(featuredGoal.target_cents, featuredGoal.currency_code)}</span>
                 <em>{progress}%</em>
               </div>
               <div className="progress-track" aria-label={`${progress}% saved`}>
@@ -125,8 +130,13 @@ export function TodayPage() {
               </div>
               <p className="support-copy">
                 {featuredGoal.emoji || "✨"}{" "}
-                {formatMoney(Math.max(0, featuredGoal.target_cents - featuredGoal.saved_cents))}{" "}
-                left to grow · {formatMoney(featuredGoal.verified_cents)} bank-verified.
+                {formatMoney(
+                  Math.max(0, featuredGoal.target_cents - featuredGoal.saved_cents),
+                  featuredGoal.currency_code
+                )}{" "}
+                left to grow ·{" "}
+                {formatMoney(featuredGoal.verified_cents, featuredGoal.currency_code)}{" "}
+                bank-verified.
               </p>
             </>
           ) : (

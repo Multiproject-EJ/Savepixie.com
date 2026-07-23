@@ -38,7 +38,7 @@ export const savingsMoves: SavingsMove[] = [
     name: "Round-up Rally",
     emoji: "⬆️",
     headline: "Round today in your favour",
-    description: "Round a recent purchase up to the next 50 kr and save the difference manually.",
+    description: "Round a recent purchase up and manually save the small difference.",
     suggestedCents: 3000,
     principle: "Small invisible amounts become visible progress.",
     completionKind: "save",

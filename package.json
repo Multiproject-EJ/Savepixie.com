@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run typecheck && vite build",
+    "build": "npm run typecheck && npm run verify:mascots && vite build",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.worker.json",
+    "verify:launch-modes": "node scripts/verify-launch-modes.mjs",
+    "verify:mascots": "node scripts/verify-mascots.mjs",
     "preview": "vite preview",
     "lint": "prettier --check ."
   },

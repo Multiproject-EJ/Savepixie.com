@@ -3,6 +3,7 @@ import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { useAuth } from "../app/AuthProvider";
 import { useSavings, type SavingsHomeInput } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
+import PixieThemePicker from "../components/PixieThemePicker";
 import { createAccountExport, downloadAccountExport } from "../features/account/export";
 import { deleteAccount } from "../features/account/api";
 import {
@@ -12,13 +13,23 @@ import {
   type Entitlement,
 } from "../features/billing/api";
 import type { SavingsHome } from "../features/goals/types";
+import { rememberPixieTheme, type PixieTheme } from "../features/profile/pixieThemes";
+import { currencySymbol, type SavingsCurrency } from "../lib/currency";
 import { reportClientError } from "../lib/telemetry";
 import { useModalDialog } from "../lib/useModalDialog";
 
 export function SettingsPage() {
   const { basePath } = useOutletContext<AppShellOutletContext>();
   const { user, signOut } = useAuth();
-  const { displayName, profile, savingsHomes, updateHome } = useSavings();
+  const {
+    displayName,
+    profile,
+    savingsHomes,
+    updateHome,
+    currencyCode,
+    pixieTheme,
+    savePixiePreference,
+  } = useSavings();
   const navigate = useNavigate();
   const isPreview = basePath === "/preview/app";
   const [exporting, setExporting] = useState(false);
@@ -36,6 +47,10 @@ export function SettingsPage() {
     isPreview ? "ready" : "loading"
   );
   const [billingMessage, setBillingMessage] = useState<string | null>(null);
+  const [pixieSaveState, setPixieSaveState] = useState<"idle" | "saving" | "saved" | "error">(
+    "idle"
+  );
+  const [pixieMessage, setPixieMessage] = useState<string | null>(null);
   const deleteDialogRef = useModalDialog<HTMLFormElement>(
     deleteDialogOpen,
     () => setDeleteDialogOpen(false),
@@ -47,6 +62,7 @@ export function SettingsPage() {
     entitlement &&
     !["inactive", "canceled", "incomplete_expired"].includes(entitlement.subscription_status)
   );
+  const isBillingDemo = !billingEnabled && !hasManageableSubscription;
   const billingTiming = entitlement?.cancel_at
     ? `Cancels ${formatBillingDate(entitlement.cancel_at)}`
     : entitlement?.subscription_status === "trialing" && entitlement.trial_ends_at
@@ -81,7 +97,13 @@ export function SettingsPage() {
   }, [isPreview, user?.id]);
 
   const openBilling = async (destination: "checkout" | "portal") => {
-    if (isPreview || !billingEnabled) return;
+    if (
+      isPreview ||
+      (destination === "checkout" && !billingEnabled) ||
+      (destination === "portal" && !hasManageableSubscription)
+    ) {
+      return;
+    }
     setBillingState("opening");
     setBillingMessage(null);
     try {
@@ -157,6 +179,24 @@ export function SettingsPage() {
     }
   };
 
+  const changePixie = async (theme: PixieTheme) => {
+    if (theme === pixieTheme || pixieSaveState === "saving") return;
+
+    const previousTheme = pixieTheme;
+    rememberPixieTheme(theme);
+    setPixieSaveState("saving");
+    setPixieMessage("Saving your Pixie…");
+    try {
+      await savePixiePreference(theme);
+      setPixieSaveState("saved");
+      setPixieMessage("Your Pixie now travels with you on every device.");
+    } catch (cause) {
+      rememberPixieTheme(previousTheme);
+      setPixieSaveState("error");
+      setPixieMessage(cause instanceof Error ? cause.message : "We couldn't save your Pixie.");
+    }
+  };
+
   return (
     <div className="app-page settings-page">
       <header className="page-heading settings-heading">
@@ -191,12 +231,38 @@ export function SettingsPage() {
         </span>
       </section>
 
+      <section className="settings-section settings-pixie-section">
+        <header className="section-heading">
+          <div>
+            <span className="eyebrow">Your magical companion</span>
+            <h2>Choose your SavePixie</h2>
+            <p>
+              Your Pixie changes the mood and colours across both the app and the SavePixie website.
+            </p>
+          </div>
+          {pixieMessage ? (
+            <span
+              className={`settings-inline-message settings-inline-message--${pixieSaveState}`}
+              role={pixieSaveState === "error" ? "alert" : "status"}
+            >
+              {pixieMessage}
+            </span>
+          ) : null}
+        </header>
+        <PixieThemePicker
+          value={pixieTheme}
+          onChange={(theme) => void changePixie(theme)}
+          disabled={pixieSaveState === "saving"}
+          compact
+        />
+      </section>
+
       <section className={`surface-card pro-plan-card ${hasPro ? "pro-plan-card--active" : ""}`}>
         <div className="pro-plan-card__spark" aria-hidden="true">
           ✦
         </div>
         <div className="pro-plan-card__copy">
-          <span className="eyebrow">SavePixie Pro</span>
+          <span className="eyebrow">SavePixie Pro{isBillingDemo ? " · Demo" : ""}</span>
           <h2>
             {hasPro ? "Your bigger Circles are unlocked" : "More Circles, still one calm app"}
           </h2>
@@ -217,9 +283,15 @@ export function SettingsPage() {
           ) : null}
         </div>
         <div className="pro-plan-card__offer">
-          <strong>29 kr</strong>
+          <strong>≈ US$5</strong>
           <span>per month</span>
-          {!entitlement ? <small>7 days free first</small> : <small>Renews monthly</small>}
+          {isBillingDemo ? (
+            <small>Demo pricing</small>
+          ) : !entitlement ? (
+            <small>7 days free first</small>
+          ) : (
+            <small>Renews monthly</small>
+          )}
           <button
             className="button primary"
             type="button"
@@ -228,15 +300,15 @@ export function SettingsPage() {
             }
             disabled={
               isPreview ||
-              !billingEnabled ||
+              (isBillingDemo && !hasManageableSubscription) ||
               billingState === "loading" ||
               billingState === "opening"
             }
           >
             {isPreview
               ? "Preview only"
-              : !billingEnabled
-                ? "Billing opens after testing"
+              : isBillingDemo
+                ? "Payments not live yet"
                 : billingState === "opening"
                   ? "Opening Stripe…"
                   : hasPro || hasManageableSubscription
@@ -246,11 +318,13 @@ export function SettingsPage() {
                       : "Start 7-day free trial"}
           </button>
           <small className="pro-plan-card__terms">
-            {!entitlement
-              ? "Then 29 kr/month until cancelled. Cancel before the trial ends to avoid a charge."
-              : hasPro || hasManageableSubscription
-                ? "29 kr/month until cancelled. Manage or cancel securely in Stripe."
-                : "Restart at 29 kr/month with no new free trial. Cancel securely in Stripe."}
+            {isBillingDemo
+              ? "Demo pricing only. No card or payment can be entered yet."
+              : !entitlement
+                ? "Then your local Stripe price each month until cancelled. Cancel before the trial ends to avoid a charge."
+                : hasPro || hasManageableSubscription
+                  ? "Your local monthly price continues until cancelled. Manage or cancel securely in Stripe."
+                  : "Restart at the local monthly price with no new free trial. Cancel securely in Stripe."}
           </small>
         </div>
       </section>
@@ -265,7 +339,12 @@ export function SettingsPage() {
         </header>
         <div className="settings-home-grid">
           {savingsHomes.map((home) => (
-            <SavingsHomeEditor key={home.id} home={home} onSave={updateHome} />
+            <SavingsHomeEditor
+              key={home.id}
+              home={home}
+              currencyCode={currencyCode}
+              onSave={updateHome}
+            />
           ))}
         </div>
       </section>
@@ -453,9 +532,11 @@ function formatBillingDate(value: string): string {
 
 function SavingsHomeEditor({
   home,
+  currencyCode,
   onSave,
 }: {
   home: SavingsHome;
+  currencyCode: SavingsCurrency;
   onSave: (input: SavingsHomeInput & { id: string }) => Promise<SavingsHome>;
 }) {
   const [label, setLabel] = useState(home.label);
@@ -544,7 +625,7 @@ function SavingsHomeEditor({
               onChange={(event) => setReportedBalance(event.target.value)}
               placeholder="0"
             />
-            <small>kr</small>
+            <small>{currencySymbol(currencyCode)}</small>
           </span>
         </label>
       </div>

@@ -36,7 +36,7 @@ Updated: 2026-07-20
   signed-in browser functions, and the 2026-07-19 reruns left zero temporary records.
 - The database enforces Basic versus Pro at the real write boundary: one two-person shared Pact on
   Basic, additional Pacts and groups of up to ten on Pro, with no destructive downgrade behavior.
-- The feature-flagged Settings offer shows the seven-day trial and 29 kr renewal plainly; Checkout
+- The feature-flagged Settings offer shows the seven-day trial and 49 kr renewal plainly; Checkout
   validates the exact price configuration, and the webhook rejects mismatched price IDs.
 - Checkout and Portal now re-retrieve the mapped Stripe customer and require matching SavePixie user
   metadata before opening any hosted billing surface. Webhooks resolve subscription ownership from
@@ -107,7 +107,7 @@ Updated: 2026-07-20
 
 ### Commercial
 
-- Stripe sandbox product, 29 NOK price, first seven-day trial, signed webhook, customer portal,
+- Stripe sandbox product, legacy 29 NOK price, first seven-day trial, signed webhook, customer portal,
   duplicate-event handling, reversible cancellation scheduling, trial-to-paid conversion, successful
   monthly renewal, failed-payment access removal, payment-recovery access restoration, and the full
   refund-and-cancel sequence are verified.

@@ -3,6 +3,7 @@ import { useSavings } from "../app/SavingsProvider";
 import type { SavingsMove } from "../data/savingsMoves";
 import type { DailyMoveResult } from "../features/daily-loop/api";
 import { gentleHaptic } from "../lib/feedback";
+import { currencySymbol, starterAmountFromNok, starterCentsFromNok } from "../lib/currency";
 import { formatMoney } from "../lib/format";
 import { useModalDialog } from "../lib/useModalDialog";
 import PixieMark from "./PixieMark";
@@ -23,11 +24,19 @@ export function DailyMoveDialog({ open, move, onClose, onCompleted }: DailyMoveD
   const [submitting, setSubmitting] = useState(false);
   const dialogRef = useModalDialog<HTMLElement>(open, onClose, !submitting);
   const isSave = move.completionKind === "save";
+  const selectedGoal = goals.find((item) => item.id === goalId) ?? goals[0];
+  const currencyCode = selectedGoal?.currency_code ?? "USD";
+  const suggestedAmounts = [20, 50, 100, 200].map((value) =>
+    starterAmountFromNok(value, currencyCode)
+  );
 
   useEffect(() => {
     if (!open) return;
-    setGoalId(goals[0]?.id || "");
-    setAmount(String(move.suggestedCents / 100));
+    const initialGoal = goals[0];
+    setGoalId(initialGoal?.id || "");
+    setAmount(
+      String(starterCentsFromNok(move.suggestedCents, initialGoal?.currency_code ?? "USD") / 100)
+    );
     setReflection("");
     setError(null);
   }, [goals, move.id, move.suggestedCents, open]);
@@ -132,7 +141,7 @@ export function DailyMoveDialog({ open, move, onClose, onCompleted }: DailyMoveD
               <label className="form-control amount-control">
                 <span>A comfortable amount</span>
                 <span className="amount-input">
-                  <strong>kr</strong>
+                  <strong>{currencySymbol(currencyCode)}</strong>
                   <input
                     type="number"
                     min="0.01"
@@ -145,7 +154,7 @@ export function DailyMoveDialog({ open, move, onClose, onCompleted }: DailyMoveD
                 </span>
               </label>
               <div className="quick-amounts" aria-label="Suggested amounts">
-                {[20, 50, 100, 200].map((value) => (
+                {suggestedAmounts.map((value) => (
                   <button
                     className={amount === String(value) ? "selected" : ""}
                     key={value}
@@ -156,7 +165,7 @@ export function DailyMoveDialog({ open, move, onClose, onCompleted }: DailyMoveD
                       setAmount(String(value));
                     }}
                   >
-                    {value} kr
+                    {formatMoney(value * 100, currencyCode)}
                   </button>
                 ))}
               </div>
@@ -165,8 +174,12 @@ export function DailyMoveDialog({ open, move, onClose, onCompleted }: DailyMoveD
                 <div>
                   <strong>{savingsHomes[0]?.label || "Savings Home required"}</strong>
                   <small>
-                    Move {formatMoney(Math.max(0, Math.round((Number(amount) || 0) * 100)))} in your
-                    bank, then confirm it here. SavePixie records it as pending.
+                    Move{" "}
+                    {formatMoney(
+                      Math.max(0, Math.round((Number(amount) || 0) * 100)),
+                      currencyCode
+                    )}{" "}
+                    in your bank, then confirm it here. SavePixie records it as pending.
                   </small>
                 </div>
               </div>

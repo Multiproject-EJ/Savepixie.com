@@ -233,23 +233,71 @@ export type Database = {
         Row: {
           avatar_url: string | null;
           created_at: string;
+          currency_code: string;
           display_name: string | null;
           id: string;
+          monthly_savings_capacity_cents: number | null;
+          pixie_theme: string;
           username: string | null;
         };
         Insert: {
           avatar_url?: string | null;
           created_at?: string;
+          currency_code?: string;
           display_name?: string | null;
           id: string;
+          monthly_savings_capacity_cents?: number | null;
+          pixie_theme?: string;
           username?: string | null;
         };
         Update: {
           avatar_url?: string | null;
           created_at?: string;
+          currency_code?: string;
           display_name?: string | null;
           id?: string;
+          monthly_savings_capacity_cents?: number | null;
+          pixie_theme?: string;
           username?: string | null;
+        };
+        Relationships: [];
+      };
+      savepixie_waitlist: {
+        Row: {
+          consent_at: string;
+          created_at: string;
+          dream_category: string | null;
+          email: string;
+          id: string;
+          landing_variant: string;
+          source: string;
+          status: string;
+          utm_campaign: string | null;
+          utm_medium: string | null;
+        };
+        Insert: {
+          consent_at?: string;
+          created_at?: string;
+          dream_category?: string | null;
+          email: string;
+          id?: string;
+          landing_variant?: string;
+          source?: string;
+          status?: string;
+          utm_campaign?: string | null;
+          utm_medium?: string | null;
+        };
+        Update: {
+          consent_at?: string;
+          created_at?: string;
+          dream_category?: string | null;
+          email?: string;
+          id?: string;
+          landing_variant?: string;
+          source?: string;
+          status?: string;
+          utm_campaign?: string | null;
+          utm_medium?: string | null;
         };
         Relationships: [];
       };
@@ -432,6 +480,7 @@ export type Database = {
           contribution_rule: string;
           created_at: string;
           created_by: string;
+          currency_code: string;
           deadline_date: string | null;
           emoji: string;
           id: string;
@@ -448,6 +497,7 @@ export type Database = {
           contribution_rule?: string;
           created_at?: string;
           created_by: string;
+          currency_code?: string;
           deadline_date?: string | null;
           emoji?: string;
           id?: string;
@@ -464,6 +514,7 @@ export type Database = {
           contribution_rule?: string;
           created_at?: string;
           created_by?: string;
+          currency_code?: string;
           deadline_date?: string | null;
           emoji?: string;
           id?: string;
@@ -572,6 +623,7 @@ export type Database = {
           contribution_rule: string;
           created_at: string;
           created_by: string;
+          currency_code: string;
           deadline_date: string | null;
           emoji: string;
           id: string;
@@ -639,6 +691,7 @@ export type Database = {
           contribution_rule: string;
           created_at: string;
           created_by: string;
+          currency_code: string;
           deadline_date: string | null;
           emoji: string;
           id: string;
@@ -717,6 +770,7 @@ export type Database = {
           contribution_rule: string;
           created_at: string;
           created_by: string;
+          currency_code: string;
           deadline_date: string | null;
           emoji: string;
           id: string;

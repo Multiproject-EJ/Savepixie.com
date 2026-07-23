@@ -24,6 +24,7 @@ import type {
   PactPrivacyMode,
 } from "../features/goals/types";
 import { gentleHaptic } from "../lib/feedback";
+import { currencySymbol } from "../lib/currency";
 import { formatMoney, formatShortDate, goalProgress } from "../lib/format";
 import { useModalDialog } from "../lib/useModalDialog";
 
@@ -347,9 +348,9 @@ export function PactDetailPage() {
         </div>
         <div className="pact-detail-hero__progress">
           <span className="eyebrow">Circle progress</span>
-          <strong>{formatMoney(goal.saved_cents)}</strong>
+          <strong>{formatMoney(goal.saved_cents, goal.currency_code)}</strong>
           <p>
-            of {formatMoney(goal.target_cents)} · {progress}% reported
+            of {formatMoney(goal.target_cents, goal.currency_code)} · {progress}% reported
           </p>
           <div className="progress-track" aria-label={`${progress}% reported`}>
             <span style={{ width: `${progress}%`, background: goal.color || "#7b3fff" }} />
@@ -358,7 +359,7 @@ export function PactDetailPage() {
         <dl className="pact-detail-stats">
           <div>
             <dt>Verified</dt>
-            <dd>{formatMoney(goal.verified_cents)}</dd>
+            <dd>{formatMoney(goal.verified_cents, goal.currency_code)}</dd>
           </div>
           <div>
             <dt>Dream date</dt>
@@ -396,16 +397,18 @@ export function PactDetailPage() {
           </div>
           {weeklyPace !== null ? (
             <span className="pact-pace-pill">
-              {weeklyPace > 0 ? `${formatMoney(weeklyPace)} / week` : "Target reached"}
+              {weeklyPace > 0
+                ? `${formatMoney(weeklyPace, goal.currency_code)} / week`
+                : "Target reached"}
             </span>
           ) : null}
         </header>
         <p className="support-copy">
           {nextMilestone
-            ? `${formatMoney(Math.max(0, nextMilestone.targetCents - goal.saved_cents))} until the ${nextMilestone.percent}% milestone.`
+            ? `${formatMoney(Math.max(0, nextMilestone.targetCents - goal.saved_cents), goal.currency_code)} until the ${nextMilestone.percent}% milestone.`
             : "Every milestone is complete. This Pact has reached its target."}
           {weeklyPace !== null && weeklyPace > 0
-            ? ` A flexible pace of about ${formatMoney(weeklyPace)} each week reaches the current dream date.`
+            ? ` A flexible pace of about ${formatMoney(weeklyPace, goal.currency_code)} each week reaches the current dream date.`
             : " Add a dream date whenever a weekly guide would feel useful."}
         </p>
         <div className="pact-milestone-row" aria-label="Pact milestones">
@@ -413,7 +416,7 @@ export function PactDetailPage() {
             <div className={milestone.reached ? "reached" : ""} key={milestone.percent}>
               <span>{milestone.reached ? "✓" : milestone.percent}</span>
               <small>{milestone.percent}%</small>
-              <em>{formatMoney(milestone.targetCents)}</em>
+              <em>{formatMoney(milestone.targetCents, goal.currency_code)}</em>
             </div>
           ))}
         </div>
@@ -442,7 +445,7 @@ export function PactDetailPage() {
                     </strong>
                     <small>{member.role === "owner" ? "Organiser" : "Circle member"}</small>
                   </div>
-                  <MemberProgress member={member} />
+                  <MemberProgress member={member} currencyCode={goal.currency_code} />
                 </article>
               ))}
             </div>
@@ -475,7 +478,7 @@ export function PactDetailPage() {
                     </div>
                     <span className="pact-activity-section__amount">
                       {item.amount_visible && item.amount_cents !== null
-                        ? formatMoney(item.amount_cents)
+                        ? formatMoney(item.amount_cents, goal.currency_code)
                         : "Amount private"}
                     </span>
                     {item.actor_user_id !== currentUserId ? (
@@ -542,7 +545,7 @@ export function PactDetailPage() {
                 </div>
                 <span className={entry.delta_cents < 0 ? "negative" : ""}>
                   {entry.delta_cents > 0 ? "+" : ""}
-                  {formatMoney(entry.delta_cents)}
+                  {formatMoney(entry.delta_cents, goal.currency_code)}
                 </span>
               </li>
             ))}
@@ -572,7 +575,7 @@ export function PactDetailPage() {
           <label className="form-control">
             <span>My commitment</span>
             <span className="amount-input">
-              <strong>kr</strong>
+              <strong>{currencySymbol(goal.currency_code)}</strong>
               <input
                 type="number"
                 min="0"
@@ -690,15 +693,21 @@ export function PactDetailPage() {
   );
 }
 
-function MemberProgress({ member }: { member: PactMemberSummary }) {
+function MemberProgress({
+  member,
+  currencyCode,
+}: {
+  member: PactMemberSummary;
+  currencyCode: string;
+}) {
   if (member.amount_visible) {
     return (
       <span className="member-progress member-progress--exact">
-        <strong>{formatMoney(member.reported_cents ?? 0)}</strong>
+        <strong>{formatMoney(member.reported_cents ?? 0, currencyCode)}</strong>
         <small>
           {member.commitment_cents === null
             ? "No commitment set"
-            : `of ${formatMoney(member.commitment_cents)}`}
+            : `of ${formatMoney(member.commitment_cents, currencyCode)}`}
         </small>
       </span>
     );

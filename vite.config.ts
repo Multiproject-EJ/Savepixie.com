@@ -3,16 +3,22 @@ import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-export default defineConfig({
-  plugins: [
-    react(),
-    {
-      name: "github-pages-spa-fallback",
-      closeBundle() {
-        copyFileSync(resolve(__dirname, "dist/index.html"), resolve(__dirname, "dist/404.html"));
-      },
+function githubPagesSpaFallback() {
+  let outputDirectory = resolve(__dirname, "dist");
+
+  return {
+    name: "github-pages-spa-fallback",
+    configResolved(config: { build: { outDir: string }; root: string }) {
+      outputDirectory = resolve(config.root, config.build.outDir);
     },
-  ],
+    closeBundle() {
+      copyFileSync(resolve(outputDirectory, "index.html"), resolve(outputDirectory, "404.html"));
+    },
+  };
+}
+
+export default defineConfig({
+  plugins: [react(), githubPagesSpaFallback()],
   build: {
     rollupOptions: {
       input: {

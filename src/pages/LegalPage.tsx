@@ -16,7 +16,8 @@ const privacyDocument: LegalDocument = {
     {
       title: "What SavePixie collects",
       paragraphs: [
-        "We collect your email address and authentication details, the profile name you choose, Savings Homes, goals and Pacts, saving commitments and entries, weekly plans, privacy choices, and support messages you send us.",
+        "If you join the early-access waitlist, we collect your email address, the broad savings dream you optionally choose, your consent time, and limited campaign labels such as the landing-page version and UTM source. Waitlist visitors cannot read anyone else's signup.",
+        "If you create an account, we collect your email address and authentication details, the profile name you choose, Savings Homes, goals and Pacts, saving commitments and entries, weekly plans, privacy choices, and support messages you send us.",
         "A Savings Home can include a bank or provider name, an account hint, and a balance you report. Do not enter a full account number, card number, bank password, or banking security code. SavePixie does not hold your savings or connect to your bank during the closed beta.",
         "Our hosting and authentication providers also process limited technical information needed to secure and operate the service, such as session, request, and error logs.",
       ],
@@ -24,6 +25,7 @@ const privacyDocument: LegalDocument = {
     {
       title: "Why it is used",
       paragraphs: [
+        "We use waitlist information to record your request for early access, send the launch updates you consented to receive, and understand which savings dreams and campaign sources generate genuine interest.",
         "We use account and saving data to provide the service you request, keep shared Pacts working, prevent misuse, respond to support, and improve reliability. If paid plans are enabled, Stripe processes payment details and SavePixie stores only the customer mapping and subscription status needed to provide access.",
         "We will ask separately before enabling optional analytics or marketing that requires consent. SavePixie does not sell your personal data.",
       ],
@@ -38,6 +40,7 @@ const privacyDocument: LegalDocument = {
     {
       title: "Retention and deletion",
       paragraphs: [
+        "Waitlist information is kept until you unsubscribe, ask us to remove it, or the early-access campaign ends and it is no longer needed. Email support@savepixie.com to remove a waitlist entry before automated unsubscribe handling is available.",
         "Core account data is kept while your account is active. You can export it from Settings and permanently delete the account in the app. Account deletion removes the authentication user and linked personal SavePixie records, but never affects money held at your bank. A shared Pact with active members is handed to its longest-standing remaining member; your membership and personal entries are removed.",
         "Deletion is paused if Stripe reports a subscription that is still active or unresolved, so an account cannot disappear while charges may continue. Billing records may need to be retained separately where tax, accounting, dispute, or fraud-prevention law requires it.",
       ],
@@ -88,7 +91,7 @@ const termsDocument: LegalDocument = {
       title: "Paid features",
       paragraphs: [
         "Paid plans are not active during the initial closed beta. Basic keeps unlimited solo saving and one active shared Pact with one companion. The planned Pro plan unlocks additional shared Pacts and larger family or group Circles; ending Pro does not delete an existing Pact or remove its members.",
-        "If SavePixie Pro is offered, the checkout will show the exact price, trial length, renewal timing, taxes, and cancellation terms before payment. The current product target is 29 kr per month after a clearly disclosed seven-day first trial. A returning customer does not receive another free trial.",
+        "If SavePixie Pro is offered, checkout will show the exact local currency, price, trial length, renewal timing, taxes, and cancellation terms before payment. The current early-price target is roughly equivalent to US$5 per month after a clearly disclosed seven-day first trial. A returning customer does not receive another free trial.",
         "Subscriptions will be managed through Stripe. You will be able to cancel from Billing before the next renewal. Refund and statutory withdrawal rights depend on the final seller identity, your location, and applicable consumer law; final reviewed terms must be published before payments are enabled.",
       ],
     },
@@ -118,7 +121,7 @@ export function LegalPage() {
         <span className="eyebrow">{content.eyebrow}</span>
         <h1>{content.title}</h1>
         <p>{content.introduction}</p>
-        <div className="legal-draft-badge">Closed-beta draft · Updated 17 July 2026</div>
+        <div className="legal-draft-badge">Closed-beta draft · Updated 22 July 2026</div>
       </header>
 
       <nav className="legal-switcher" aria-label="Legal documents">

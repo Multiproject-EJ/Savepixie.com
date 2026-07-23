@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useSavings } from "../app/SavingsProvider";
 import { gentleHaptic } from "../lib/feedback";
+import { currencySymbol, starterAmountFromNok } from "../lib/currency";
 import { formatMoney } from "../lib/format";
 import { useModalDialog } from "../lib/useModalDialog";
 
@@ -19,11 +20,17 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const dialogRef = useModalDialog<HTMLElement>(open, onClose, !submitting);
+  const selectedGoal = goals.find((item) => item.id === goalId) ?? goals[0];
+  const currencyCode = selectedGoal?.currency_code ?? "USD";
+  const suggestedAmounts = [50, 100, 200, 500].map((value) =>
+    starterAmountFromNok(value, currencyCode)
+  );
 
   useEffect(() => {
     if (!open) return;
-    setGoalId(initialGoalId || goals[0]?.id || "");
-    setAmount("50");
+    const initialGoal = goals.find((item) => item.id === initialGoalId) ?? goals[0];
+    setGoalId(initialGoal?.id || "");
+    setAmount(String(starterAmountFromNok(50, initialGoal?.currency_code ?? "USD")));
     setNote("");
     setError(null);
   }, [goals, initialGoalId, open]);
@@ -51,7 +58,9 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
     setError(null);
     try {
       await deposit(goalId, cents, note.trim() || undefined);
-      onSaved(`${formatMoney(cents)} recorded as pending for ${goal?.name || "your Pact"}.`);
+      onSaved(
+        `${formatMoney(cents, goal?.currency_code)} recorded as pending for ${goal?.name || "your Pact"}.`
+      );
       onClose();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We couldn't record that save.");
@@ -118,7 +127,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
             <label className="form-control amount-control">
               <span>Amount</span>
               <span className="amount-input">
-                <strong>kr</strong>
+                <strong>{currencySymbol(currencyCode)}</strong>
                 <input
                   type="number"
                   min="0.01"
@@ -131,7 +140,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
               </span>
             </label>
             <div className="quick-amounts" aria-label="Suggested amounts">
-              {[50, 100, 200, 500].map((value) => (
+              {suggestedAmounts.map((value) => (
                 <button
                   className={amount === String(value) ? "selected" : ""}
                   key={value}
@@ -142,7 +151,7 @@ export function QuickSaveDialog({ open, initialGoalId, onClose, onSaved }: Quick
                     setAmount(String(value));
                   }}
                 >
-                  {value} kr
+                  {formatMoney(value * 100, currencyCode)}
                 </button>
               ))}
             </div>

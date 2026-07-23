@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabase";
+import { isSavingsCurrency } from "../../lib/currency";
 import type { Tables } from "../../types/database";
 import type {
   CreateGoalInput,
@@ -29,6 +30,7 @@ function normalizeGoal(row: PactRow): Goal {
     user_id: row.created_by,
     mode: row.mode as Goal["mode"],
     name: row.name,
+    currency_code: isSavingsCurrency(row.currency_code) ? row.currency_code : "USD",
     target_cents: numberValue(row.target_cents),
     saved_cents: numberValue(row.reported_cents),
     verified_cents: numberValue(row.verified_cents),
@@ -61,7 +63,7 @@ export async function fetchGoals(): Promise<Goal[]> {
   const { data, error } = await supabase
     .from("savings_pacts")
     .select(
-      "id, created_by, mode, name, target_cents, reported_cents, verified_cents, emoji, color, deadline_date, contribution_rule, status, created_at, updated_at"
+      "id, created_by, mode, name, currency_code, target_cents, reported_cents, verified_cents, emoji, color, deadline_date, contribution_rule, status, created_at, updated_at"
     )
     .eq("status", "active")
     .order("created_at", { ascending: true });

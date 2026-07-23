@@ -1,13 +1,14 @@
 # SavePixie Stripe Setup
 
-Updated: 2026-07-19
-Status: Test-mode product, secrets, webhook, portal, Checkout, seven-day trial, duplicate delivery,
-and cancellation scheduling verified; tax setup, test-clock coverage, public activation, and live-mode
-lifecycle acceptance remain gated
+Updated: 2026-07-20
+Status: Complete sandbox lifecycle verified; demo mode remains fail-closed while tax, legal, and
+live-mode account preparation remain gated
 
 ## Commercial boundary
 
-SavePixie Pro is planned as a 29 NOK monthly subscription with a plainly disclosed seven-day trial.
+SavePixie Pro is planned as a low-cost monthly subscription with a plainly disclosed seven-day
+trial. The integration price uses 49 NOK as its base amount, while Checkout should present supported
+customers with an intentional local-currency option from the same Stripe Price.
 Stripe revenue belongs to SavePixie. Customer savings are never collected, pooled, held, or moved by
 Stripe or SavePixie.
 
@@ -19,15 +20,29 @@ The paid boundary is now real and enforced by PostgreSQL:
 - Ending Pro never deletes, hides, or removes an existing Pact or member; it prevents only new
   Pro-sized creation or joining.
 
-The Settings offer states the seven-day trial, 29 kr monthly renewal, and cancellation timing before
-leaving SavePixie. Its action remains disabled by `VITE_STRIPE_ENABLED=false` until Stripe test-mode
-acceptance passes.
+The Settings offer shows the planned price as demo pricing and prevents a new Checkout while
+`VITE_STRIPE_ENABLED=false`. Existing subscribers can still open the Billing Portal during a sales
+pause. The short launch and rollback procedure is in `PAYMENTS-GO-LIVE.md`.
+
+### International price presentation
+
+Use one Stripe multi-currency Price rather than creating separate products or hard-coding a country
+in SavePixie. Add reviewed monthly `currency_options` for the first launch currencies (USD, EUR, GBP,
+CAD, AUD and the Nordic currencies) to the same Price ID. The Checkout Session deliberately does not
+set `currency`, allowing Stripe Checkout to choose a supported local option. If no reviewed option
+matches, Checkout falls back to the Price's base currency.
+
+Adaptive Pricing can later widen coverage, but it includes currency conversion in the customer price.
+Review its current fees and presentation before enabling it account-wide. The savings currency chosen
+inside SavePixie is independent of the billing currency: it never changes the Stripe subscription or
+converts a customer's saved amounts.
 
 ## Deployed components
 
 - `create-checkout-session` verifies the signed-in Supabase user and creates a Stripe-hosted
-  subscription Checkout Session. It rejects any configured price that is not an active recurring
-  29 NOK monthly price and grants the seven-day trial only when no prior SavePixie entitlement exists.
+  subscription Checkout Session. It rejects any configured price whose base is not the approved
+  active recurring 49 NOK monthly price; reviewed currency options may coexist on that Price. It
+  grants the seven-day trial only when no prior SavePixie entitlement exists.
 - `create-portal-session` verifies the user and creates a short-lived Stripe Billing Portal Session.
 - Checkout re-retrieves any mapped Stripe customer before reuse; a deleted customer is replaced and a
   customer whose immutable SavePixie user metadata does not match is rejected. Portal performs the
@@ -65,7 +80,9 @@ secret is required. The service-role value must never be added to GitHub Pages v
 
 ## Stripe Dashboard configuration
 
-1. SavePixie Pro exists in the Stripe sandbox with an active recurring monthly price of 29 NOK.
+1. The legacy SavePixie Pro sandbox price is 29 NOK. Replace its configured price ID with an active
+   recurring 49 NOK base monthly price and reviewed local-currency options before testing or enabling
+   the new offer.
 2. The test-mode Billing Portal permits payment-method updates and cancellation at period end.
    It carries the SavePixie headline plus Privacy and Terms links.
 3. The deployed `stripe-webhook` endpoint uses API version
@@ -85,7 +102,7 @@ secret is required. The service-role value must never be added to GitHub Pages v
 - [x] An unsigned webhook request returns `400` before processing.
 - [x] A signed-in free user receives a Stripe-hosted Checkout URL.
 - A returning customer who previously had an entitlement receives no second free trial.
-- [x] Checkout displays the 29 kr monthly price and seven-day trial before confirmation.
+- [ ] Replace the sandbox subscription price with the new 49 kr monthly target and reverify the seven-day trial before confirmation.
 - [x] Successful Checkout creates `trialing` access only after the signed webhook is processed.
 - [x] Replaying the same webhook event does not apply the update twice. Event
       `evt_1Tv2aoF2MDiiXhcg3uKu7TF1` was resent on 2026-07-19; the entitlement stayed trialing and the
@@ -127,7 +144,7 @@ sandbox on 2026-07-20, and its disposable clock customer and Supabase user were 
 The 2026-07-19 sandbox audit found Stripe Tax status `pending`, no head-office address or default tax
 code, and `tax_behavior=unspecified` on the SavePixie price. Do not enable public billing until the
 operator's legal business location and required registrations are confirmed, the appropriate digital
-service tax code is selected, the displayed 29 kr treatment is decided (inclusive or exclusive), and
+service tax code is selected, the displayed 49 kr treatment is decided (inclusive or exclusive), and
 test Checkout shows the intended tax disclosure. This decision requires the operator/accountant; it
 must not be guessed in code.
 
@@ -141,5 +158,5 @@ cutover is complete.
 
 Next, complete the Stripe Tax and legal-operator decisions, review the final conversion screen against
 the owner's reference video, create the corresponding live-mode Stripe configuration, and complete
-the domain cutover. Set `VITE_STRIPE_ENABLED=true` only after those checks pass; that single production
-flag activates the visible Stripe action.
+the domain cutover. Then follow `PAYMENTS-GO-LIVE.md`; its single repository variable activates new
+customer Checkout and can pause new sales without locking existing subscribers out of the Portal.

@@ -1,6 +1,6 @@
 declare const self: ServiceWorkerGlobalScope;
 
-const CACHE_NAME = "savepixie-shell-v3";
+const CACHE_NAME = "savepixie-shell-v4";
 const ASSETS_TO_CACHE = ["/", "/index.html", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

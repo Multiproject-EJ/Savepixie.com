@@ -30,8 +30,9 @@ export function App() {
           <span>SavePixie</span>
         </Link>
         <nav className="nav-links" aria-label="Website navigation">
-          <a href="#how-it-works">How it works</a>
-          <a href="#why-savepixie">Why SavePixie</a>
+          <a href="/#how-it-works">How it works</a>
+          <a href="/#your-dream">Your dream</a>
+          <a href="/#early-access">Early access</a>
         </nav>
         <div className="auth-summary">
           {loading ? (
@@ -50,9 +51,9 @@ export function App() {
               <Link className="link-button" to="/auth">
                 Sign in
               </Link>
-              <Link className="button compact-button" to="/auth#sign-up">
-                Start saving
-              </Link>
+              <a className="button compact-button" href="/#join-waitlist">
+                Join waitlist
+              </a>
             </>
           )}
           {signOutMessage ? (

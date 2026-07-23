@@ -5,12 +5,14 @@ import { useSavings } from "../app/SavingsProvider";
 import type { AppShellOutletContext } from "../components/AppShell";
 import InviteLinkCard from "../components/InviteLinkCard";
 import { goalIdeas, type GoalIdea } from "../data/savingsMoves";
+import { currencySymbol, starterAmountFromNok, type SavingsCurrency } from "../lib/currency";
 import { formatMoney, formatShortDate, goalProgress } from "../lib/format";
 import { useModalDialog } from "../lib/useModalDialog";
 
 export function GoalsPage() {
   const { user } = useAuth();
-  const { goals, loading, error, addGoal, createInvite, joinSharedPact } = useSavings();
+  const { goals, loading, error, addGoal, createInvite, joinSharedPact, currencyCode } =
+    useSavings();
   const { openQuickSave, basePath } = useOutletContext<AppShellOutletContext>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedIdea, setSelectedIdea] = useState<GoalIdea | null>(null);
@@ -161,15 +163,16 @@ export function GoalsPage() {
                   <h2>{goal.name}</h2>
                 </div>
                 <div className="goal-amount-line">
-                  <strong>{formatMoney(goal.saved_cents)}</strong>
-                  <span>of {formatMoney(goal.target_cents)}</span>
+                  <strong>{formatMoney(goal.saved_cents, goal.currency_code)}</strong>
+                  <span>of {formatMoney(goal.target_cents, goal.currency_code)}</span>
                 </div>
                 <div className="progress-track" aria-label={`${progress}% saved`}>
                   <span style={{ width: `${progress}%`, background: goal.color || "#7b3fff" }} />
                 </div>
                 <footer>
                   <span>
-                    {progress}% reported · {formatMoney(goal.verified_cents)} verified
+                    {progress}% reported · {formatMoney(goal.verified_cents, goal.currency_code)}{" "}
+                    verified
                   </span>
                   <div className="goal-card-actions">
                     <Link to={`${basePath}/goals/${goal.id}`}>Open Pact</Link>
@@ -222,7 +225,13 @@ export function GoalsPage() {
                   {idea.category}
                 </small>
                 <strong>{idea.name}</strong>
-                <em>{formatMoney(idea.targetCents)} starter goal</em>
+                <em>
+                  {formatMoney(
+                    starterAmountFromNok(idea.targetCents / 100, currencyCode) * 100,
+                    currencyCode
+                  )}{" "}
+                  starter goal
+                </em>
               </span>
               <span className="dream-card__arrow" aria-hidden="true">
                 →
@@ -235,6 +244,7 @@ export function GoalsPage() {
       <NewGoalDialog
         open={dialogOpen}
         idea={selectedIdea}
+        currencyCode={currencyCode}
         onClose={() => {
           setDialogOpen(false);
           setSelectedIdea(null);
@@ -270,6 +280,7 @@ export function parseInviteToken(value: string): string | null {
 type NewGoalDialogProps = {
   open: boolean;
   idea?: GoalIdea | null;
+  currencyCode: SavingsCurrency;
   onClose: () => void;
   onCreate: (values: {
     mode?: "solo" | "shared";
@@ -281,7 +292,7 @@ type NewGoalDialogProps = {
   }) => Promise<void>;
 };
 
-function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
+function NewGoalDialog({ open, idea, currencyCode, onClose, onCreate }: NewGoalDialogProps) {
   const [name, setName] = useState("");
   const [mode, setMode] = useState<"solo" | "shared">("solo");
   const [target, setTarget] = useState("");
@@ -302,10 +313,10 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
   useEffect(() => {
     if (!open || !idea) return;
     setName(idea.name);
-    setTarget(String(idea.targetCents / 100));
+    setTarget(String(starterAmountFromNok(idea.targetCents / 100, currencyCode)));
     setEmoji(idea.emoji);
     setError(null);
-  }, [idea, open]);
+  }, [currencyCode, idea, open]);
 
   if (!open) return null;
 
@@ -412,7 +423,7 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
             <label className="form-control amount-control">
               <span>Target</span>
               <span className="amount-input">
-                <strong>kr</strong>
+                <strong>{currencySymbol(currencyCode)}</strong>
                 <input
                   type="number"
                   min="1"
@@ -439,8 +450,8 @@ function NewGoalDialog({ open, idea, onClose, onCreate }: NewGoalDialogProps) {
             <div className="goal-pace-preview" role="note">
               <span aria-hidden="true">✦</span>
               <p>
-                About <strong>{formatMoney(weeklyPreview)} each week</strong> would reach this dream
-                date. It is a guide, never a demand.
+                About <strong>{formatMoney(weeklyPreview, currencyCode)} each week</strong> would
+                reach this dream date. It is a guide, never a demand.
               </p>
             </div>
           ) : null}
