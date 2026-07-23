@@ -881,14 +881,151 @@ p {
   font-size: clamp(1rem, 1.5vw, 1.18rem);
   line-height: 1.7;
 }
-.waitlist-form {
-  width: min(650px, 100%);
-  padding: 1.1rem;
-  border: 1px solid rgba(184, 153, 255, 0.22);
-  border-radius: 24px;
+.landing-waitlist-launch {
+  width: min(470px, 100%);
+  display: grid;
+  gap: 0.65rem;
+}
+.landing-waitlist-launch .button {
+  min-height: 62px;
+  justify-content: space-between;
+  padding-inline: 1.35rem;
+  border: 1px solid rgba(154, 248, 232, 0.35);
+  font-size: 0.96rem;
+  box-shadow:
+    0 18px 46px color-mix(in srgb, var(--violet) 30%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.landing-waitlist-launch .button > span:last-child {
+  font-size: 1.35rem;
+  transition: translate 180ms ease;
+}
+.landing-waitlist-launch .button:hover > span:last-child {
+  translate: 4px 0;
+}
+.landing-waitlist-launch > span {
+  color: var(--faint);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+.waitlist-dialog__backdrop {
+  position: fixed;
+  z-index: 300;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
   background:
-    linear-gradient(145deg, rgba(36, 23, 70, 0.92), rgba(17, 10, 38, 0.94)), var(--surface);
-  box-shadow: 0 24px 70px rgba(3, 0, 16, 0.36);
+    radial-gradient(circle at 50% 38%, rgba(56, 223, 198, 0.11), transparent 38%),
+    rgba(5, 3, 14, 0.82);
+  backdrop-filter: blur(18px) saturate(0.78);
+  animation: waitlist-backdrop-in 220ms ease-out both;
+}
+.waitlist-dialog {
+  position: relative;
+  width: min(610px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid color-mix(in srgb, var(--mint) 36%, var(--border));
+  border-radius: clamp(25px, 5vw, 36px);
+  background:
+    radial-gradient(
+      circle at 50% -8%,
+      color-mix(in srgb, var(--violet) 30%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(circle at 105% 90%, rgba(56, 223, 198, 0.12), transparent 35%),
+    linear-gradient(155deg, rgba(28, 18, 58, 0.99), rgba(11, 7, 28, 0.995));
+  box-shadow:
+    0 40px 110px rgba(1, 0, 8, 0.72),
+    0 0 0 1px rgba(255, 255, 255, 0.025),
+    0 0 80px color-mix(in srgb, var(--violet) 18%, transparent);
+  animation: waitlist-dialog-in 360ms cubic-bezier(0.2, 0.85, 0.25, 1.08) both;
+}
+.waitlist-dialog__close {
+  position: absolute;
+  z-index: 2;
+  top: 1rem;
+  right: 1rem;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: rgba(7, 4, 18, 0.58);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1.4rem;
+  line-height: 1;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease;
+}
+.waitlist-dialog__close:hover {
+  transform: rotate(5deg) scale(1.05);
+  border-color: rgba(56, 223, 198, 0.42);
+  background: rgba(56, 223, 198, 0.08);
+  color: var(--mint-light);
+}
+.waitlist-dialog__header {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+.waitlist-dialog__header h2 {
+  max-width: 520px;
+  margin: 0.55rem 0 0.65rem;
+  font-size: clamp(1.8rem, 6vw, 2.7rem);
+  line-height: 1.02;
+  letter-spacing: -0.055em;
+}
+.waitlist-dialog__header p {
+  max-width: 490px;
+  margin: 0 0 1.35rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+.waitlist-dialog__pixie {
+  position: relative;
+  width: 112px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.25rem;
+  filter: drop-shadow(0 18px 28px color-mix(in srgb, var(--violet) 28%, transparent));
+  animation: onboarding-float 3.2s ease-in-out infinite;
+}
+.waitlist-dialog__pixie .pixie-mark {
+  transform: scale(0.82);
+}
+.waitlist-dialog__pixie i {
+  position: absolute;
+  color: var(--gold);
+  font-style: normal;
+  animation: spark-pulse 1.8s ease-in-out infinite;
+}
+.waitlist-dialog__pixie i:nth-of-type(1) {
+  top: 5px;
+  right: 5px;
+}
+.waitlist-dialog__pixie i:nth-of-type(2) {
+  bottom: 10px;
+  left: 2px;
+  animation-delay: 480ms;
+}
+.waitlist-form {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid rgba(184, 153, 255, 0.18);
+  border-radius: 22px;
+  background: rgba(8, 4, 21, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
 .waitlist-dreams {
   margin: 0 0 0.9rem;
@@ -1027,6 +1164,29 @@ p {
 .waitlist-success small {
   color: var(--muted);
   line-height: 1.5;
+}
+.waitlist-dialog__reassurance {
+  display: block;
+  margin-top: 0.85rem;
+  color: var(--faint);
+  font-size: 0.68rem;
+  font-weight: 750;
+  text-align: center;
+}
+@keyframes waitlist-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes waitlist-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .landing-reassurance {
   display: block;
@@ -5065,6 +5225,12 @@ p {
   .waitlist-form {
     padding: 0.9rem;
   }
+  .waitlist-dialog {
+    padding: 1.2rem;
+  }
+  .waitlist-dialog__header {
+    padding-inline: 1rem;
+  }
   .waitlist-email-row {
     grid-template-columns: 1fr;
   }
@@ -5154,6 +5320,19 @@ p {
   .waitlist-dreams button {
     justify-content: flex-start;
     padding-inline: 0.55rem;
+  }
+  .waitlist-dialog__backdrop {
+    padding-inline: 10px;
+  }
+  .waitlist-dialog {
+    max-height: calc(100dvh - 20px);
+    border-radius: 26px;
+  }
+  .waitlist-dialog__pixie {
+    height: 78px;
+  }
+  .waitlist-dialog__header h2 {
+    font-size: 1.75rem;
   }
   .landing-hero__visual {
     min-height: 590px;
