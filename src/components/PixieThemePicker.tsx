@@ -40,6 +40,7 @@ export function PixieThemePicker({
             <PixieMark size={compact ? "small" : "medium"} mood="happy" theme={theme.key} />
           </span>
           <span className="pixie-theme-card__copy">
+            <em>{theme.world}</em>
             <strong>{theme.name}</strong>
             <small>{theme.personality}</small>
           </span>
